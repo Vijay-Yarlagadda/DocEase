@@ -25,14 +25,6 @@ const Signup = () => {
       route: '/admin/dashboard',
     },
     {
-      id: 'doctor',
-      icon: UserCheck,
-      label: 'Doctor',
-      description: 'Medical professionals',
-      gradient: 'from-cyan-600 to-cyan-400',
-      route: '/doctor/dashboard',
-    },
-    {
       id: 'patient',
       icon: Users,
       label: 'Patient',
@@ -93,8 +85,8 @@ const Signup = () => {
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-4">
               Select Your Role
             </label>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              {roles.map((role) => {
+            <div className="flex justify-center gap-8">
+              {roles.map((role, idx) => {
                 const Icon = role.icon
                 const isSelected = selectedRole === role.id
                 return (
@@ -104,13 +96,17 @@ const Signup = () => {
                     onClick={() => setSelectedRole(role.id)}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    className={`p-4 rounded-lg border-2 transition-all ${
+                    className={`w-44 p-6 rounded-lg border-2 transition-all flex flex-col items-center ${
                       isSelected
                         ? `border-primary bg-gradient-to-br ${role.gradient} text-white`
                         : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:border-primary dark:hover:border-accent'
                     }`}
+                    style={{
+                      marginLeft: idx === 0 ? 'auto' : undefined,
+                      marginRight: idx === roles.length - 1 ? 'auto' : undefined,
+                    }}
                   >
-                    <Icon className="w-8 h-8 mx-auto mb-2" />
+                    <Icon className="w-8 h-8 mb-2" />
                     <p className="font-semibold">{role.label}</p>
                     <p className="text-xs mt-1 opacity-80">{role.description}</p>
                   </motion.button>
