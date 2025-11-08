@@ -26,3 +26,6 @@ export const requireRole = (...roles) => (req, res, next) => {
   }
   next()
 }
+
+// Backwards-compatible alias: some files import `requireAuth`
+export const requireAuth = verifyToken

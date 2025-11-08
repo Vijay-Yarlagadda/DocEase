@@ -4,6 +4,8 @@ import mongoose from 'mongoose'
 import cors from 'cors'
 import dotenv from 'dotenv'
 import authRoutes from './routes/authRoutes.js'
+import hospitalRoutes from './routes/hospitalRoutes.js'
+import adminRoutes from './routes/adminRoutes.js'
 
 // Load environment variables from backend/.env
 dotenv.config()
@@ -19,6 +21,8 @@ app.get('/', (req, res) => res.send('DocEase backend is running 🚀'))
 
 // API Routes
 app.use('/api/auth', authRoutes)
+app.use('/api/hospitals', hospitalRoutes)
+app.use('/api/admin', adminRoutes)
 
 // Connect to MongoDB Atlas and start server
 const PORT = process.env.PORT || 5000

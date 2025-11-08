@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useState, useContext } from 'react'
 import { motion } from 'framer-motion'
 import { useNavigate, Link } from 'react-router-dom'
 import { Shield, UserCheck, Users, ArrowRight, Mail, Lock } from 'lucide-react'
+import { AuthContext } from '../context/AuthContext'
 
 const Login = () => {
   const [selectedRole, setSelectedRole] = useState(null)
@@ -10,6 +11,7 @@ const Login = () => {
     password: '',
   })
   const navigate = useNavigate()
+  const { login } = useContext(AuthContext)
 
   const roles = [
     {
@@ -47,14 +49,44 @@ const Login = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    if (!selectedRole) {
-      alert('Please select a role')
-      return
-    }
-    // TODO: Handle login with API
-    console.log('Login:', { ...formData, role: selectedRole })
-    const selectedRoleData = roles.find(r => r.id === selectedRole)
-    navigate(selectedRoleData.route)
+    ;(async () => {
+      if (!selectedRole) {
+        alert('Please select a role')
+        return
+      }
+      try {
+        const res = await login(formData.email, formData.password)
+        // If backend signals firstLogin (doctor needs to change temp password)
+        if (res && res.firstLogin) {
+          // send user to change-password page with email
+          navigate('/doctor/change-password', { state: { email: formData.email } })
+          return
+        }
+        // Normal successful login returns a token and user
+        if (res && res.token && res.user) {
+          const userRole = res.user.role
+          // If user selected a different role, warn but navigate to actual role
+          if (userRole !== selectedRole) {
+            // small UX decision: still navigate to the user's actual dashboard
+            // but show a notice
+            // (Replace with toast when available)
+            alert(`Signed in as ${userRole}. Redirecting to your dashboard.`)
+          }
+          const route = roles.find(r => r.id === userRole)?.route || '/'
+          navigate(route)
+          return
+        }
+        // If backend returned an error body (message), show it
+        if (res && res.message) {
+          alert(res.message)
+          return
+        }
+        alert('Unable to sign in. Please check credentials and try again.')
+      } catch (err) {
+        console.error('Login error', err)
+        alert(err.message || 'Login failed')
+      }
+    })()
   }
 
   return (
