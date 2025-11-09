@@ -11,7 +11,8 @@ export const verifyToken = async (req, res, next) => {
   const token = authHeader.split(' ')[1]
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET)
-    req.user = await User.findById(decoded.id).select('-password')
+    // Find user and exclude password/tempPassword fields
+    req.user = await User.findById(decoded.id).select('-password -tempPassword')
     if (!req.user) return res.status(401).json({ message: 'User not found' })
     next()
   } catch (err) {
@@ -20,9 +21,12 @@ export const verifyToken = async (req, res, next) => {
 }
 
 // Middleware for role-based access
-export const requireRole = (...roles) => (req, res, next) => {
-  if (!roles.includes(req.user.role)) {
-    return res.status(403).json({ message: 'Access denied' })
+export const requireRole = (role) => (req, res, next) => {
+  if (!req.user) {
+    return res.status(401).json({ message: 'Authentication required' })
+  }
+  if (req.user.role !== role) {
+    return res.status(403).json({ message: 'Access denied: insufficient role' })
   }
   next()
 }

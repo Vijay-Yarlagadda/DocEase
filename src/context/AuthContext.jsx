@@ -18,7 +18,9 @@ export const AuthProvider = ({ children }) => {
       api
         .get('/auth/dashboard')
         .then((res) => {
-          setUser(res.data.user || { name: res.data.message })
+          // Set user from response (user object or construct from available data)
+          const userData = res.data.user || { name: res.data.message || 'User' }
+          setUser(userData)
           setToken(t)
         })
         .catch(() => {
@@ -35,12 +37,13 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     try {
       const res = await api.post('/auth/login', { email, password })
-      const { token: t, user: u } = res.data
+      const { token: t, user: u, name, role } = res.data
       if (t) {
         localStorage.setItem('docease_token', t)
         setAuthToken(t)
         setToken(t)
-        setUser(u)
+        // Set user with name from response (prioritize user object, then name field, then fallback)
+        setUser(u || { name, role } || { name: name || 'User', role: role || 'patient' })
       }
       return res.data
     } catch (err) {
@@ -53,16 +56,27 @@ export const AuthProvider = ({ children }) => {
   const signup = async (payload) => {
     try {
       const res = await api.post('/auth/signup', payload)
-      const { token: t, user: u } = res.data
+      const { token: t, user: u, name, role } = res.data
       if (t) {
         localStorage.setItem('docease_token', t)
         setAuthToken(t)
         setToken(t)
-        setUser(u)
+        // Set user with name from response (prioritize user object, then name field, then fallback)
+        setUser(u || { name, role } || { name: name || 'User', role: role || 'patient' })
       }
       return res.data
     } catch (err) {
-      if (err.response && err.response.data) return err.response.data
+      console.error('Signup error:', err)
+      // Enhanced error handling for network errors
+      if (err.code === 'ERR_NETWORK' || err.message === 'Network Error') {
+        const networkError = new Error('Cannot connect to server. Please make sure the backend server is running on port 5000.')
+        networkError.code = 'NETWORK_ERROR'
+        throw networkError
+      }
+      // If server responded with error, return the error data
+      if (err.response && err.response.data) {
+        return err.response.data
+      }
       throw err
     }
   }

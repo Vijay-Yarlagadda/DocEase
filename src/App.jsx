@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, useLocation } from 'react-router-dom'
 import { useState, useEffect, useContext } from 'react'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
@@ -17,6 +17,7 @@ import { AuthContext } from './context/AuthContext'
 function App() {
   const [darkMode, setDarkMode] = useState(false)
   const { user } = useContext(AuthContext)
+  const location = useLocation()
 
   useEffect(() => {
     // Check for saved theme preference or default to light mode
@@ -39,14 +40,16 @@ function App() {
     }
   }
 
-  // Only show navbar/footer on non-dashboard pages or when not logged in
-  const showMainLayout = !user || !['/admin', '/doctor', '/patient'].some(prefix => 
-    window.location.pathname.startsWith(prefix)
-  )
+  // Only show navbar/footer on non-dashboard pages
+  // Dashboard pages use DashboardLayout which has its own navigation
+  const isDashboardRoute = location.pathname.startsWith('/admin') || 
+                           location.pathname.startsWith('/doctor') || 
+                           location.pathname.startsWith('/patient')
+  const showMainLayout = !isDashboardRoute
 
   return (
     <div className="min-h-screen flex flex-col">
-      {showMainLayout && <Navbar darkMode={darkMode} toggleDarkMode={toggleDarkMode} />}
+      {showMainLayout && <Navbar darkMode={darkMode} toggleDarkMode={toggleDarkMode} user={user} />}
       <Routes>
         {/* Public routes */}
         <Route path="/" element={<Home />} />

@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useState, useContext } from 'react'
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { Shield, UserCheck, Users, ArrowRight, Mail, Lock, User, Phone } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { AuthContext } from '../context/AuthContext'
 
 const Signup = () => {
   const [selectedRole, setSelectedRole] = useState(null)
@@ -14,6 +15,7 @@ const Signup = () => {
     confirmPassword: '',
   })
   const navigate = useNavigate()
+  const { signup } = useContext(AuthContext)
 
   const roles = [
     {
@@ -41,7 +43,7 @@ const Signup = () => {
     })
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     if (!selectedRole) {
       alert('Please select a role')
@@ -51,10 +53,46 @@ const Signup = () => {
       alert('Passwords do not match')
       return
     }
-    // TODO: Handle signup with API
-    console.log('Signup:', { ...formData, role: selectedRole })
-    const selectedRoleData = roles.find(r => r.id === selectedRole)
-    navigate(selectedRoleData.route)
+    if (formData.password.length < 8) {
+      alert('Password must be at least 8 characters long')
+      return
+    }
+    
+    try {
+      const payload = {
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+        role: selectedRole,
+      }
+      const res = await signup(payload)
+      
+      if (res && res.token) {
+        // Successful signup - navigate to appropriate dashboard
+        const selectedRoleData = roles.find(r => r.id === selectedRole)
+        if (selectedRoleData) {
+          navigate(selectedRoleData.route)
+        } else {
+          navigate('/')
+        }
+      } else if (res && res.message) {
+        alert(res.message)
+      }
+    } catch (err) {
+      console.error('Signup error:', err)
+      // Better error messages
+      let errorMessage = 'Signup failed. Please try again.'
+      
+      if (err.response?.data?.message) {
+        errorMessage = err.response.data.message
+      } else if (err.message) {
+        errorMessage = err.message
+      } else if (err.code === 'ERR_NETWORK' || err.message?.includes('Network Error')) {
+        errorMessage = 'Cannot connect to server. Please make sure the backend server is running on port 5000.'
+      }
+      
+      alert(errorMessage)
+    }
   }
 
   return (
