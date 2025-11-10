@@ -1,16 +1,9 @@
 // Auth controller for signup, login, logout
 import bcrypt from 'bcrypt'
-import jwt from 'jsonwebtoken'
+import admin from '../firebaseAdmin.js'
 import User from '../models/userModel.js'
 
-// Helper: generate JWT
-const generateToken = (user) => {
-  return jwt.sign(
-    { id: user._id, role: user.role },
-    process.env.JWT_SECRET,
-    { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
-  )
-}
+// Note: Firebase issues ID tokens on the client. Backend verifies them via Firebase Admin.
 
 // Signup (Patient self-register, Admin creates Admin)
 export const signupUser = async (req, res) => {
@@ -50,26 +43,19 @@ export const signupUser = async (req, res) => {
     
     const existing = await User.findOne({ email })
     if (existing) return res.status(409).json({ message: 'Email already exists' })
-    
-    // Let the model pre-save hook hash the password
-    const user = await User.create({ name, email, password, role, hospitalId })
-    
-    // Remove sensitive data before sending response
-    user.password = undefined
-    user.tempPassword = undefined
-    const userObj = user.toObject()
-    delete userObj.password
-    delete userObj.tempPassword
-    
-    const token = generateToken(user)
-    console.log('User registered successfully:', email)
-    res.status(201).json({ 
-      message: 'User created successfully', 
-      token, 
-      role: user.role,
-      name: user.name,
-      user: userObj
-    })
+
+    // Create Firebase user
+    if (!admin || !admin.auth) {
+      return res.status(500).json({ message: 'Firebase Admin not initialized' })
+    }
+    const userRecord = await admin.auth().createUser({ email, password, displayName: name })
+    // Set custom claims for role (so client can read role from token if needed)
+    await admin.auth().setCustomUserClaims(userRecord.uid, { role })
+
+    // Store metadata locally (use Firebase UID as _id)
+    const created = await User.create({ _id: userRecord.uid, name, email, role, hospitalId })
+    console.log('User registered successfully (Firebase):', email, 'uid:', userRecord.uid)
+    res.status(201).json({ message: 'User created successfully', uid: userRecord.uid, role: created.role, name: created.name, user: created })
   } catch (err) {
     console.error('Signup error:', err)
     res.status(500).json({ message: err.message })
@@ -85,37 +71,22 @@ export const createDoctor = async (req, res) => {
     }
     const existing = await User.findOne({ email })
     if (existing) return res.status(409).json({ message: 'Email already exists' })
-    
+
     // Generate temp password (plain text version to return to admin)
     const tempPasswordPlain = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8).toUpperCase()
-    
-    // Create user with temp password (will be hashed by pre-save hook)
-    const user = await User.create({
-      name,
-      email,
-      password: tempPasswordPlain,
-      role: 'doctor',
-      hospitalId,
-      firstLogin: true,
-      tempPassword: tempPasswordPlain // Store plain version temporarily (field is select: false)
-    })
-    
-    // Remove sensitive data
-    user.password = undefined
-    const userObj = user.toObject()
-    delete userObj.password
-    delete userObj.tempPassword
-    
-    // Return credentials for admin to give to doctor (only in response, not stored in user object)
+
+    // Create Firebase user for doctor
+    if (!admin || !admin.auth) {
+      return res.status(500).json({ message: 'Firebase Admin not initialized' })
+    }
+    const userRecord = await admin.auth().createUser({ email, password: tempPasswordPlain, displayName: name })
+    await admin.auth().setCustomUserClaims(userRecord.uid, { role: 'doctor' })
+    const user = await User.create({ _id: userRecord.uid, name, email, password: tempPasswordPlain, role: 'doctor', hospitalId, firstLogin: true, tempPassword: tempPasswordPlain })
+
     res.status(201).json({
       message: 'Doctor account created successfully',
-      doctor: { 
-        id: user._id, 
-        name: user.name, 
-        email: user.email, 
-        hospitalId: user.hospitalId
-      },
-      tempPassword: tempPasswordPlain, // Return plain temp password only here
+      doctor: { id: user._id, name: user.name, email: user.email, hospitalId: user.hospitalId },
+      tempPassword: tempPasswordPlain,
       note: 'Share these credentials with the doctor. They must change their password on first login.'
     })
   } catch (err) {
@@ -127,99 +98,48 @@ export const createDoctor = async (req, res) => {
 // Login (doctor must change password on first login)
 export const loginUser = async (req, res) => {
   try {
-    const { email, password } = req.body;
-    console.log('Login attempt:', { email });
-    
-    // Find user and explicitly select password field (since it's needed for comparison)
-    const user = await User.findOne({ email }).select('+password');
-    console.log('User found:', user ? 'Yes' : 'No');
-    
-    if (!user) {
-      console.log('User not found for email:', email);
-      return res.status(401).json({ message: 'Invalid credentials' });
-    }
-    
-    const match = await bcrypt.compare(password, user.password);
-    console.log('Password match:', match);
-    
-    if (!match) {
-      console.log('Password mismatch for user:', email);
-      return res.status(401).json({ message: 'Invalid credentials' });
-    }
-    
-    // If doctor and firstLogin, require password change
-    if (user.role === 'doctor' && user.firstLogin) {
-      console.log('Doctor first login, password change required');
-      return res.status(403).json({ 
-        message: 'First login: password change required', 
-        firstLogin: true,
-        email: user.email
-      });
-    }
-    
-    // Remove sensitive data before sending response
-    user.password = undefined
-    user.tempPassword = undefined
-    const userObj = user.toObject()
-    delete userObj.password
-    delete userObj.tempPassword
-    
-    const token = generateToken(user);
-    console.log('JWT token generated for user:', user.email);
-    
-    res.status(200).json({ 
-      message: 'Login successful', 
-      token, 
-      role: user.role,
-      name: user.name,
-      user: userObj
-    })
+    // Expect ID token from client (obtained via Firebase client SDK after sign-in)
+    const idToken = req.body.idToken || (req.headers.authorization && req.headers.authorization.split(' ')[1])
+    if (!idToken) return res.status(400).json({ message: 'Missing idToken. Sign in on the client and send idToken to this endpoint.' })
+    if (!admin || !admin.auth) return res.status(500).json({ message: 'Firebase Admin not initialized' })
+
+    const decoded = await admin.auth().verifyIdToken(idToken)
+    // decoded.uid, decoded.email, and decoded.auth_time etc.
+    const user = await User.findById(decoded.uid) || await User.findOne({ email: decoded.email })
+    const responseUser = user ? { ...user } : { uid: decoded.uid, email: decoded.email }
+    if (responseUser.password) delete responseUser.password
+    if (responseUser.tempPassword) delete responseUser.tempPassword
+
+    // Return the same idToken as proof of authentication and user metadata
+    res.status(200).json({ message: 'Login successful', token: idToken, role: (responseUser.role || decoded.role || (decoded.claims && decoded.claims.role)), name: responseUser.name, user: responseUser })
   } catch (err) {
-    console.error('Login error:', err);
-    res.status(500).json({ message: err.message });
+    console.error('Login error (Firebase):', err)
+    res.status(401).json({ message: 'Invalid or expired idToken' })
   }
 }
 
 // Doctor changes password on first login
 export const changePassword = async (req, res) => {
   try {
-    const { email, oldPassword, newPassword } = req.body
-    if (!email || !oldPassword || !newPassword) {
-      return res.status(400).json({ message: 'All fields are required' })
-    }
-    
-    // Find user with password field selected
-    const user = await User.findOne({ email }).select('+password')
+    // For Firebase-managed auth, expect an idToken to identify the user and newPassword
+    const idToken = req.body.idToken || (req.headers.authorization && req.headers.authorization.split(' ')[1])
+    const { newPassword } = req.body
+    if (!idToken || !newPassword) return res.status(400).json({ message: 'idToken and newPassword are required' })
+    if (!admin || !admin.auth) return res.status(500).json({ message: 'Firebase Admin not initialized' })
+
+    const decoded = await admin.auth().verifyIdToken(idToken)
+    const user = await User.findById(decoded.uid)
     if (!user) return res.status(404).json({ message: 'User not found' })
-    
-    if (user.role !== 'doctor' || !user.firstLogin) {
-      return res.status(400).json({ message: 'Password change not required' })
-    }
-    
-    const match = await bcrypt.compare(oldPassword, user.password)
-    if (!match) return res.status(401).json({ message: 'Invalid current password' })
-    
-    // Assign plain new password so model pre-save hook will hash it
-    user.password = newPassword
-    user.firstLogin = false
-    user.tempPassword = undefined
-    await user.save()
-    
-    // Remove sensitive data
-    user.password = undefined
-    user.tempPassword = undefined
-    const userObj = user.toObject()
-    delete userObj.password
-    delete userObj.tempPassword
-    
-    const token = generateToken(user)
-    res.status(200).json({
-      message: 'Password changed successfully',
-      token,
-      role: user.role,
-      name: user.name,
-      user: userObj
-    })
+    if (user.role !== 'doctor' || !user.firstLogin) return res.status(400).json({ message: 'Password change not required' })
+
+    // Update password in Firebase
+    await admin.auth().updateUser(decoded.uid, { password: newPassword })
+    // Update local metadata
+    await User.updateById(user._id, { firstLogin: false, tempPassword: undefined })
+    const updated = await User.findById(user._id)
+    delete updated.password
+    delete updated.tempPassword
+    res.status(200).json({ message: 'Password changed successfully', user: updated })
   } catch (err) {
     console.error('Change password error:', err)
     res.status(500).json({ message: err.message })

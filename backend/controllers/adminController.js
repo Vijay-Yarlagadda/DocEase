@@ -3,17 +3,17 @@ import Hospital from '../models/hospitalModel.js'
 
 export const getAdminStats = async (req, res) => {
   try {
-    const [hospitals, doctors, patients, activeUsers] = await Promise.all([
-      Hospital.countDocuments(),
-      User.countDocuments({ role: 'doctor' }),
-      User.countDocuments({ role: 'patient' }),
-      User.countDocuments({ lastActive: { $gte: new Date(Date.now() - 24*60*60*1000) } })
-    ])
+    const hospitalsList = await Hospital.find()
+    const doctorsList = await User.find({ role: 'doctor' })
+    const patientsList = await User.find({ role: 'patient' })
+    const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000)
+    const allUsers = await User.find()
+    const activeUsers = allUsers.filter(u => u.updatedAt && new Date(u.updatedAt) >= cutoff).length
 
     res.json({
-      hospitals,
-      doctors,
-      patients,
+      hospitals: hospitalsList.length,
+      doctors: doctorsList.length,
+      patients: patientsList.length,
       activeSessions: activeUsers
     })
   } catch (err) {
@@ -23,30 +23,18 @@ export const getAdminStats = async (req, res) => {
 
 export const getRecentActivity = async (req, res) => {
   try {
-    const recentActivity = await Promise.all([
-      // Get recent doctor registrations
-      User.find({ role: 'doctor', createdAt: { $gte: new Date(Date.now() - 7*24*60*60*1000) } })
-        .select('name email createdAt')
-        .sort('-createdAt')
-        .limit(5),
-      
-      // Get recent hospital additions
-      Hospital.find({ createdAt: { $gte: new Date(Date.now() - 7*24*60*60*1000) } })
-        .select('name createdAt')
-        .sort('-createdAt')
-        .limit(5),
-        
-      // Get recent patient signups
-      User.find({ role: 'patient', createdAt: { $gte: new Date(Date.now() - 7*24*60*60*1000) } })
-        .select('name email createdAt')
-        .sort('-createdAt')
-        .limit(5)
-    ])
+    const cutoff = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+    const recentDoctors = await User.find({ role: 'doctor', createdAt: { $gte: cutoff } })
+    const recentHospitals = await Hospital.find({ createdAt: { $gte: cutoff } })
+    const recentPatients = await User.find({ role: 'patient', createdAt: { $gte: cutoff } })
+
+    // Sort by createdAt desc and limit 5
+    const sortDesc = (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
 
     res.json({
-      recentDoctors: recentActivity[0],
-      recentHospitals: recentActivity[1],
-      recentPatients: recentActivity[2]
+      recentDoctors: recentDoctors.sort(sortDesc).slice(0, 5),
+      recentHospitals: recentHospitals.sort(sortDesc).slice(0, 5),
+      recentPatients: recentPatients.sort(sortDesc).slice(0, 5)
     })
   } catch (err) {
     res.status(500).json({ message: err.message })

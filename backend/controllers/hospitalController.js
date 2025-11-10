@@ -4,8 +4,6 @@ import Hospital from '../models/hospitalModel.js'
 export const getHospitals = async (req, res) => {
   try {
     const hospitals = await Hospital.find()
-      .populate('admins', 'name email')
-      .populate('doctors', 'name email')
     res.json(hospitals)
   } catch (err) {
     res.status(500).json({ message: err.message })
@@ -16,8 +14,6 @@ export const getHospitals = async (req, res) => {
 export const getHospital = async (req, res) => {
   try {
     const hospital = await Hospital.findById(req.params.id)
-      .populate('admins', 'name email')
-      .populate('doctors', 'name email')
     if (!hospital) {
       return res.status(404).json({ message: 'Hospital not found' })
     }
@@ -30,8 +26,7 @@ export const getHospital = async (req, res) => {
 // Create hospital
 export const createHospital = async (req, res) => {
   try {
-    const hospital = new Hospital(req.body)
-    const newHospital = await hospital.save()
+    const newHospital = await Hospital.create(req.body)
     res.status(201).json(newHospital)
   } catch (err) {
     res.status(400).json({ message: err.message })
@@ -41,13 +36,8 @@ export const createHospital = async (req, res) => {
 // Update hospital
 export const updateHospital = async (req, res) => {
   try {
-    const hospital = await Hospital.findById(req.params.id)
-    if (!hospital) {
-      return res.status(404).json({ message: 'Hospital not found' })
-    }
-
-    Object.assign(hospital, req.body)
-    const updatedHospital = await hospital.save()
+    const updatedHospital = await Hospital.updateById(req.params.id, req.body)
+    if (!updatedHospital) return res.status(404).json({ message: 'Hospital not found' })
     res.json(updatedHospital)
   } catch (err) {
     res.status(400).json({ message: err.message })
@@ -57,11 +47,8 @@ export const updateHospital = async (req, res) => {
 // Delete hospital
 export const deleteHospital = async (req, res) => {
   try {
-    const hospital = await Hospital.findById(req.params.id)
-    if (!hospital) {
-      return res.status(404).json({ message: 'Hospital not found' })
-    }
-    await hospital.remove()
+    const deleted = await Hospital.deleteById(req.params.id)
+    if (!deleted) return res.status(404).json({ message: 'Hospital not found' })
     res.json({ message: 'Hospital deleted' })
   } catch (err) {
     res.status(500).json({ message: err.message })
@@ -77,12 +64,14 @@ export const addDoctorToHospital = async (req, res) => {
       return res.status(404).json({ message: 'Hospital not found' })
     }
 
+    hospital.doctors = hospital.doctors || []
     if (!hospital.doctors.includes(doctorId)) {
       hospital.doctors.push(doctorId)
-      await hospital.save()
+      await Hospital.updateById(hospitalId, { doctors: hospital.doctors })
     }
 
-    res.json(hospital)
+    const updated = await Hospital.findById(hospitalId)
+    res.json(updated)
   } catch (err) {
     res.status(400).json({ message: err.message })
   }
