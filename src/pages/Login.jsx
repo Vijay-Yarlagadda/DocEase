@@ -77,14 +77,30 @@ const Login = () => {
           return
         }
         // If backend returned an error body (message), show it
-        if (res && res.message) {
+        if (res && res.message && !res.token) {
           alert(res.message)
+          return
+        }
+        // If we have a token but no user role, it might be a backend issue
+        if (res && res.token && (!res.user || !res.user.role)) {
+          alert('Login successful but user data incomplete. Please try again.')
           return
         }
         alert('Unable to sign in. Please check credentials and try again.')
       } catch (err) {
         console.error('Login error', err)
-        alert(err.message || 'Login failed')
+        // Handle specific error cases
+        if (err.response && err.response.data && err.response.data.message) {
+          alert(err.response.data.message)
+        } else if (err.response && err.response.status === 404) {
+          alert('User not found. Please sign up first.')
+        } else if (err.response && err.response.status === 401) {
+          alert('Invalid credentials. Please check your email and password.')
+        } else if (err.code === 'ERR_NETWORK' || err.message?.includes('Network Error')) {
+          alert('Cannot connect to server. Please make sure the backend server is running on port 5000.')
+        } else {
+          alert(err.message || 'Login failed')
+        }
       }
     })()
   }

@@ -1,6 +1,9 @@
 import { createContext, useState, useEffect } from 'react'
 import api, { setAuthToken } from '../services/api'
 import { useNavigate } from 'react-router-dom'
+// Optional Firebase client — initialize in src/services/firebase.js using VITE_FIREBASE_* env vars
+import { auth } from '../services/firebase'
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth'
 
 export const AuthContext = createContext(null)
 
@@ -36,16 +39,54 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
-      const res = await api.post('/auth/login', { email, password })
-      const { token: t, user: u, name, role } = res.data
-      if (t) {
-        localStorage.setItem('docease_token', t)
-        setAuthToken(t)
-        setToken(t)
-        // Set user with name from response (prioritize user object, then name field, then fallback)
-        setUser(u || { name, role } || { name: name || 'User', role: role || 'patient' })
+      // If Firebase client is initialized, authenticate with Firebase first and exchange the idToken with backend
+      if (!auth) {
+        throw new Error('Firebase is not configured on the frontend. Please provide VITE_FIREBASE_* env vars.')
       }
-      return res.data
+
+      try {
+        const userCredential = await signInWithEmailAndPassword(auth, email, password)
+        const firebaseUser = userCredential.user
+        const idToken = await firebaseUser.getIdToken()
+
+        // Persist token locally and set axios header
+        localStorage.setItem('docease_token', idToken)
+        setAuthToken(idToken)
+        setToken(idToken)
+
+        // Ask backend to verify/sync the user using the idToken
+        try {
+          const res = await api.post('/auth/login', { idToken })
+          const { user: u, name, role, firstLogin } = res.data || {}
+          const userData = u || { name: name || firebaseUser.displayName || firebaseUser.email, role: role || 'patient', uid: firebaseUser.uid }
+          setUser(userData)
+          // Include firstLogin flag in response for doctors
+          return { ...res.data, token: idToken, user: userData, firstLogin }
+        } catch (err) {
+          // Backend error - check if it's a client error (4xx) that should be shown to user
+          if (err.response && err.response.status >= 400 && err.response.status < 500) {
+            // For 4xx errors (like 404 user not found), throw to let component handle it
+            throw err
+          }
+          
+          // For 5xx errors or network errors, use Firebase-only session but warn
+          console.warn('Backend unavailable, using Firebase-only session')
+          const minimal = { name: firebaseUser.displayName || firebaseUser.email, uid: firebaseUser.uid, role: 'patient' }
+          setUser(minimal)
+          return { token: idToken, user: minimal, warning: 'Backend unavailable' }
+        }
+      } catch (firebaseErr) {
+        if (
+          firebaseErr?.code === 'auth/operation-not-allowed' ||
+          firebaseErr?.code === 'auth/configuration-not-found'
+        ) {
+          throw new Error('Firebase email/password authentication is disabled. Enable it in Firebase console.')
+        }
+        if (firebaseErr?.code === 'app/no-app') {
+          throw new Error('Firebase client not initialized. Check VITE_FIREBASE_* configuration.')
+        }
+        throw firebaseErr
+      }
     } catch (err) {
       // If server returns an error body (eg. firstLogin flag), surface it to callers
       if (err.response && err.response.data) return err.response.data
@@ -55,16 +96,71 @@ export const AuthProvider = ({ children }) => {
 
   const signup = async (payload) => {
     try {
-      const res = await api.post('/auth/signup', payload)
-      const { token: t, user: u, name, role } = res.data
-      if (t) {
-        localStorage.setItem('docease_token', t)
-        setAuthToken(t)
-        setToken(t)
-        // Set user with name from response (prioritize user object, then name field, then fallback)
-        setUser(u || { name, role } || { name: name || 'User', role: role || 'patient' })
+      // If Firebase client is available, create the user client-side and send idToken to backend to sync metadata
+      if (!auth) {
+        throw new Error('Firebase is not configured on the frontend. Please provide VITE_FIREBASE_* env vars.')
       }
-      return res.data
+
+      const { email, password, name, role } = payload
+      try {
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password)
+        const firebaseUser = userCredential.user
+        const idToken = await firebaseUser.getIdToken()
+
+        try {
+          const res = await api.post('/auth/signup', { idToken, name, role })
+          const { token: t, user: u, message } = res.data || {}
+          
+          // If backend returned an error message (but status 200), check if it's an error
+          if (message && message.includes('already exists')) {
+            // User already exists, but we have a token, so return success
+            const finalToken = t || idToken
+            localStorage.setItem('docease_token', finalToken)
+            setAuthToken(finalToken)
+            setToken(finalToken)
+            const userData = u || { name: name || firebaseUser.displayName || firebaseUser.email, role, uid: firebaseUser.uid }
+            setUser(userData)
+            return res.data
+          }
+          
+          // Successful signup
+          const finalToken = t || idToken
+          localStorage.setItem('docease_token', finalToken)
+          setAuthToken(finalToken)
+          setToken(finalToken)
+          const userData = u || { name: name || firebaseUser.displayName || firebaseUser.email, role, uid: firebaseUser.uid }
+          setUser(userData)
+          return res.data
+        } catch (err) {
+          // Backend error - check if it's a network error or server error
+          console.error('Backend signup error:', err)
+          
+          // If it's a 4xx error (client error), throw it so the component can handle it
+          if (err.response && err.response.status >= 400 && err.response.status < 500) {
+            throw err
+          }
+          
+          // For 5xx errors or network errors, still keep Firebase session but warn user
+          console.warn('Backend unavailable, using Firebase-only session')
+          localStorage.setItem('docease_token', idToken)
+          setAuthToken(idToken)
+          setToken(idToken)
+          const minimalUser = { name: name || firebaseUser.displayName || firebaseUser.email, role, uid: firebaseUser.uid }
+          setUser(minimalUser)
+          return { token: idToken, user: minimalUser, warning: 'Backend unavailable, data not saved to database' }
+        }
+      } catch (firebaseErr) {
+        if (
+          firebaseErr?.code === 'auth/operation-not-allowed' ||
+          firebaseErr?.code === 'auth/configuration-not-found'
+        ) {
+          throw new Error('Firebase email/password authentication is disabled. Enable it in Firebase console.')
+        }
+        if (firebaseErr?.code === 'app/no-app') {
+          throw new Error('Firebase client not initialized. Check VITE_FIREBASE_* configuration.')
+        }
+        throw firebaseErr
+      }
     } catch (err) {
       console.error('Signup error:', err)
       // Enhanced error handling for network errors

@@ -68,10 +68,11 @@ const Signup = () => {
       const res = await signup(payload)
       
       if (res && res.token) {
-        // Successful signup - navigate to appropriate dashboard
-        const selectedRoleData = roles.find(r => r.id === selectedRole)
-        if (selectedRoleData) {
-          navigate(selectedRoleData.route)
+        // Successful signup - navigate to appropriate dashboard based on user role
+        const userRole = res.user?.role || res.role || selectedRole
+        const roleData = roles.find(r => r.id === userRole)
+        if (roleData) {
+          navigate(roleData.route)
         } else {
           navigate('/')
         }
