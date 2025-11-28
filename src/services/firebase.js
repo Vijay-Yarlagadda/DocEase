@@ -1,48 +1,19 @@
-// Lightweight Firebase client initializer for the frontend (modular SDK v9+)
-// Reads config from Vite env variables (VITE_FIREBASE_*)
-import { initializeApp } from 'firebase/app'
-import { getAuth } from 'firebase/auth'
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
 
-// Ensure these VITE_* variables are set in your project root .env (not committed):
-// VITE_FIREBASE_API_KEY, VITE_FIREBASE_AUTH_DOMAIN, VITE_FIREBASE_PROJECT_ID,
-// VITE_FIREBASE_STORAGE_BUCKET, VITE_FIREBASE_MESSAGING_SENDER_ID, VITE_FIREBASE_APP_ID
-
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
-}
+  apiKey: "AIzaSyD9a9zO22-hjrbiieRRX2bRWhUxLK7Hf1c",
+  authDomain: "docease-62051.firebaseapp.com",
+  projectId: "docease-62051",
+  storageBucket: "docease-62051.firebasestorage.app",
+  messagingSenderId: "452831225927",
+  appId: "1:452831225927:web:7bcd63858e88247ab9e962",
+  measurementId: "G-XW84E8VGZ5"
+};
 
-// Allow supplying the entire config as a single JSON string (VITE_FIREBASE_CONFIG)
-const rawConfig = import.meta.env.VITE_FIREBASE_CONFIG
-if (rawConfig) {
-  try {
-    const parsed = typeof rawConfig === 'string' ? JSON.parse(rawConfig) : rawConfig
-    Object.assign(firebaseConfig, parsed)
-  } catch (err) {
-    console.error('Failed to parse VITE_FIREBASE_CONFIG:', err)
-  }
-}
-
-// Initialize app only once (Vite fast-refresh may re-run modules)
-let firebaseApp = null
-let auth = null
-
-const hasConfig = firebaseConfig.apiKey && firebaseConfig.projectId && firebaseConfig.appId
-if (hasConfig) {
-  try {
-    firebaseApp = initializeApp(firebaseConfig)
-    auth = getAuth(firebaseApp)
-    console.log('Firebase client initialized')
-  } catch (err) {
-    console.error('Failed to initialize Firebase client:', err)
-  }
-} else {
-  console.warn('Firebase client config missing. Provide VITE_FIREBASE_* vars or VITE_FIREBASE_CONFIG JSON to initialize.')
-}
-
-export { auth }
-export default firebaseApp
+// Initialize Firebase
+export const app = initializeApp(firebaseConfig);
