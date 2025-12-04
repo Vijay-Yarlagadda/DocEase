@@ -62,6 +62,7 @@ const Signup = () => {
       const payload = {
         name: formData.name,
         email: formData.email,
+        phone: formData.phone,
         password: formData.password,
         role: selectedRole,
       }

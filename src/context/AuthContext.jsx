@@ -2,8 +2,12 @@ import { createContext, useState, useEffect } from 'react'
 import api, { setAuthToken } from '../services/api'
 import { useNavigate } from 'react-router-dom'
 // Optional Firebase client — initialize in src/services/firebase.js using VITE_FIREBASE_* env vars
-import { auth } from '../services/firebase'
+import { auth, db } from '../services/firebase'
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth'
+import { doc, setDoc, serverTimestamp, getDoc } from 'firebase/firestore'
+
+// Use provided collection id if set, otherwise fall back to this specific collection id
+const USERS_COLLECTION = import.meta.env.VITE_FIRESTORE_USERS_COLLECTION || 'ASjw9v0N0hggMbhwjpy5'
 
 export const AuthContext = createContext(null)
 
@@ -54,11 +58,23 @@ export const AuthProvider = ({ children }) => {
         setAuthToken(idToken)
         setToken(idToken)
 
+        // Try to read Firestore user profile for authoritative role/profile
+        let firestoreProfile = null
+        try {
+          if (db) {
+            const snap = await getDoc(doc(db, USERS_COLLECTION, firebaseUser.uid))
+            if (snap.exists()) firestoreProfile = snap.data()
+          }
+        } catch (readErr) {
+          console.warn('Failed to read Firestore profile during login:', readErr)
+        }
+
         // Ask backend to verify/sync the user using the idToken
         try {
           const res = await api.post('/auth/login', { idToken })
           const { user: u, name, role, firstLogin } = res.data || {}
-          const userData = u || { name: name || firebaseUser.displayName || firebaseUser.email, role: role || 'patient', uid: firebaseUser.uid }
+          // Merge priority: backend user -> firestoreProfile -> firebaseUser
+          const userData = u || (firestoreProfile ? { ...firestoreProfile, uid: firebaseUser.uid } : { name: name || firebaseUser.displayName || firebaseUser.email, role: role || (firestoreProfile?.role || 'patient'), uid: firebaseUser.uid })
           setUser(userData)
           // Include firstLogin flag in response for doctors
           return { ...res.data, token: idToken, user: userData, firstLogin }
@@ -101,11 +117,29 @@ export const AuthProvider = ({ children }) => {
         throw new Error('Firebase is not configured on the frontend. Please provide VITE_FIREBASE_* env vars.')
       }
 
-      const { email, password, name, role } = payload
+      const { email, password, name, role, phone } = payload
       try {
         const userCredential = await createUserWithEmailAndPassword(auth, email, password)
         const firebaseUser = userCredential.user
         const idToken = await firebaseUser.getIdToken()
+
+        // Create Firestore user document (link Auth <-> Firestore)
+        try {
+          if (db) {
+            await setDoc(doc(db, USERS_COLLECTION, firebaseUser.uid), {
+              fullName: name || firebaseUser.displayName || '',
+              email: firebaseUser.email,
+              phone: phone || '',
+              role: role || 'patient',
+              uid: firebaseUser.uid,
+              createdAt: serverTimestamp(),
+            })
+          } else {
+            console.warn('Firestore `db` not initialized; skipping user document creation')
+          }
+        } catch (firestoreErr) {
+          console.warn('Failed to create Firestore user document:', firestoreErr)
+        }
 
         try {
           const res = await api.post('/auth/signup', { idToken, name, role })
