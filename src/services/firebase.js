@@ -3,15 +3,16 @@ import { initializeApp } from 'firebase/app'
 import { getAuth } from 'firebase/auth'
 import { getFirestore } from 'firebase/firestore'
 
-// Firebase config - Replace with your Firebase project keys
+// Firebase config - use environment variables or placeholders
+// Make sure to set these in your .env or Vite config files
 const firebaseConfig = {
-  apiKey: "AIzaSyDnAxzfFsYw0Zq6SqSUOYAux90tbKfr3_8",
-  authDomain: "docease-0406dike.firebaseapp.com",
-  projectId: "docease-0406dike",
-  storageBucket: "docease-0406dike.firebasestorage.app",
-  messagingSenderId: "894991232962",
-  appId: "1:894991232962:web:072dfdf5dd283b0be4b05b",
-  measurementId: "G-ECZC22BC74"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "YOUR_API_KEY",
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "YOUR_PROJECT.firebaseapp.com",
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "YOUR_PROJECT_ID",
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "YOUR_PROJECT.appspot.com",
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "YOUR_MESSAGING_SENDER_ID",
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || "YOUR_APP_ID",
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || "YOUR_MEASUREMENT_ID"
 };
 
 
