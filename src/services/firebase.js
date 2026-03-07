@@ -6,13 +6,13 @@ import { getFirestore } from 'firebase/firestore'
 // Firebase config - use environment variables or placeholders
 // Make sure to set these in your .env or Vite config files
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "YOUR_API_KEY",
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "YOUR_PROJECT.firebaseapp.com",
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "YOUR_PROJECT_ID",
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "YOUR_PROJECT.appspot.com",
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "YOUR_MESSAGING_SENDER_ID",
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || "YOUR_APP_ID",
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || "YOUR_MEASUREMENT_ID"
+  apiKey: "AIzaSyDnAxzfFsYw0Zq6SqSUOYAux90tbKfr3_8",
+  authDomain: "docease-0406dike.firebaseapp.com",
+  projectId: "docease-0406dike",
+  storageBucket: "docease-0406dike.appspot.com",
+  messagingSenderId: "103355555555",
+  appId: "1:docease-0406dike:web:1c5f4f4f4f4f",
+  measurementId: "G-XXXXXXXXXX"
 };
 
 
