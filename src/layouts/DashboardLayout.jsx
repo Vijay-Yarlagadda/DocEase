@@ -1,10 +1,10 @@
 import { Outlet } from 'react-router-dom'
 import { useContext } from 'react'
-import { Mail, LogOut } from 'lucide-react'
+import { Mail, LogOut, Moon, Sun } from 'lucide-react'
 import Sidebar from '../components/Sidebar'
 import { AuthContext } from '../context/AuthContext'
 
-const DashboardLayout = () => {
+const DashboardLayout = ({ darkMode, toggleDarkMode }) => {
   const { user, logout } = useContext(AuthContext)
   const getUserName = () => {
     if (user?.name) return user.name
@@ -24,6 +24,18 @@ const DashboardLayout = () => {
           Welcome{userName ? `, ${userName}` : ''}
         </h1>
         <div className="flex items-center space-x-4">
+          {/* dark mode toggle in dashboard header */}
+          <button
+            onClick={toggleDarkMode}
+            className="p-2 rounded-lg bg-white/30 hover:bg-white/40"
+            aria-label="Toggle dark mode"
+          >
+            {darkMode ? (
+              <Sun className="w-5 h-5 text-yellow-300" />
+            ) : (
+              <Moon className="w-5 h-5 text-gray-100" />
+            )}
+          </button>
           <Mail className="w-5 h-5" />
           <span className="text-sm truncate max-w-xs">
             {user?.email}

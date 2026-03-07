@@ -5,7 +5,7 @@ import { Menu, X, Moon, Sun, Stethoscope, User, LogOut, Mail } from 'lucide-reac
 import { useContext } from 'react'
 import { AuthContext } from '../context/AuthContext'
 
-const Navbar = ({ darkMode, toggleDarkMode, user, isDashboard }) => {
+const Navbar = ({ darkMode, toggleDarkMode, user }) => {
   const [isOpen, setIsOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const location = useLocation()
@@ -31,8 +31,8 @@ const Navbar = ({ darkMode, toggleDarkMode, user, isDashboard }) => {
     { path: '/contact', label: 'Contact' },
   ]
 
-  // if navbar is shown on a dashboard route we hide the regular links
-  const showLinks = !isDashboard
+  // always show regular links (navbar only renders on public pages)
+  const showLinks = true
 
   const handleLogout = () => {
     logout()
@@ -77,12 +77,9 @@ const Navbar = ({ darkMode, toggleDarkMode, user, isDashboard }) => {
             <div className="p-2 rounded-lg bg-gradient-to-br from-primary to-secondary group-hover:scale-110 transition-transform">
               <Stethoscope className="w-5 h-5 md:w-6 md:h-6 text-white" />
             </div>
-            {/* hide text when on dashboard because sidebar already shows name */}
-            {!isDashboard && (
-              <span className="text-xl md:text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-                DocEase
-              </span>
-            )}
+            <span className="text-xl md:text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+              DocEase
+            </span>
           </Link>
 
           {/* Navigation Links - Center (Desktop only) */}

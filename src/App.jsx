@@ -44,7 +44,7 @@ function App() {
   const isDashboardRoute = location.pathname.startsWith('/admin') || 
                            location.pathname.startsWith('/doctor') || 
                            location.pathname.startsWith('/patient')
-  const showNavbar = true  // navbar always visible
+  const showNavbar = !isDashboardRoute
   const showFooter = !isDashboardRoute
 
   return (
@@ -54,7 +54,6 @@ function App() {
           darkMode={darkMode}
           toggleDarkMode={toggleDarkMode}
           user={user}
-          isDashboard={isDashboardRoute}
         />
       )}
       <Routes>
@@ -68,7 +67,7 @@ function App() {
         <Route path="/doctor/change-password" element={<DoctorChangePassword />} />
         
         {/* Dashboard routes - using DashboardLayout */}
-        <Route path="/admin" element={<DashboardLayout />}>
+        <Route path="/admin" element={<DashboardLayout darkMode={darkMode} toggleDarkMode={toggleDarkMode} />}>
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="hospitals" element={<div>Hospitals Management</div>} />
           <Route path="add-doctor" element={<div>Add New Doctor</div>} />
@@ -77,7 +76,7 @@ function App() {
           <Route path="settings" element={<div>Admin Settings</div>} />
         </Route>
 
-        <Route path="/doctor" element={<DashboardLayout />}>
+        <Route path="/doctor" element={<DashboardLayout darkMode={darkMode} toggleDarkMode={toggleDarkMode} />}>
           <Route path="dashboard" element={<DoctorDashboard />} />
           <Route path="patients" element={<div>Patient List</div>} />
           <Route path="appointments" element={<div>Appointments</div>} />
@@ -85,7 +84,7 @@ function App() {
           <Route path="settings" element={<div>Doctor Settings</div>} />
         </Route>
 
-        <Route path="/patient" element={<DashboardLayout />}>
+        <Route path="/patient" element={<DashboardLayout darkMode={darkMode} toggleDarkMode={toggleDarkMode} />}>
           <Route path="dashboard" element={<PatientDashboard />} />
           <Route path="appointments" element={<div>My Appointments</div>} />
           <Route path="history" element={<div>Medical History</div>} />
