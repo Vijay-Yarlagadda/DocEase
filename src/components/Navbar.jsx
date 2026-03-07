@@ -40,10 +40,11 @@ const Navbar = ({ darkMode, toggleDarkMode, user, isDashboard }) => {
     navigate('/login')
   }
 
-  // Get user name from user object
+  // Get user name from user object, fallback to email local part
   const getUserName = () => {
     if (user?.name) return user.name
     if (user?.user?.name) return user.user.name
+    if (user?.email) return user.email.split('@')[0]
     return 'User'
   }
 
@@ -76,9 +77,12 @@ const Navbar = ({ darkMode, toggleDarkMode, user, isDashboard }) => {
             <div className="p-2 rounded-lg bg-gradient-to-br from-primary to-secondary group-hover:scale-110 transition-transform">
               <Stethoscope className="w-5 h-5 md:w-6 md:h-6 text-white" />
             </div>
-            <span className="text-xl md:text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-              DocEase
-            </span>
+            {/* hide text when on dashboard because sidebar already shows name */}
+            {!isDashboard && (
+              <span className="text-xl md:text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                DocEase
+              </span>
+            )}
           </Link>
 
           {/* Navigation Links - Center (Desktop only) */}
@@ -107,7 +111,7 @@ const Navbar = ({ darkMode, toggleDarkMode, user, isDashboard }) => {
           )}
 
           {/* Right Side - Profile/Login & Dark Mode */}
-          <div className="flex items-center space-x-3 md:space-x-4">
+          <div className={`flex items-center ${isDashboard ? 'space-x-2' : 'space-x-3 md:space-x-4'}`}>
             {/* Dark Mode Toggle */}
             <button
               onClick={toggleDarkMode}
