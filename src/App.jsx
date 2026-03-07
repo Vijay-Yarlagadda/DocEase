@@ -40,16 +40,23 @@ function App() {
     }
   }
 
-  // Only show navbar/footer on non-dashboard pages
-  // Dashboard pages use DashboardLayout which has its own navigation
+  // determine if current route is part of a dashboard
   const isDashboardRoute = location.pathname.startsWith('/admin') || 
                            location.pathname.startsWith('/doctor') || 
                            location.pathname.startsWith('/patient')
-  const showMainLayout = !isDashboardRoute
+  const showNavbar = true  // navbar always visible
+  const showFooter = !isDashboardRoute
 
   return (
     <div className="min-h-screen flex flex-col">
-      {showMainLayout && <Navbar darkMode={darkMode} toggleDarkMode={toggleDarkMode} user={user} />}
+      {showNavbar && (
+        <Navbar
+          darkMode={darkMode}
+          toggleDarkMode={toggleDarkMode}
+          user={user}
+          isDashboard={isDashboardRoute}
+        />
+      )}
       <Routes>
         {/* Public routes */}
         <Route path="/" element={<Home />} />
@@ -85,7 +92,7 @@ function App() {
           <Route path="settings" element={<div>Patient Settings</div>} />
         </Route>
       </Routes>
-      {showMainLayout && <Footer />}
+      {showFooter && <Footer />}
     </div>
   )
 }

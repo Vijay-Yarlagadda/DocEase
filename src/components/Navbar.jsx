@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Menu, X, Moon, Sun, Stethoscope, User, LogOut } from 'lucide-react'
+import { Menu, X, Moon, Sun, Stethoscope, User, LogOut, Mail } from 'lucide-react'
 import { useContext } from 'react'
 import { AuthContext } from '../context/AuthContext'
 
-const Navbar = ({ darkMode, toggleDarkMode, user }) => {
+const Navbar = ({ darkMode, toggleDarkMode, user, isDashboard }) => {
   const [isOpen, setIsOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const location = useLocation()
@@ -31,9 +31,13 @@ const Navbar = ({ darkMode, toggleDarkMode, user }) => {
     { path: '/contact', label: 'Contact' },
   ]
 
+  // if navbar is shown on a dashboard route we hide the regular links
+  const showLinks = !isDashboard
+
   const handleLogout = () => {
     logout()
-    navigate('/')
+    // ensure redirect to login in case AuthContext doesn't
+    navigate('/login')
   }
 
   // Get user name from user object
@@ -78,27 +82,29 @@ const Navbar = ({ darkMode, toggleDarkMode, user }) => {
           </Link>
 
           {/* Navigation Links - Center (Desktop only) */}
-          <div className="hidden lg:flex items-center justify-center flex-1 space-x-8">
-            {navLinks.map((link) => (
-              <Link
-                key={link.path}
-                to={link.path}
-                className={`relative text-sm font-medium transition-colors ${
-                  location.pathname === link.path
-                    ? 'text-primary dark:text-accent'
-                    : 'text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-accent'
-                }`}
-              >
-                {link.label}
-                {location.pathname === link.path && (
-                  <motion.div
-                    layoutId="underline"
-                    className="absolute -bottom-1 left-0 right-0 h-0.5 bg-gradient-to-r from-primary to-secondary"
-                  />
-                )}
-              </Link>
-            ))}
-          </div>
+          {showLinks && (
+            <div className="hidden lg:flex items-center justify-center flex-1 space-x-8">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.path}
+                  to={link.path}
+                  className={`relative text-sm font-medium transition-colors ${
+                    location.pathname === link.path
+                      ? 'text-primary dark:text-accent'
+                      : 'text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-accent'
+                  }`}
+                >
+                  {link.label}
+                  {location.pathname === link.path && (
+                    <motion.div
+                      layoutId="underline"
+                      className="absolute -bottom-1 left-0 right-0 h-0.5 bg-gradient-to-r from-primary to-secondary"
+                    />
+                  )}
+                </Link>
+              ))}
+            </div>
+          )}
 
           {/* Right Side - Profile/Login & Dark Mode */}
           <div className="flex items-center space-x-3 md:space-x-4">
@@ -118,6 +124,8 @@ const Navbar = ({ darkMode, toggleDarkMode, user }) => {
             {/* User Profile or Login Button */}
             {user ? (
               <div className="hidden md:flex items-center space-x-3">
+                {/* mail icon always visible when logged in */}
+                <Mail className="w-5 h-5 text-gray-700 dark:text-gray-300" />
                 <div className="flex items-center space-x-2 px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
                   <User className="w-4 h-4 text-primary dark:text-accent" />
                   <span className="text-sm font-medium text-gray-700 dark:text-gray-300">

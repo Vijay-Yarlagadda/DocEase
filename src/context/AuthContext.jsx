@@ -216,7 +216,8 @@ export const AuthProvider = ({ children }) => {
     setAuthToken(null)
     setUser(null)
     setToken(null)
-    navigate('/')
+    // send user to login page after logging out
+    navigate('/login')
   }
 
   return (
