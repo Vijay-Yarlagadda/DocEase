@@ -1,4 +1,6 @@
 import { auth, db } from './firebase'
+import { functions } from './firebase'
+import { httpsCallable } from 'firebase/functions'
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
@@ -277,25 +279,43 @@ export const adminCreateDoctor = async (
   try {
     if (!name || !email) throw new Error('Name and email are required')
 
+    // Prefer calling a backend Cloud Function to perform admin create (secure)
+    if (functions) {
+      try {
+        const createDoctorFn = httpsCallable(functions, 'createDoctor')
+        const res = await createDoctorFn({ name, email, qualification, specialization, experience, hospitalId })
+        return res.data
+      } catch (fnErr) {
+        // fall back to client-side creation if function call fails
+        console.warn('createDoctor callable failed, falling back to client-side create:', fnErr)
+      }
+    }
+
     const tempPassword = generateTempPassword(12)
 
-    // Create Firebase Auth account for doctor
+    // Create Firebase Auth account for doctor (fallback)
     const userCredential = await createUserWithEmailAndPassword(auth, email, tempPassword)
     const firebaseUser = userCredential.user
 
     // Save doctor document using the Firebase UID as the doc ID
     const docRef = doc(db, DOCTORS_COLLECTION, firebaseUser.uid)
-    await setDoc(docRef, {
-      uid: firebaseUser.uid,
-      name,
-      email: firebaseUser.email,
-      qualification,
-      specialization,
-      experience: Number(experience) || 0,
-      hospitalId: hospitalId || null,
-      firstLogin: true,
-      createdAt: serverTimestamp(),
-    })
+    try {
+      await setDoc(docRef, {
+        uid: firebaseUser.uid,
+        name,
+        email: firebaseUser.email,
+        qualification,
+        specialization,
+        experience: Number(experience) || 0,
+        hospitalId: hospitalId || null,
+        firstLogin: true,
+        createdAt: serverTimestamp(),
+      })
+    } catch (writeErr) {
+      // Roll back auth user if Firestore write fails
+      try { await firebaseUser.delete() } catch (e) { console.error('Rollback delete failed', e) }
+      throw writeErr
+    }
 
     // Return the temp password so the admin can show it once
     return {
