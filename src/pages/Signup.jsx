@@ -1,21 +1,21 @@
-import { useState, useContext } from 'react'
+import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { useNavigate } from 'react-router-dom'
-import { Shield, UserCheck, Users, ArrowRight, Mail, Lock, User, Phone } from 'lucide-react'
-import { Link } from 'react-router-dom'
-import { AuthContext } from '../context/AuthContext'
+import { useNavigate, Link } from 'react-router-dom'
+import { Shield, Users, Mail, Lock, User, ArrowRight } from 'lucide-react'
+import { adminSignup, patientSignup } from '../services/authService'
+import { useToast } from '../components/Toast'
 
 const Signup = () => {
   const [selectedRole, setSelectedRole] = useState(null)
+  const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    phone: '',
     password: '',
     confirmPassword: '',
   })
   const navigate = useNavigate()
-  const { signup } = useContext(AuthContext)
+  const { showSuccess, showError } = useToast()
 
   const roles = [
     {
@@ -43,57 +43,72 @@ const Signup = () => {
     })
   }
 
+  const validateForm = () => {
+    if (!selectedRole) {
+      showError('Please select a role')
+      return false
+    }
+
+    if (!formData.name.trim()) {
+      showError('Full name is required')
+      return false
+    }
+
+    if (!formData.email.trim()) {
+      showError('Email is required')
+      return false
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(formData.email)) {
+      showError('Please enter a valid email address')
+      return false
+    }
+
+    if (formData.password.length < 8) {
+      showError('Password must be at least 8 characters long')
+      return false
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      showError('Passwords do not match')
+      return false
+    }
+
+    return true
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
-    if (!selectedRole) {
-      alert('Please select a role')
-      return
-    }
-    if (formData.password !== formData.confirmPassword) {
-      alert('Passwords do not match')
-      return
-    }
-    if (formData.password.length < 8) {
-      alert('Password must be at least 8 characters long')
-      return
-    }
-    
+
+    if (!validateForm()) return
+
+    setLoading(true)
+
     try {
-      const payload = {
-        name: formData.name,
-        email: formData.email,
-        phone: formData.phone,
-        password: formData.password,
-        role: selectedRole,
+      let result
+
+      if (selectedRole === 'admin') {
+        result = await adminSignup(formData.email, formData.password, formData.name)
+      } else if (selectedRole === 'patient') {
+        result = await patientSignup(formData.email, formData.password, formData.name)
       }
-      const res = await signup(payload)
-      
-      if (res && res.token) {
-        // Successful signup - navigate to appropriate dashboard based on user role
-        const userRole = res.user?.role || res.role || selectedRole
-        const roleData = roles.find(r => r.id === userRole)
-        if (roleData) {
-          navigate(roleData.route)
-        } else {
-          navigate('/')
-        }
-      } else if (res && res.message) {
-        alert(res.message)
-      }
+
+      showSuccess(`Welcome ${result.name}! Signup successful.`)
+
+      // Store user data
+      localStorage.setItem('docease_user', JSON.stringify(result))
+
+      // Navigate to appropriate dashboard
+      const roleData = roles.find((r) => r.id === selectedRole)
+      setTimeout(() => {
+        navigate(roleData.route)
+      }, 500)
     } catch (err) {
       console.error('Signup error:', err)
-      // Better error messages
-      let errorMessage = 'Signup failed. Please try again.'
-      
-      if (err.response?.data?.message) {
-        errorMessage = err.response.data.message
-      } else if (err.message) {
-        errorMessage = err.message
-      } else if (err.code === 'ERR_NETWORK' || err.message?.includes('Network Error')) {
-        errorMessage = 'Cannot connect to server. Please make sure the backend server is running on port 5000.'
-      }
-      
-      alert(errorMessage)
+      showError(err.message || 'Signup failed. Please try again.')
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -172,146 +187,111 @@ const Signup = () => {
                   name="name"
                   value={formData.name}
                   onChange={handleChange}
+                  disabled={loading}
                   required
-                  className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
+                  className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   placeholder="John Doe"
                 />
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              <div>
-                <label
-                  htmlFor="email"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                >
-                  Email Address
-                </label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                  <input
-                    type="email"
-                    id="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    required
-                    className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
-                    placeholder="your.email@example.com"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label
-                  htmlFor="phone"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                >
-                  Phone Number
-                </label>
-                <div className="relative">
-                  <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                  <input
-                    type="tel"
-                    id="phone"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleChange}
-                    required
-                    className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
-                    placeholder="+1 (555) 123-4567"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              <div>
-                <label
-                  htmlFor="password"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                >
-                  Password
-                </label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                  <input
-                    type="password"
-                    id="password"
-                    name="password"
-                    value={formData.password}
-                    onChange={handleChange}
-                    required
-                    minLength={8}
-                    className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
-                    placeholder="Minimum 8 characters"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label
-                  htmlFor="confirmPassword"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                >
-                  Confirm Password
-                </label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                  <input
-                    type="password"
-                    id="confirmPassword"
-                    name="confirmPassword"
-                    value={formData.confirmPassword}
-                    onChange={handleChange}
-                    required
-                    minLength={8}
-                    className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
-                    placeholder="Confirm your password"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="flex items-center">
-              <input
-                type="checkbox"
-                id="terms"
-                required
-                className="rounded border-gray-300 text-primary focus:ring-primary"
-              />
-              <label htmlFor="terms" className="ml-2 text-sm text-gray-600 dark:text-gray-300">
-                I agree to the{' '}
-                <Link to="#" className="text-primary dark:text-accent hover:underline">
-                  Terms of Service
-                </Link>{' '}
-                and{' '}
-                <Link to="#" className="text-primary dark:text-accent hover:underline">
-                  Privacy Policy
-                </Link>
-              </label>
-            </div>
-
-            <motion.button
-              type="submit"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="w-full btn-primary inline-flex items-center justify-center"
-            >
-              Create Account
-              <ArrowRight className="ml-2 w-5 h-5" />
-            </motion.button>
-
-            <p className="text-center text-sm text-gray-600 dark:text-gray-300">
-              Already have an account?{' '}
-              <Link
-                to="/login"
-                className="text-primary dark:text-accent font-semibold hover:underline"
+            <div>
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
               >
-                Sign in
-              </Link>
-            </p>
+                Email Address
+              </label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  disabled={loading}
+                  required
+                  className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  placeholder="your.email@example.com"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              >
+                Password
+              </label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <input
+                  type="password"
+                  id="password"
+                  name="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  disabled={loading}
+                  required
+                  className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  placeholder="Min. 8 characters"
+                />
+              </div>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                Must be at least 8 characters long
+              </p>
+            </div>
+
+            <div>
+              <label
+                htmlFor="confirmPassword"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              >
+                Confirm Password
+              </label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <input
+                  type="password"
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                  disabled={loading}
+                  required
+                  className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  placeholder="Confirm your password"
+                />
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-gradient-to-r from-primary to-secondary hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-lg transition-all duration-300 flex items-center justify-center gap-2"
+            >
+              {loading ? (
+                <>
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  Creating Account...
+                </>
+              ) : (
+                <>
+                  Create Account
+                  <ArrowRight className="w-5 h-5" />
+                </>
+              )}
+            </button>
           </form>
+
+          <p className="text-center text-gray-600 dark:text-gray-300 mt-6">
+            Already have an account?{' '}
+            <Link to="/login" className="text-primary hover:text-secondary font-semibold transition-colors">
+              Sign in here
+            </Link>
+          </p>
         </motion.div>
       </div>
     </div>
@@ -319,4 +299,3 @@ const Signup = () => {
 }
 
 export default Signup
-

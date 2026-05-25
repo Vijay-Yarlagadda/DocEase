@@ -1,17 +1,19 @@
-import { useState, useContext } from 'react'
+import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { useNavigate, Link } from 'react-router-dom'
 import { Shield, UserCheck, Users, ArrowRight, Mail, Lock } from 'lucide-react'
-import { AuthContext } from '../context/AuthContext'
+import { loginUser } from '../services/authService'
+import { useToast } from '../components/Toast'
 
 const Login = () => {
   const [selectedRole, setSelectedRole] = useState(null)
+  const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
     email: '',
     password: '',
   })
   const navigate = useNavigate()
-  const { login } = useContext(AuthContext)
+  const { showSuccess, showError } = useToast()
 
   const roles = [
     {
@@ -47,62 +49,51 @@ const Login = () => {
     })
   }
 
-  const handleSubmit = (e) => {
+  const validateForm = () => {
+    if (!selectedRole) {
+      showError('Please select a role')
+      return false
+    }
+
+    if (!formData.email.trim()) {
+      showError('Email is required')
+      return false
+    }
+
+    if (!formData.password.trim()) {
+      showError('Password is required')
+      return false
+    }
+
+    return true
+  }
+
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    ;(async () => {
-      if (!selectedRole) {
-        alert('Please select a role')
-        return
-      }
-      try {
-        const res = await login(formData.email, formData.password)
-        // If backend signals firstLogin (doctor needs to change temp password)
-        if (res && res.firstLogin) {
-          // send user to change-password page with email
-          navigate('/doctor/change-password', { state: { email: formData.email } })
-          return
-        }
-        // Normal successful login returns a token and user
-        if (res && res.token && res.user) {
-          const userRole = res.user.role
-          // If user selected a different role, warn but navigate to actual role
-          if (userRole !== selectedRole) {
-            // small UX decision: still navigate to the user's actual dashboard
-            // but show a notice
-            // (Replace with toast when available)
-            alert(`Signed in as ${userRole}. Redirecting to your dashboard.`)
-          }
-          const route = roles.find(r => r.id === userRole)?.route || '/'
-          navigate(route)
-          return
-        }
-        // If backend returned an error body (message), show it
-        if (res && res.message && !res.token) {
-          alert(res.message)
-          return
-        }
-        // If we have a token but no user role, it might be a backend issue
-        if (res && res.token && (!res.user || !res.user.role)) {
-          alert('Login successful but user data incomplete. Please try again.')
-          return
-        }
-        alert('Unable to sign in. Please check credentials and try again.')
-      } catch (err) {
-        console.error('Login error', err)
-        // Handle specific error cases
-        if (err.response && err.response.data && err.response.data.message) {
-          alert(err.response.data.message)
-        } else if (err.response && err.response.status === 404) {
-          alert('User not found. Please sign up first.')
-        } else if (err.response && err.response.status === 401) {
-          alert('Invalid credentials. Please check your email and password.')
-        } else if (err.code === 'ERR_NETWORK' || err.message?.includes('Network Error')) {
-          alert('Cannot connect to server. Please make sure the backend server is running on port 5000.')
-        } else {
-          alert(err.message || 'Login failed')
-        }
-      }
-    })()
+
+    if (!validateForm()) return
+
+    setLoading(true)
+
+    try {
+      const user = await loginUser(formData.email, formData.password, selectedRole)
+
+      showSuccess(`Welcome back, ${user.name}!`)
+
+      // Store user data
+      localStorage.setItem('docease_user', JSON.stringify(user))
+
+      // Navigate to appropriate dashboard
+      const roleData = roles.find((r) => r.id === selectedRole)
+      setTimeout(() => {
+        navigate(roleData.route)
+      }, 500)
+    } catch (err) {
+      console.error('Login error:', err)
+      showError(err.message || 'Login failed. Please try again.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -176,8 +167,9 @@ const Login = () => {
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
+                  disabled={loading}
                   required
-                  className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
+                  className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   placeholder="your.email@example.com"
                 />
               </div>
@@ -198,51 +190,39 @@ const Login = () => {
                   name="password"
                   value={formData.password}
                   onChange={handleChange}
+                  disabled={loading}
                   required
-                  className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
+                  className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   placeholder="Enter your password"
                 />
               </div>
             </div>
 
-            <div className="flex items-center justify-between">
-              <label className="flex items-center">
-                <input
-                  type="checkbox"
-                  className="rounded border-gray-300 text-primary focus:ring-primary"
-                />
-                <span className="ml-2 text-sm text-gray-600 dark:text-gray-300">
-                  Remember me
-                </span>
-              </label>
-              <Link
-                to="#"
-                className="text-sm text-primary dark:text-accent hover:underline"
-              >
-                Forgot password?
-              </Link>
-            </div>
-
-            <motion.button
+            <button
               type="submit"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="w-full btn-primary inline-flex items-center justify-center"
+              disabled={loading}
+              className="w-full bg-gradient-to-r from-primary to-secondary hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-lg transition-all duration-300 flex items-center justify-center gap-2"
             >
-              Sign In
-              <ArrowRight className="ml-2 w-5 h-5" />
-            </motion.button>
-
-            <p className="text-center text-sm text-gray-600 dark:text-gray-300">
-              Don't have an account?{' '}
-              <Link
-                to="/signup"
-                className="text-primary dark:text-accent font-semibold hover:underline"
-              >
-                Sign up
-              </Link>
-            </p>
+              {loading ? (
+                <>
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  Signing in...
+                </>
+              ) : (
+                <>
+                  Sign In
+                  <ArrowRight className="w-5 h-5" />
+                </>
+              )}
+            </button>
           </form>
+
+          <p className="text-center text-gray-600 dark:text-gray-300 mt-6">
+            Don't have an account?{' '}
+            <Link to="/signup" className="text-primary hover:text-secondary font-semibold transition-colors">
+              Sign up here
+            </Link>
+          </p>
         </motion.div>
       </div>
     </div>
@@ -250,4 +230,3 @@ const Login = () => {
 }
 
 export default Login
-
