@@ -14,6 +14,12 @@ import {
   getDocs,
   serverTimestamp,
 } from 'firebase/firestore'
+import { updateDoc } from 'firebase/firestore'
+import {
+  updatePassword,
+  reauthenticateWithCredential,
+  EmailAuthProvider,
+} from 'firebase/auth'
 
 const USERS_COLLECTION = 'users'
 const DOCTORS_COLLECTION = 'doctors'
@@ -221,6 +227,125 @@ export const fetchUserData = async (uid) => {
     }
 
     return userDoc.data()
+  } catch (error) {
+    throw handleAuthError(error)
+  }
+}
+
+/**
+ * Generate a random temporary password
+ */
+export const generateTempPassword = (length = 12) => {
+  const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+-=[]{}|;:,.<>?'
+  let pw = ''
+  for (let i = 0; i < length; i++) pw += chars.charAt(Math.floor(Math.random() * chars.length))
+  return pw
+}
+
+/**
+ * Admin creates a doctor: creates Firebase Auth account and doctor document
+ * Returns { doctorId, uid, email, tempPassword }
+ */
+export const adminCreateDoctor = async (
+  name,
+  email,
+  qualification = '',
+  specialization = '',
+  experience = 0,
+  hospitalId = null
+) => {
+  try {
+    if (!name || !email) throw new Error('Name and email are required')
+
+    const tempPassword = generateTempPassword(12)
+
+    // Create Firebase Auth account for doctor
+    const userCredential = await createUserWithEmailAndPassword(auth, email, tempPassword)
+    const firebaseUser = userCredential.user
+
+    // Save doctor document using the Firebase UID as the doc ID
+    const docRef = doc(db, DOCTORS_COLLECTION, firebaseUser.uid)
+    await setDoc(docRef, {
+      uid: firebaseUser.uid,
+      name,
+      email: firebaseUser.email,
+      qualification,
+      specialization,
+      experience: Number(experience) || 0,
+      hospitalId: hospitalId || null,
+      firstLogin: true,
+      createdAt: serverTimestamp(),
+    })
+
+    // Return the temp password so the admin can show it once
+    return {
+      doctorId: firebaseUser.uid,
+      uid: firebaseUser.uid,
+      email: firebaseUser.email,
+      tempPassword,
+    }
+  } catch (error) {
+    throw handleAuthError(error)
+  }
+}
+
+/**
+ * Change doctor's password on first login. Re-authenticates then updates password
+ * Accepts currentPassword and newPassword. If no signed-in user, `email` may be provided.
+ */
+export const doctorChangePassword = async (currentPassword, newPassword, email) => {
+  try {
+    if (!currentPassword || !newPassword) throw new Error('Both current and new passwords are required')
+    if (newPassword.length < 8) throw new Error('New password must be at least 8 characters')
+
+    // Ensure user is signed in; if not, sign in with provided email
+    if (!auth.currentUser) {
+      if (!email) throw new Error('No authenticated user; please provide email')
+      await signInWithEmailAndPassword(auth, email, currentPassword)
+    }
+
+    const user = auth.currentUser
+    if (!user) throw new Error('Unable to determine authenticated user')
+
+    // Reauthenticate with current password
+    const credential = EmailAuthProvider.credential(user.email, currentPassword)
+    await reauthenticateWithCredential(user, credential)
+
+    // Update password
+    await updatePassword(user, newPassword)
+
+    // Mark firstLogin false in doctors collection (doc ID uses uid)
+    const doctorDocRef = doc(db, DOCTORS_COLLECTION, user.uid)
+    await updateDoc(doctorDocRef, { firstLogin: false })
+
+    return { uid: user.uid, email: user.email }
+  } catch (error) {
+    throw handleAuthError(error)
+  }
+}
+
+/**
+ * Get all doctors for admin listing
+ */
+export const getAllDoctors = async () => {
+  try {
+    const doctorsRef = collection(db, DOCTORS_COLLECTION)
+    const snap = await getDocs(doctorsRef)
+    return snap.docs.map((d) => ({ id: d.id, ...d.data() }))
+  } catch (error) {
+    throw handleAuthError(error)
+  }
+}
+
+/**
+ * Fetch doctor data by UID
+ */
+export const fetchDoctorData = async (uid) => {
+  try {
+    if (!uid) throw new Error('UID is required')
+    const docSnap = await getDoc(doc(db, DOCTORS_COLLECTION, uid))
+    if (!docSnap.exists()) return null
+    return docSnap.data()
   } catch (error) {
     throw handleAuthError(error)
   }

@@ -77,6 +77,13 @@ const Login = () => {
 
     try {
       const user = await loginUser(formData.email, formData.password, selectedRole)
+      // If doctor logs in and is on first login, force password change
+      if (selectedRole === 'doctor' && user.firstLogin) {
+        navigate('/doctor/change-password', {
+          state: { email: user.email, tempPassword: formData.password, doctorName: user.name },
+        })
+        return
+      }
 
       showSuccess(`Welcome back, ${user.name}!`)
 

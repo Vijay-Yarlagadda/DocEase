@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion'
 import { Shield, Building2, UserPlus, BarChart3, Users, Activity, Settings, LogOut } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import DoctorManagement from '../../components/DoctorManagement'
 
 const AdminDashboard = () => {
   const stats = [
@@ -131,6 +132,17 @@ const AdminDashboard = () => {
               )
             })}
           </div>
+        </motion.div>
+
+        {/* Doctor Management */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.6 }}
+          className="card mb-8"
+        >
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Doctors</h2>
+          <DoctorManagement />
         </motion.div>
 
         {/* Recent Activity */}
