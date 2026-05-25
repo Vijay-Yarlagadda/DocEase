@@ -33,6 +33,9 @@ const Navbar = ({ darkMode, toggleDarkMode, user }) => {
 
   // always show regular links (navbar only renders on public pages)
   const showLinks = true
+  const isDashboard = location.pathname.startsWith('/admin') || 
+                      location.pathname.startsWith('/doctor') || 
+                      location.pathname.startsWith('/patient')
 
   const handleLogout = () => {
     logout()

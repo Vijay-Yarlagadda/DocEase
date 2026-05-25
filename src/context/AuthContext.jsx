@@ -22,30 +22,26 @@ export const AuthProvider = ({ children }) => {
     const t = localStorage.getItem('docease_token')
     if (t) {
       setAuthToken(t)
-      // Set a short timeout for the auth check - if backend is slow, we'll retry later
-      const timeoutId = setTimeout(() => {
-        setLoading(false)
-      }, 3000) // 3 second max wait, then show app anyway
+      // Skip backend check if backend is not available
+      // This allows frontend to load instantly
+      setLoading(false)
       
-      api
-        .get('/auth/dashboard')
-        .then((res) => {
-          clearTimeout(timeoutId)
-          const userData = res.data.user || { name: res.data.message || 'User' }
-          setUser(userData)
-          setToken(t)
-          setLoading(false)
-        })
-        .catch((err) => {
-          clearTimeout(timeoutId)
-          console.log('Backend unavailable at startup:', err.message)
-          localStorage.removeItem('docease_token')
-          setAuthToken(null)
-          setUser(null)
-          setToken(null)
-          setLoading(false)
-        })
-    } else setLoading(false)
+      // Optionally sync with backend in background (non-blocking)
+      setTimeout(() => {
+        api
+          .get('/auth/dashboard')
+          .then((res) => {
+            const userData = res.data.user || { name: res.data.message || 'User' }
+            setUser(userData)
+            setToken(t)
+          })
+          .catch((err) => {
+            console.log('Backend unavailable:', err.message)
+          })
+      }, 1000)
+    } else {
+      setLoading(false)
+    }
   }, [])
 
   const login = async (email, password) => {
