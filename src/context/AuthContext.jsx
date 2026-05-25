@@ -22,22 +22,29 @@ export const AuthProvider = ({ children }) => {
     const t = localStorage.getItem('docease_token')
     if (t) {
       setAuthToken(t)
+      // Set a short timeout for the auth check - if backend is slow, we'll retry later
+      const timeoutId = setTimeout(() => {
+        setLoading(false)
+      }, 3000) // 3 second max wait, then show app anyway
+      
       api
         .get('/auth/dashboard')
         .then((res) => {
-          // Set user from response (user object or construct from available data)
+          clearTimeout(timeoutId)
           const userData = res.data.user || { name: res.data.message || 'User' }
           setUser(userData)
           setToken(t)
+          setLoading(false)
         })
-        .catch(() => {
-          // invalid token
+        .catch((err) => {
+          clearTimeout(timeoutId)
+          console.log('Backend unavailable at startup:', err.message)
           localStorage.removeItem('docease_token')
           setAuthToken(null)
           setUser(null)
           setToken(null)
+          setLoading(false)
         })
-        .finally(() => setLoading(false))
     } else setLoading(false)
   }, [])
 
