@@ -4,7 +4,9 @@ import App from './App.jsx'
 import './index.css'
 import { BrowserRouter } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
-import './services/firebase'
+
+// Lazy load Firebase to not block app startup
+import('./services/firebase').catch(err => console.error('Firebase init failed:', err))
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
