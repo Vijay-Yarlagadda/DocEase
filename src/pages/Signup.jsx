@@ -49,28 +49,33 @@ const Signup = () => {
       return false
     }
 
-    if (!formData.name.trim()) {
+    const name = formData.name.trim()
+    const email = formData.email.trim()
+    const password = formData.password
+    const confirm = formData.confirmPassword
+
+    if (!name) {
       showError('Full name is required')
       return false
     }
 
-    if (!formData.email.trim()) {
+    if (!email) {
       showError('Email is required')
       return false
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailRegex.test(formData.email)) {
+    if (!emailRegex.test(email)) {
       showError('Please enter a valid email address')
       return false
     }
 
-    if (formData.password.length < 8) {
+    if (password.length < 8) {
       showError('Password must be at least 8 characters long')
       return false
     }
 
-    if (formData.password !== formData.confirmPassword) {
+    if (password !== confirm) {
       showError('Passwords do not match')
       return false
     }
@@ -106,7 +111,13 @@ const Signup = () => {
       }, 500)
     } catch (err) {
       console.error('Signup error:', err)
-      showError(err.message || 'Signup failed. Please try again.')
+      // Friendly guidance for Firestore permission errors
+      const msg = err?.message || ''
+      if (msg.toLowerCase().includes('permission') || msg.toLowerCase().includes('insufficient')) {
+        showError('Account creation failed due to backend permissions. Please check Firebase Firestore rules or contact the system administrator.')
+      } else {
+        showError(msg || 'Signup failed. Please try again.')
+      }
     } finally {
       setLoading(false)
     }
@@ -133,7 +144,7 @@ const Signup = () => {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.2 }}
-          className="card max-w-2xl mx-auto"
+          className="card max-w-2xl mx-auto shadow-lg border dark:border-gray-700"
         >
           {/* Role Selection */}
           <div className="mb-8">
@@ -151,9 +162,10 @@ const Signup = () => {
                     onClick={() => setSelectedRole(role.id)}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
+                    aria-pressed={isSelected}
                     className={`w-44 p-6 rounded-lg border-2 transition-all flex flex-col items-center ${
                       isSelected
-                        ? `border-primary bg-gradient-to-br ${role.gradient} text-white`
+                        ? `border-primary bg-gradient-to-br ${role.gradient} text-white shadow-lg transform scale-100`
                         : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:border-primary dark:hover:border-accent'
                     }`}
                     style={{
@@ -269,8 +281,9 @@ const Signup = () => {
 
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || !selectedRole}
               className="w-full bg-gradient-to-r from-primary to-secondary hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-lg transition-all duration-300 flex items-center justify-center gap-2"
+              aria-disabled={loading || !selectedRole}
             >
               {loading ? (
                 <>

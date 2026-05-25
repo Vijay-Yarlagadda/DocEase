@@ -42,14 +42,25 @@ export const adminSignup = async (email, password, name) => {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password)
     const firebaseUser = userCredential.user
 
-    // Create Firestore user document
-    await setDoc(doc(db, USERS_COLLECTION, firebaseUser.uid), {
-      email: firebaseUser.email,
-      role: 'admin',
-      name: name,
-      uid: firebaseUser.uid,
-      createdAt: serverTimestamp(),
-    })
+    // Create Firestore user document. If this fails, roll back the created auth user to avoid orphan accounts.
+    try {
+      await setDoc(doc(db, USERS_COLLECTION, firebaseUser.uid), {
+        email: firebaseUser.email,
+        role: 'admin',
+        name: name,
+        uid: firebaseUser.uid,
+        createdAt: serverTimestamp(),
+      })
+    } catch (writeErr) {
+      // Attempt to remove the created Firebase Auth user
+      try {
+        await firebaseUser.delete()
+      } catch (delErr) {
+        // ignore delete errors; we'll surface the original error
+        console.error('Failed to delete orphan firebase user after Firestore write failed', delErr)
+      }
+      throw writeErr
+    }
 
     return {
       uid: firebaseUser.uid,
@@ -80,14 +91,23 @@ export const patientSignup = async (email, password, name) => {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password)
     const firebaseUser = userCredential.user
 
-    // Create Firestore user document
-    await setDoc(doc(db, USERS_COLLECTION, firebaseUser.uid), {
-      email: firebaseUser.email,
-      role: 'patient',
-      name: name,
-      uid: firebaseUser.uid,
-      createdAt: serverTimestamp(),
-    })
+    // Create Firestore user document. If this fails, roll back the created auth user to avoid orphan accounts.
+    try {
+      await setDoc(doc(db, USERS_COLLECTION, firebaseUser.uid), {
+        email: firebaseUser.email,
+        role: 'patient',
+        name: name,
+        uid: firebaseUser.uid,
+        createdAt: serverTimestamp(),
+      })
+    } catch (writeErr) {
+      try {
+        await firebaseUser.delete()
+      } catch (delErr) {
+        console.error('Failed to delete orphan firebase user after Firestore write failed', delErr)
+      }
+      throw writeErr
+    }
 
     return {
       uid: firebaseUser.uid,
