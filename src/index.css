@@ -75,16 +75,12 @@
     @apply w-96 h-96 -bottom-32 -right-32 bg-secondary/10;
   }
 
-  .dashboard-sidebar {
-    @apply fixed left-0 top-0 h-screen z-40 flex flex-col border-r border-slate-700/50 bg-slate-900/80 backdrop-blur-xl transition-all duration-300;
-  }
-
   .dashboard-topbar {
-    @apply fixed top-0 right-0 h-16 z-30 flex items-center justify-between px-4 md:px-6 border-b border-slate-700/40 bg-slate-900/70 backdrop-blur-xl transition-all duration-300;
+    @apply fixed top-0 left-0 right-0 h-16 z-50 flex items-center justify-between px-4 md:px-6 lg:px-8 border-b border-slate-700/40 bg-slate-900/80 backdrop-blur-xl;
   }
 
   .dashboard-main {
-    @apply fixed top-16 right-0 bottom-0 z-10 overflow-hidden transition-all duration-300;
+    @apply fixed top-16 left-0 right-0 bottom-0 z-10 overflow-hidden;
   }
 
   .dashboard-main-inner {
