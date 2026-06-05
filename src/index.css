@@ -24,5 +24,48 @@
   .card {
     @apply bg-white dark:bg-gray-800 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 p-6 border border-gray-200 dark:border-gray-700;
   }
+
+  .auth-page {
+    @apply relative overflow-hidden bg-[#060b18];
+    background-image:
+      radial-gradient(ellipse 80% 50% at 50% -20%, rgba(30, 58, 138, 0.35), transparent),
+      radial-gradient(ellipse 60% 40% at 100% 100%, rgba(14, 165, 233, 0.12), transparent);
+  }
+
+  .auth-page-glow {
+    @apply absolute rounded-full blur-3xl pointer-events-none;
+  }
+
+  .auth-page-glow--left {
+    @apply w-72 h-72 -top-20 -left-20 bg-blue-600/20;
+  }
+
+  .auth-page-glow--right {
+    @apply w-96 h-96 -bottom-32 -right-24 bg-cyan-500/15;
+  }
+
+  .auth-card {
+    @apply bg-slate-900/70 backdrop-blur-xl border border-slate-700/50 shadow-2xl shadow-black/40;
+  }
+
+  .auth-input {
+    @apply text-slate-100;
+  }
+
+  .auth-btn {
+    @apply w-full py-3.5 rounded-xl font-semibold text-white bg-gradient-to-r from-primary via-blue-600 to-secondary hover:from-blue-700 hover:via-blue-600 hover:to-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 flex items-center justify-center gap-2 shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:-translate-y-0.5 active:translate-y-0;
+  }
+}
+
+@layer utilities {
+  .auth-input:-webkit-autofill,
+  .auth-input:-webkit-autofill:hover,
+  .auth-input:-webkit-autofill:focus,
+  .auth-input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 1000px #0f172a inset !important;
+    -webkit-text-fill-color: #f1f5f9 !important;
+    caret-color: #f1f5f9;
+    transition: background-color 5000s ease-in-out 0s;
+  }
 }
 
