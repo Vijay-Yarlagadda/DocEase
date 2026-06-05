@@ -42,41 +42,55 @@ const DoctorManagement = () => {
 
   return (
     <div className="space-y-6">
-      <div className="bg-white dark:bg-gray-800 p-6 rounded shadow">
-        <h3 className="text-lg font-semibold mb-4">Create Doctor</h3>
-        <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-3">
-          <input name="name" value={form.name} onChange={handleChange} placeholder="Name" className="input" />
-          <input name="email" value={form.email} onChange={handleChange} placeholder="Email" className="input" />
-          <input name="qualification" value={form.qualification} onChange={handleChange} placeholder="Qualification" className="input" />
-          <input name="specialization" value={form.specialization} onChange={handleChange} placeholder="Specialization" className="input" />
-          <input name="experience" value={form.experience} onChange={handleChange} placeholder="Experience (years)" type="number" className="input" />
-          <div className="flex justify-end">
-            <button type="submit" disabled={loading} className="btn-primary">{loading ? 'Creating...' : 'Create Doctor'}</button>
+      <div className="p-5 rounded-xl bg-slate-900/50 border border-slate-700/30">
+        <h3 className="text-base font-semibold text-white mb-4">Create Doctor</h3>
+        <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <input name="name" value={form.name} onChange={handleChange} placeholder="Name" className="dashboard-input" />
+          <input name="email" value={form.email} onChange={handleChange} placeholder="Email" className="dashboard-input" />
+          <input name="qualification" value={form.qualification} onChange={handleChange} placeholder="Qualification" className="dashboard-input" />
+          <input name="specialization" value={form.specialization} onChange={handleChange} placeholder="Specialization" className="dashboard-input" />
+          <input name="experience" value={form.experience} onChange={handleChange} placeholder="Experience (years)" type="number" className="dashboard-input sm:col-span-2" />
+          <div className="flex justify-end sm:col-span-2">
+            <button type="submit" disabled={loading} className="btn-primary text-sm">
+              {loading ? 'Creating...' : 'Create Doctor'}
+            </button>
           </div>
         </form>
         {createdTemp && (
-          <div className="mt-4 p-3 bg-blue-50 dark:bg-gray-700 rounded">
-            <p className="text-sm">Temporary password for <strong>{createdTemp.email}</strong>:</p>
+          <div className="mt-4 p-4 rounded-xl bg-primary/10 border border-primary/20">
+            <p className="text-sm text-slate-300">
+              Temporary password for <strong className="text-white">{createdTemp.email}</strong>:
+            </p>
             <div className="mt-2 flex items-center gap-2">
-              <code className="px-2 py-1 bg-white dark:bg-gray-800 rounded">{createdTemp.tempPassword}</code>
-              <button onClick={() => navigator.clipboard.writeText(createdTemp.tempPassword)} className="text-sm text-blue-600">Copy</button>
+              <code className="px-3 py-1.5 bg-slate-900 rounded-lg text-accent text-sm">{createdTemp.tempPassword}</code>
+              <button onClick={() => navigator.clipboard.writeText(createdTemp.tempPassword)} className="text-sm text-accent hover:text-cyan-300 transition-colors">
+                Copy
+              </button>
             </div>
           </div>
         )}
       </div>
 
-      <div className="bg-white dark:bg-gray-800 p-6 rounded shadow">
-        <h3 className="text-lg font-semibold mb-4">Doctors</h3>
-        <div className="space-y-3">
-          {doctors.length === 0 && <p className="text-sm text-gray-500">No doctors yet</p>}
+      <div className="p-5 rounded-xl bg-slate-900/50 border border-slate-700/30">
+        <h3 className="text-base font-semibold text-white mb-4">All Doctors</h3>
+        <div className="space-y-2">
+          {doctors.length === 0 && <p className="text-sm text-slate-500">No doctors yet</p>}
           {doctors.map((d) => (
-            <div key={d.id} className="p-3 border rounded flex justify-between items-center">
+            <div key={d.id} className="p-4 rounded-xl bg-slate-800/50 border border-slate-700/30 flex justify-between items-center">
               <div>
-                <div className="font-medium">{d.name}</div>
-                <div className="text-sm text-gray-500">{d.email} • {d.specialization || '—'}</div>
+                <div className="font-medium text-white">{d.name}</div>
+                <div className="text-sm text-slate-500">{d.email} &bull; {d.specialization || '—'}</div>
               </div>
               <div className="text-sm">
-                {d.firstLogin ? <span className="px-2 py-1 bg-yellow-100 rounded">Awaiting first login</span> : <span className="px-2 py-1 bg-green-100 rounded">Active</span>}
+                {d.firstLogin ? (
+                  <span className="px-2.5 py-1 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/20 text-xs font-medium">
+                    Awaiting first login
+                  </span>
+                ) : (
+                  <span className="px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 text-xs font-medium">
+                    Active
+                  </span>
+                )}
               </div>
             </div>
           ))}

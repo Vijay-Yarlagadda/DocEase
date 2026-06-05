@@ -55,6 +55,57 @@
   .auth-btn {
     @apply w-full py-3.5 rounded-xl font-semibold text-white bg-gradient-to-r from-primary via-blue-600 to-secondary hover:from-blue-700 hover:via-blue-600 hover:to-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 flex items-center justify-center gap-2 shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:-translate-y-0.5 active:translate-y-0;
   }
+
+  .dashboard-layout {
+    @apply relative h-screen overflow-hidden bg-[#060b18];
+    background-image:
+      radial-gradient(ellipse 70% 50% at 10% -10%, rgba(30, 58, 138, 0.25), transparent),
+      radial-gradient(ellipse 50% 40% at 90% 100%, rgba(14, 165, 233, 0.12), transparent);
+  }
+
+  .dashboard-glow {
+    @apply absolute rounded-full blur-3xl pointer-events-none;
+  }
+
+  .dashboard-glow--left {
+    @apply w-80 h-80 -top-24 -left-24 bg-primary/15;
+  }
+
+  .dashboard-glow--right {
+    @apply w-96 h-96 -bottom-32 -right-32 bg-secondary/10;
+  }
+
+  .dashboard-sidebar {
+    @apply fixed left-0 top-0 h-screen z-40 flex flex-col border-r border-slate-700/50 bg-slate-900/80 backdrop-blur-xl transition-all duration-300;
+  }
+
+  .dashboard-topbar {
+    @apply fixed top-0 right-0 h-16 z-30 flex items-center justify-between px-4 md:px-6 border-b border-slate-700/40 bg-slate-900/70 backdrop-blur-xl transition-all duration-300;
+  }
+
+  .dashboard-main {
+    @apply fixed top-16 right-0 bottom-0 z-10 overflow-hidden transition-all duration-300;
+  }
+
+  .dashboard-main-inner {
+    @apply h-full w-full overflow-y-auto p-4 md:p-6 lg:p-8;
+  }
+
+  .dashboard-card {
+    @apply bg-slate-800/60 backdrop-blur-sm rounded-xl p-5 sm:p-6 border border-slate-700/50 shadow-lg shadow-black/20 hover:border-slate-600/60 transition-all duration-300;
+  }
+
+  .dashboard-nav-link {
+    @apply flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-800/80 transition-all duration-200;
+  }
+
+  .dashboard-nav-link--active {
+    @apply bg-gradient-to-r from-primary/20 to-secondary/10 text-accent border border-primary/20;
+  }
+
+  .dashboard-input {
+    @apply w-full px-4 py-2.5 rounded-lg border border-slate-700/80 bg-slate-900/80 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-accent/60 focus:ring-2 focus:ring-accent/20 transition-all duration-200;
+  }
 }
 
 @layer utilities {

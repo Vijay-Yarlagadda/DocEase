@@ -1,14 +1,13 @@
 import { useState, useContext, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { UserCircle, Settings, LogOut } from 'lucide-react'
+import { UserCircle, Settings, LogOut, ChevronUp } from 'lucide-react'
 import { AuthContext } from '../context/AuthContext'
 
-const ProfileDropdown = () => {
+const ProfileDropdown = ({ collapsed = false }) => {
   const [isOpen, setIsOpen] = useState(false)
   const { user, logout } = useContext(AuthContext)
   const dropdownRef = useRef(null)
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -28,41 +27,45 @@ const ProfileDropdown = () => {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+        className={`w-full flex items-center gap-2 p-2 rounded-lg hover:bg-slate-800/80 transition-colors ${collapsed ? 'justify-center' : ''}`}
       >
-        <UserCircle className="w-8 h-8 text-gray-600 dark:text-gray-300" />
-        <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
-          {user?.name || 'Profile'}
-        </span>
+        <UserCircle className="w-7 h-7 text-accent flex-shrink-0" />
+        {!collapsed && (
+          <>
+            <div className="flex-1 text-left min-w-0">
+              <p className="text-sm font-medium text-slate-200 truncate">
+                {user?.name || 'Profile'}
+              </p>
+              <p className="text-xs text-slate-500 capitalize truncate">
+                {user?.role}
+              </p>
+            </div>
+            <ChevronUp className={`w-4 h-4 text-slate-500 transition-transform ${isOpen ? '' : 'rotate-180'}`} />
+          </>
+        )}
       </button>
 
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 10 }}
-            transition={{ duration: 0.2 }}
-            className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg py-1 z-50"
+            exit={{ opacity: 0, y: 8 }}
+            transition={{ duration: 0.15 }}
+            className={`absolute bottom-full mb-2 bg-slate-800/95 backdrop-blur-xl border border-slate-700/50 rounded-xl shadow-xl py-1 z-50 ${collapsed ? 'left-0 w-48' : 'left-0 right-0'}`}
           >
-            <div className="px-4 py-2 border-b border-gray-200 dark:border-gray-700">
-              <p className="text-sm font-medium text-gray-900 dark:text-white">
+            <div className="px-4 py-2.5 border-b border-slate-700/50">
+              <p className="text-sm font-medium text-white truncate">
                 {user?.name}
               </p>
-              <p className="text-xs text-gray-500 dark:text-gray-400">
+              <p className="text-xs text-slate-400 truncate">
                 {user?.email}
-              </p>
-              <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">
-                {user?.role}
               </p>
             </div>
 
             <button
-              onClick={() => {
-                setIsOpen(false)
-                // TODO: Navigate to settings
-              }}
-              className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center space-x-2"
+              onClick={() => setIsOpen(false)}
+              className="w-full px-4 py-2 text-left text-sm text-slate-300 hover:bg-slate-700/50 flex items-center gap-2 transition-colors"
             >
               <Settings className="w-4 h-4" />
               <span>Settings</span>
@@ -70,7 +73,7 @@ const ProfileDropdown = () => {
 
             <button
               onClick={handleLogout}
-              className="w-full px-4 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center space-x-2"
+              className="w-full px-4 py-2 text-left text-sm text-red-400 hover:bg-slate-700/50 flex items-center gap-2 transition-colors"
             >
               <LogOut className="w-4 h-4" />
               <span>Logout</span>

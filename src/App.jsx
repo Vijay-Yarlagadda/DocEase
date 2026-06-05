@@ -12,6 +12,7 @@ import AdminDashboard from './pages/dashboards/AdminDashboard'
 import DoctorDashboard from './pages/dashboards/DoctorDashboard'
 import PatientDashboard from './pages/dashboards/PatientDashboard'
 import DoctorChangePassword from './pages/DoctorChangePassword'
+import DashboardPlaceholder from './components/dashboard/DashboardPlaceholder'
 import { AuthContext } from './context/AuthContext'
 
 function App() {
@@ -69,26 +70,26 @@ function App() {
         {/* Dashboard routes - using DashboardLayout */}
         <Route path="/admin" element={<DashboardLayout darkMode={darkMode} toggleDarkMode={toggleDarkMode} />}>
           <Route path="dashboard" element={<AdminDashboard />} />
-          <Route path="hospitals" element={<div>Hospitals Management</div>} />
-          <Route path="add-doctor" element={<div>Add New Doctor</div>} />
-          <Route path="users" element={<div>User Management</div>} />
-          <Route path="analytics" element={<div>Analytics Dashboard</div>} />
-          <Route path="settings" element={<div>Admin Settings</div>} />
+          <Route path="hospitals" element={<DashboardPlaceholder title="Hospitals Management" />} />
+          <Route path="add-doctor" element={<DashboardPlaceholder title="Add New Doctor" />} />
+          <Route path="users" element={<DashboardPlaceholder title="User Management" />} />
+          <Route path="analytics" element={<DashboardPlaceholder title="Analytics Dashboard" />} />
+          <Route path="settings" element={<DashboardPlaceholder title="Admin Settings" />} />
         </Route>
 
         <Route path="/doctor" element={<DashboardLayout darkMode={darkMode} toggleDarkMode={toggleDarkMode} />}>
           <Route path="dashboard" element={<DoctorDashboard />} />
-          <Route path="patients" element={<div>Patient List</div>} />
-          <Route path="appointments" element={<div>Appointments</div>} />
-          <Route path="records" element={<div>Medical Records</div>} />
-          <Route path="settings" element={<div>Doctor Settings</div>} />
+          <Route path="patients" element={<DashboardPlaceholder title="Patient List" />} />
+          <Route path="appointments" element={<DashboardPlaceholder title="Appointments" />} />
+          <Route path="records" element={<DashboardPlaceholder title="Medical Records" />} />
+          <Route path="settings" element={<DashboardPlaceholder title="Doctor Settings" />} />
         </Route>
 
         <Route path="/patient" element={<DashboardLayout darkMode={darkMode} toggleDarkMode={toggleDarkMode} />}>
           <Route path="dashboard" element={<PatientDashboard />} />
-          <Route path="appointments" element={<div>My Appointments</div>} />
-          <Route path="history" element={<div>Medical History</div>} />
-          <Route path="settings" element={<div>Patient Settings</div>} />
+          <Route path="appointments" element={<DashboardPlaceholder title="My Appointments" />} />
+          <Route path="history" element={<DashboardPlaceholder title="Medical History" />} />
+          <Route path="settings" element={<DashboardPlaceholder title="Patient Settings" />} />
         </Route>
       </Routes>
       {showFooter && <Footer />}

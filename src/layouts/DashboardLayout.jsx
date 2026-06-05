@@ -1,57 +1,85 @@
+import { useState } from 'react'
 import { Outlet } from 'react-router-dom'
 import { useContext } from 'react'
-import { Mail, LogOut, Moon, Sun } from 'lucide-react'
+import { Mail, LogOut, Moon, Sun, User } from 'lucide-react'
 import Sidebar from '../components/Sidebar'
 import { AuthContext } from '../context/AuthContext'
 
 const DashboardLayout = ({ darkMode, toggleDarkMode }) => {
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const { user, logout } = useContext(AuthContext)
+
   const getUserName = () => {
     if (user?.name) return user.name
     if (user?.user?.name) return user.user.name
     if (user?.email) return user.email.split('@')[0]
     return 'User'
   }
+
   const userName = getUserName()
+  const sidebarOffset = sidebarCollapsed ? 'left-16' : 'left-64'
 
   return (
-    <div className="flex flex-col h-screen bg-gray-50 dark:bg-gray-900">
-      <Sidebar />
+    <div className="dashboard-layout">
+      <div className="dashboard-glow dashboard-glow--left" aria-hidden="true" />
+      <div className="dashboard-glow dashboard-glow--right" aria-hidden="true" />
 
-      {/* top bar inside dashboard */}
-      <header className="ml-16 lg:ml-64 w-full bg-gradient-to-r from-primary to-secondary text-white p-4 shadow-md flex justify-between items-center">
-        <h1 className="text-lg font-semibold">
-          Welcome{userName ? `, ${userName}` : ''}
-        </h1>
-        <div className="flex items-center space-x-4">
-          {/* dark mode toggle in dashboard header */}
+      <Sidebar
+        collapsed={sidebarCollapsed}
+        onToggle={() => setSidebarCollapsed((prev) => !prev)}
+      />
+
+      <header className={`dashboard-topbar ${sidebarOffset}`}>
+        <div>
+          <p className="text-xs text-slate-500">Welcome back</p>
+          <h1 className="text-sm md:text-base font-semibold text-white">
+            <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+              {userName}
+            </span>
+          </h1>
+        </div>
+
+        <div className="flex items-center gap-2 md:gap-4">
           <button
             onClick={toggleDarkMode}
-            className="p-2 rounded-lg bg-white/30 hover:bg-white/40"
+            className="p-2 rounded-lg bg-slate-800/80 border border-slate-700/50 hover:bg-slate-700 text-slate-300 transition-colors"
             aria-label="Toggle dark mode"
           >
             {darkMode ? (
-              <Sun className="w-5 h-5 text-yellow-300" />
+              <Sun className="w-4 h-4 text-yellow-400" />
             ) : (
-              <Moon className="w-5 h-5 text-gray-100" />
+              <Moon className="w-4 h-4" />
             )}
           </button>
-          <Mail className="w-5 h-5" />
-          <span className="text-sm truncate max-w-xs">
-            {user?.email}
-          </span>
+
+          <button
+            className="hidden sm:flex p-2 rounded-lg bg-slate-800/80 border border-slate-700/50 hover:bg-slate-700 text-slate-300 transition-colors"
+            aria-label="Notifications"
+          >
+            <Mail className="w-4 h-4" />
+          </button>
+
+          <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 border border-slate-700/50">
+            <User className="w-4 h-4 text-accent" />
+            <span className="text-sm text-slate-300 truncate max-w-[180px]">
+              {user?.email}
+            </span>
+          </div>
+
           <button
             onClick={logout}
-            className="flex items-center space-x-1 hover:underline"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm text-slate-300 hover:text-white hover:bg-slate-800/80 border border-transparent hover:border-slate-700/50 transition-all"
           >
-            <LogOut className="w-5 h-5" />
-            <span>Logout</span>
+            <LogOut className="w-4 h-4" />
+            <span className="hidden lg:inline">Logout</span>
           </button>
         </div>
       </header>
 
-      <main className="flex-1 ml-16 lg:ml-64 p-6 overflow-y-auto mt-4">
-        <Outlet />
+      <main className={`dashboard-main ${sidebarOffset}`}>
+        <div className="dashboard-main-inner">
+          <Outlet />
+        </div>
       </main>
     </div>
   )

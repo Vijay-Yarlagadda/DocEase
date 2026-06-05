@@ -1,7 +1,6 @@
-import { useContext, useState } from 'react'
+import { useContext } from 'react'
 import { NavLink } from 'react-router-dom'
 import {
-  Menu,
   Building2,
   Users,
   Calendar,
@@ -14,10 +13,16 @@ import {
   ClipboardList,
 } from 'lucide-react'
 import { AuthContext } from '../context/AuthContext'
+import DocEaseLogo from './DocEaseLogo'
 import ProfileDropdown from './ProfileDropdown'
 
-const Sidebar = () => {
-  const [collapsed, setCollapsed] = useState(false)
+const rolePortal = {
+  admin: { label: 'Admin Portal', gradient: 'from-blue-900 to-blue-600' },
+  doctor: { label: 'Doctor Portal', gradient: 'from-cyan-600 to-cyan-400' },
+  patient: { label: 'Patient Portal', gradient: 'from-teal-600 to-teal-400' },
+}
+
+const Sidebar = ({ collapsed, onToggle }) => {
   const { user } = useContext(AuthContext)
 
   const adminMenuItems = [
@@ -59,63 +64,60 @@ const Sidebar = () => {
       menuItems = []
   }
 
+  const portal = rolePortal[user?.role] || rolePortal.admin
+
   return (
-    <aside
-      className={`${
-        collapsed ? 'w-16' : 'w-64'
-      } bg-white dark:bg-gray-800 h-screen fixed left-0 top-0 transition-all duration-300 border-r border-gray-200 dark:border-gray-700 z-40`}
-    >
-      {/* Logo Section */}
-      <div className="flex items-center justify-between h-16 px-4">
+    <aside className={`dashboard-sidebar ${collapsed ? 'w-16' : 'w-64'}`}>
+      <div className={`flex items-center h-16 px-3 border-b border-slate-700/40 ${collapsed ? 'justify-center' : 'justify-between'}`}>
+        <DocEaseLogo collapsed={collapsed} to={`/${user?.role || 'admin'}/dashboard`} />
         {!collapsed && (
-          <span className="text-xl font-semibold text-primary dark:text-accent">
-            DocEase
-          </span>
+          <button
+            onClick={onToggle}
+            className="p-1.5 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-colors"
+            aria-label="Collapse sidebar"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
         )}
-        <button
-          onClick={() => setCollapsed(!collapsed)}
-          className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
-        >
-          <Menu className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-        </button>
       </div>
 
-      {/* Navigation Menu */}
-      <nav className="px-2 py-4">
+      {!collapsed && (
+        <div className="px-4 py-3">
+          <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold text-white bg-gradient-to-r ${portal.gradient}`}>
+            {portal.label}
+          </span>
+        </div>
+      )}
+
+      <nav className="flex-1 px-2 py-2 space-y-1 overflow-y-auto">
         {menuItems.map((item) => (
           <NavLink
             key={item.to}
             to={item.to}
+            title={collapsed ? item.label : undefined}
             className={({ isActive }) =>
-              `flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors ${
-                isActive
-                  ? 'bg-primary/10 text-primary dark:bg-accent/10 dark:text-accent'
-                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-              }`
+              `dashboard-nav-link ${isActive ? 'dashboard-nav-link--active' : ''} ${collapsed ? 'justify-center' : ''}`
             }
           >
-            <item.icon className={`w-5 h-5 ${collapsed ? 'mx-auto' : ''}`} />
+            <item.icon className="w-5 h-5 flex-shrink-0" />
             {!collapsed && <span>{item.label}</span>}
           </NavLink>
         ))}
       </nav>
 
-      {/* Profile Section */}
-      <div className="absolute bottom-0 left-0 right-0 p-4">
-        <ProfileDropdown />
+      <div className="p-3 border-t border-slate-700/40">
+        <ProfileDropdown collapsed={collapsed} />
       </div>
 
-      {/* Collapse Toggle */}
-      <button
-        onClick={() => setCollapsed(!collapsed)}
-        className="absolute -right-3 top-20 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-full p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700"
-      >
-        {collapsed ? (
+      {collapsed && (
+        <button
+          onClick={onToggle}
+          className="absolute -right-3 top-20 bg-slate-800 border border-slate-700 rounded-full p-1.5 hover:bg-slate-700 text-slate-400 hover:text-slate-200 transition-colors"
+          aria-label="Expand sidebar"
+        >
           <ChevronRight className="w-4 h-4" />
-        ) : (
-          <ChevronLeft className="w-4 h-4" />
-        )}
-      </button>
+        </button>
+      )}
     </aside>
   )
 }
