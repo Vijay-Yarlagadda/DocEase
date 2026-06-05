@@ -112,14 +112,14 @@ const Signup = () => {
         navigate(roleData.route)
       }, 500)
     } catch (err) {
-      console.error('Signup error:', err)
-      // Friendly guidance for Firestore permission errors
-      const msg = err?.message || ''
-      if (msg.toLowerCase().includes('permission') || msg.toLowerCase().includes('insufficient')) {
-        showError('Account creation failed due to backend permissions. Please check Firebase Firestore rules or contact the system administrator.')
-      } else {
-        showError(msg || 'Signup failed. Please try again.')
-      }
+      console.error('[Signup] caught error:', err)
+      console.error('[Signup] error.code:', err?.code)
+      console.error('[Signup] error.message:', err?.message)
+      console.error('[Signup] full error object:', err)
+
+      // Show the actual error message from Firebase (or fallback generic)
+      const displayMessage = err?.message || 'Signup failed. Please try again.'
+      showError(displayMessage)
     } finally {
       setLoading(false)
     }

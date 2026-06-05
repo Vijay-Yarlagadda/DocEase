@@ -7,12 +7,24 @@ import { auth, db } from './firebase.js';
 async function signup({ name, email, password, phone, role }) {
   try {
     // create the user with email/password
-    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    console.info('[signup.js] creating Firebase Auth user for', email)
+    let userCredential
+    try {
+      userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    } catch (err) {
+      console.error('[signup.js] createUserWithEmailAndPassword failed')
+      console.error('Code:', err?.code)
+      console.error('Message:', err?.message)
+      console.error('Full error:', err)
+      alert('Error: ' + (err?.message || 'Account creation failed'))
+      return
+    }
     const user = userCredential.user;
-    console.log("Account created successfully");
+    console.info('[signup.js] Account created successfully', user?.uid)
 
     // now save extra details in Firestore under 'users' collection
     try {
+      console.info('[signup.js] writing Firestore doc at users/' + user.uid)
       await setDoc(doc(db, 'users', user.uid), {
         name: name || '',
         email: email,
@@ -20,14 +32,17 @@ async function signup({ name, email, password, phone, role }) {
         role: role || 'patient',
         createdAt: serverTimestamp(),
       });
-      console.log("User details saved to Firestore");
+      console.info('[signup.js] User details saved to Firestore')
     } catch (firestoreError) {
-      console.error("Error saving user details:", firestoreError);
+      console.error('[signup.js] Error saving user details:')
+      console.error('Code:', firestoreError?.code)
+      console.error('Message:', firestoreError?.message)
+      console.error('Full error:', firestoreError)
     }
 
   } catch (error) {
-    console.error("Error creating account:", error.message);
-    alert("Error: " + error.message);
+    console.error('[signup.js] Error creating account:', error)
+    alert('Error: ' + (error?.message || 'Unknown error'))
   }
 }
 

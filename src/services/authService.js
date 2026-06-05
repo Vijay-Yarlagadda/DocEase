@@ -77,12 +77,25 @@ export const adminSignup = async (email, password, name) => {
     }
 
     // Create Firebase Auth account
-    const userCredential = await createUserWithEmailAndPassword(auth, email, password)
+    console.info('[authService] adminSignup - creating Firebase Auth user for', email)
+    let userCredential
+    try {
+      userCredential = await createUserWithEmailAndPassword(auth, email, password)
+    } catch (err) {
+      console.error('[authService] adminSignup - createUserWithEmailAndPassword failed')
+      console.error('Code:', err?.code)
+      console.error('Message:', err?.message)
+      console.error('Full error:', err)
+      throw handleAuthError(err)
+    }
     const firebaseUser = userCredential.user
+    console.info('[authService] adminSignup - Firebase user created', firebaseUser?.uid)
 
     // Create Firestore user document. If this fails, roll back the created auth user to avoid orphan accounts.
     try {
-      await setDoc(doc(db, USERS_COLLECTION, firebaseUser.uid), {
+      const userDocRef = doc(db, USERS_COLLECTION, firebaseUser.uid)
+      console.info('[authService] adminSignup - writing Firestore doc at', `${USERS_COLLECTION}/${firebaseUser.uid}`)
+      await setDoc(userDocRef, {
         email: firebaseUser.email,
         mail: firebaseUser.email,
         role: 'admin',
@@ -90,15 +103,19 @@ export const adminSignup = async (email, password, name) => {
         uid: firebaseUser.uid,
         createdAt: serverTimestamp(),
       })
+      console.info('[authService] adminSignup - Firestore write successful for', firebaseUser.uid)
     } catch (writeErr) {
+      console.error('[authService] adminSignup - Firestore setDoc failed')
+      console.error('Code:', writeErr?.code)
+      console.error('Message:', writeErr?.message)
+      console.error('Full error:', writeErr)
       // Attempt to remove the created Firebase Auth user
       try {
         await firebaseUser.delete()
       } catch (delErr) {
-        // ignore delete errors; we'll surface the original error
-        console.error('Failed to delete orphan firebase user after Firestore write failed', delErr)
+        console.error('[authService] adminSignup - Failed to delete orphan firebase user after Firestore write failed', delErr)
       }
-      throw writeErr
+      throw handleAuthError(writeErr)
     }
 
     return {
@@ -108,6 +125,9 @@ export const adminSignup = async (email, password, name) => {
       name: name,
     }
   } catch (error) {
+    console.error('[authService] adminSignup - caught error', error)
+    if (error?.code) console.error('Code:', error.code)
+    if (error?.message) console.error('Message:', error.message)
     throw handleAuthError(error)
   }
 }
@@ -127,12 +147,25 @@ export const patientSignup = async (email, password, name) => {
     }
 
     // Create Firebase Auth account
-    const userCredential = await createUserWithEmailAndPassword(auth, email, password)
+    console.info('[authService] patientSignup - creating Firebase Auth user for', email)
+    let userCredential
+    try {
+      userCredential = await createUserWithEmailAndPassword(auth, email, password)
+    } catch (err) {
+      console.error('[authService] patientSignup - createUserWithEmailAndPassword failed')
+      console.error('Code:', err?.code)
+      console.error('Message:', err?.message)
+      console.error('Full error:', err)
+      throw handleAuthError(err)
+    }
     const firebaseUser = userCredential.user
+    console.info('[authService] patientSignup - Firebase user created', firebaseUser?.uid)
 
     // Create Firestore user document. If this fails, roll back the created auth user to avoid orphan accounts.
     try {
-      await setDoc(doc(db, USERS_COLLECTION, firebaseUser.uid), {
+      const userDocRef = doc(db, USERS_COLLECTION, firebaseUser.uid)
+      console.info('[authService] patientSignup - writing Firestore doc at', `${USERS_COLLECTION}/${firebaseUser.uid}`)
+      await setDoc(userDocRef, {
         email: firebaseUser.email,
         mail: firebaseUser.email,
         role: 'patient',
@@ -140,13 +173,18 @@ export const patientSignup = async (email, password, name) => {
         uid: firebaseUser.uid,
         createdAt: serverTimestamp(),
       })
+      console.info('[authService] patientSignup - Firestore write successful for', firebaseUser.uid)
     } catch (writeErr) {
+      console.error('[authService] patientSignup - Firestore setDoc failed')
+      console.error('Code:', writeErr?.code)
+      console.error('Message:', writeErr?.message)
+      console.error('Full error:', writeErr)
       try {
         await firebaseUser.delete()
       } catch (delErr) {
-        console.error('Failed to delete orphan firebase user after Firestore write failed', delErr)
+        console.error('[authService] patientSignup - Failed to delete orphan firebase user after Firestore write failed', delErr)
       }
-      throw writeErr
+      throw handleAuthError(writeErr)
     }
 
     return {
@@ -156,6 +194,9 @@ export const patientSignup = async (email, password, name) => {
       name: name,
     }
   } catch (error) {
+    console.error('[authService] patientSignup - caught error', error)
+    if (error?.code) console.error('Code:', error.code)
+    if (error?.message) console.error('Message:', error.message)
     throw handleAuthError(error)
   }
 }
@@ -323,12 +364,24 @@ export const adminCreateDoctor = async (
     const tempPassword = generateTempPassword(12)
 
     // Create Firebase Auth account for doctor (fallback)
-    const userCredential = await createUserWithEmailAndPassword(auth, email, tempPassword)
+    console.info('[authService] adminCreateDoctor - creating Firebase Auth user for', email)
+    let userCredential
+    try {
+      userCredential = await createUserWithEmailAndPassword(auth, email, tempPassword)
+    } catch (err) {
+      console.error('[authService] adminCreateDoctor - createUserWithEmailAndPassword failed')
+      console.error('Code:', err?.code)
+      console.error('Message:', err?.message)
+      console.error('Full error:', err)
+      throw handleAuthError(err)
+    }
     const firebaseUser = userCredential.user
+    console.info('[authService] adminCreateDoctor - Firebase user created', firebaseUser?.uid)
 
     // Save doctor document using the Firebase UID as the doc ID
     const docRef = doc(db, DOCTORS_COLLECTION, firebaseUser.uid)
     try {
+      console.info('[authService] adminCreateDoctor - writing Firestore doc at', `${DOCTORS_COLLECTION}/${firebaseUser.uid}`)
       await setDoc(docRef, {
         uid: firebaseUser.uid,
         name,
@@ -340,10 +393,15 @@ export const adminCreateDoctor = async (
         firstLogin: true,
         createdAt: serverTimestamp(),
       })
+      console.info('[authService] adminCreateDoctor - Firestore write successful for', firebaseUser.uid)
     } catch (writeErr) {
+      console.error('[authService] adminCreateDoctor - Firestore setDoc failed')
+      console.error('Code:', writeErr?.code)
+      console.error('Message:', writeErr?.message)
+      console.error('Full error:', writeErr)
       // Roll back auth user if Firestore write fails
       try { await firebaseUser.delete() } catch (e) { console.error('Rollback delete failed', e) }
-      throw writeErr
+      throw handleAuthError(writeErr)
     }
 
     // Return the temp password so the admin can show it once
@@ -425,31 +483,16 @@ export const fetchDoctorData = async (uid) => {
  */
 const handleAuthError = (error) => {
   // Log full error to help debugging (shows code and message in browser console)
-  console.error('Firebase auth error:', error)
+  console.error('[authService] handleAuthError - full error object:', error)
+  if (error?.code) console.error('[authService] handleAuthError - code:', error.code)
+  if (error?.message) console.error('[authService] handleAuthError - message:', error.message)
 
-  let message = 'An authentication error occurred'
-
-  if (error.code === 'auth/email-already-in-use') {
-    message = 'Email is already registered. Please use a different email or try logging in.'
-  } else if (error.code === 'auth/invalid-email') {
-    message = 'Invalid email address'
-  } else if (error.code === 'auth/weak-password') {
-    message = 'Password is too weak. Use at least 8 characters.'
-  } else if (error.code === 'auth/user-not-found') {
-    message = 'User not found. Please check your email or sign up.'
-  } else if (error.code === 'auth/wrong-password') {
-    message = 'Incorrect password. Please try again.'
-  } else if (error.code === 'auth/too-many-requests') {
-    message = 'Too many login attempts. Please try again later.'
-  } else if (error.code === 'auth/invalid-api-key') {
-    message = 'Firebase API key is invalid or not authorized. Verify your VITE_FIREBASE_API_KEY and Firebase project configuration.'
-  } else if (error.code === 'auth/app-not-authorized') {
-    message = 'This Firebase API key is not authorized for this app. Verify the correct Firebase web app configuration and API key.'
-  } else if (error.code === 'auth/network-request-failed') {
-    message = 'Network error. Check your internet connection and try again.'
-  } else if (error.message) {
-    message = error.message
+  // If this is a FirebaseError (has a code), return it unchanged so callers/UI can display the exact message.
+  if (error && error.code) {
+    return error
   }
 
+  // Otherwise, preserve the original message when possible
+  const message = error?.message || 'An authentication error occurred'
   return new Error(message)
 }

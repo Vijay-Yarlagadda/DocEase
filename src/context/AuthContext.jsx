@@ -52,6 +52,7 @@ export const AuthProvider = ({ children }) => {
       }
 
       try {
+        console.info('[AuthContext] login - signing in with Firebase for', email)
         const userCredential = await signInWithEmailAndPassword(auth, email, password)
         const firebaseUser = userCredential.user
         const idToken = await firebaseUser.getIdToken()
@@ -105,18 +106,10 @@ export const AuthProvider = ({ children }) => {
           return { token: idToken, user: minimal, warning: 'Backend unavailable' }
         }
       } catch (firebaseErr) {
-        if (
-          firebaseErr?.code === 'auth/operation-not-allowed' ||
-          firebaseErr?.code === 'auth/configuration-not-found'
-        ) {
-          throw new Error('Firebase email/password authentication is disabled. Enable it in Firebase console.')
-        }
-        if (firebaseErr?.code === 'auth/invalid-api-key') {
-          throw new Error('Firebase API key is invalid. Verify your VITE_FIREBASE_API_KEY and that the web app config matches your project.')
-        }
-        if (firebaseErr?.code === 'app/no-app') {
-          throw new Error('Firebase client not initialized. Check VITE_FIREBASE_* configuration.')
-        }
+        console.error('[AuthContext] login - Firebase error:', firebaseErr)
+        console.error('[AuthContext] login - code:', firebaseErr?.code)
+        console.error('[AuthContext] login - message:', firebaseErr?.message)
+        // Re-throw the original firebase error so the caller can display the exact message
         throw firebaseErr
       }
     } catch (err) {
@@ -135,6 +128,7 @@ export const AuthProvider = ({ children }) => {
 
       const { email, password, name, role, phone } = payload
       try {
+        console.info('[AuthContext] signup - creating Firebase Auth user for', email)
         const userCredential = await createUserWithEmailAndPassword(auth, email, password)
         const firebaseUser = userCredential.user
         const idToken = await firebaseUser.getIdToken()
@@ -142,7 +136,9 @@ export const AuthProvider = ({ children }) => {
         // Create Firestore user document (link Auth <-> Firestore)
         try {
           if (db) {
-            await setDoc(doc(db, USERS_COLLECTION, firebaseUser.uid), {
+            const userDocRef = doc(db, USERS_COLLECTION, firebaseUser.uid)
+            console.info('[AuthContext] signup - writing Firestore doc at', `${USERS_COLLECTION}/${firebaseUser.uid}`)
+            await setDoc(userDocRef, {
               fullName: name || firebaseUser.displayName || '',
               name: name || firebaseUser.displayName || '',
               email: firebaseUser.email,
@@ -152,11 +148,17 @@ export const AuthProvider = ({ children }) => {
               uid: firebaseUser.uid,
               createdAt: serverTimestamp(),
             })
+            console.info('[AuthContext] signup - Firestore write successful for', firebaseUser.uid)
           } else {
             console.warn('Firestore `db` not initialized; skipping user document creation')
           }
         } catch (firestoreErr) {
-          console.warn('Failed to create Firestore user document:', firestoreErr)
+          console.error('[AuthContext] signup - Firestore setDoc failed')
+          console.error('Code:', firestoreErr?.code)
+          console.error('Message:', firestoreErr?.message)
+          console.error('Full error:', firestoreErr)
+          // Let the error bubble up so caller sees exact message
+          throw firestoreErr
         }
 
         try {
@@ -202,18 +204,10 @@ export const AuthProvider = ({ children }) => {
           return { token: idToken, user: minimalUser, warning: 'Backend unavailable, data not saved to database' }
         }
       } catch (firebaseErr) {
-        if (
-          firebaseErr?.code === 'auth/operation-not-allowed' ||
-          firebaseErr?.code === 'auth/configuration-not-found'
-        ) {
-          throw new Error('Firebase email/password authentication is disabled. Enable it in Firebase console.')
-        }
-        if (firebaseErr?.code === 'auth/invalid-api-key') {
-          throw new Error('Firebase API key is invalid. Verify your VITE_FIREBASE_API_KEY and that the web app config matches your project.')
-        }
-        if (firebaseErr?.code === 'app/no-app') {
-          throw new Error('Firebase client not initialized. Check VITE_FIREBASE_* configuration.')
-        }
+        console.error('[AuthContext] signup - Firebase error:', firebaseErr)
+        console.error('[AuthContext] signup - code:', firebaseErr?.code)
+        console.error('[AuthContext] signup - message:', firebaseErr?.message)
+        // Re-throw the original firebase error so the caller can display the exact message
         throw firebaseErr
       }
     } catch (err) {
