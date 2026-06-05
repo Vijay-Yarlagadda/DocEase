@@ -23,8 +23,44 @@ import {
   EmailAuthProvider,
 } from 'firebase/auth'
 
-const USERS_COLLECTION = 'users'
+const USERS_COLLECTION = import.meta.env.VITE_FIRESTORE_USERS_COLLECTION || 'users'
 const DOCTORS_COLLECTION = 'doctors'
+
+const normalizeFirestoreUserDoc = (docData = {}, uid = '', fallbackEmail = '') => {
+  const email = docData.email || docData.mail || fallbackEmail || ''
+  return {
+    uid: uid || docData.uid || '',
+    email,
+    role: docData.role || 'patient',
+    name: docData.name || docData.fullName || '',
+    ...docData,
+    email,
+    uid: uid || docData.uid || '',
+  }
+}
+
+const findUserDocByEmail = async (email) => {
+  const usersRef = collection(db, USERS_COLLECTION)
+  let q = query(usersRef, where('email', '==', email))
+  let snap = await getDocs(q)
+  if (!snap.empty) return snap.docs[0]
+
+  q = query(usersRef, where('mail', '==', email))
+  snap = await getDocs(q)
+  return snap.docs[0] || null
+}
+
+const findDoctorDocByEmail = async (email) => {
+  const doctorsRef = collection(db, DOCTORS_COLLECTION)
+  const queryByEmail = query(doctorsRef, where('email', '==', email))
+  let querySnapshot = await getDocs(queryByEmail)
+  if (!querySnapshot.empty) return querySnapshot.docs[0]
+
+  const queryByMail = query(doctorsRef, where('mail', '==', email))
+  querySnapshot = await getDocs(queryByMail)
+  return querySnapshot.docs[0] || null
+}
+
 
 /**
  * Admin Signup - Create Firebase Auth & Firestore user doc
@@ -48,6 +84,7 @@ export const adminSignup = async (email, password, name) => {
     try {
       await setDoc(doc(db, USERS_COLLECTION, firebaseUser.uid), {
         email: firebaseUser.email,
+        mail: firebaseUser.email,
         role: 'admin',
         name: name,
         uid: firebaseUser.uid,
@@ -97,6 +134,7 @@ export const patientSignup = async (email, password, name) => {
     try {
       await setDoc(doc(db, USERS_COLLECTION, firebaseUser.uid), {
         email: firebaseUser.email,
+        mail: firebaseUser.email,
         role: 'patient',
         name: name,
         uid: firebaseUser.uid,
@@ -146,13 +184,16 @@ export const loginUser = async (email, password, role) => {
     const firebaseUser = userCredential.user
 
     // Get user document from Firestore to verify role
-    const userDoc = await getDoc(doc(db, USERS_COLLECTION, firebaseUser.uid))
+    let userDoc = await getDoc(doc(db, USERS_COLLECTION, firebaseUser.uid))
 
     if (!userDoc.exists()) {
-      throw new Error('User document not found in database')
+      userDoc = await findUserDocByEmail(email)
+      if (!userDoc) {
+        throw new Error('User document not found in database')
+      }
     }
 
-    const userData = userDoc.data()
+    const userData = normalizeFirestoreUserDoc(userDoc.data(), firebaseUser.uid, firebaseUser.email)
 
     // Verify the selected role matches the user's actual role
     if (userData.role !== role) {
@@ -161,12 +202,7 @@ export const loginUser = async (email, password, role) => {
       )
     }
 
-    return {
-      uid: firebaseUser.uid,
-      email: firebaseUser.email,
-      role: userData.role,
-      name: userData.name,
-    }
+    return userData
   } catch (error) {
     throw handleAuthError(error)
   }
@@ -183,16 +219,12 @@ export const doctorLogin = async (email, password) => {
     }
 
     // Search for doctor by email in doctors collection
-    const doctorsRef = collection(db, DOCTORS_COLLECTION)
-    const q = query(doctorsRef, where('email', '==', email))
-    const querySnapshot = await getDocs(q)
+    const doctorDoc = await findDoctorDocByEmail(email)
 
-    if (querySnapshot.empty) {
+    if (!doctorDoc) {
       throw new Error('Doctor not found. Please check your email.')
     }
 
-    // Get doctor document
-    const doctorDoc = querySnapshot.docs[0]
     const doctorData = doctorDoc.data()
 
     // Authenticate with Firebase using the email and password
@@ -200,12 +232,9 @@ export const doctorLogin = async (email, password) => {
     const firebaseUser = userCredential.user
 
     return {
-      uid: firebaseUser.uid,
-      email: firebaseUser.email,
+      ...normalizeFirestoreUserDoc(doctorData, firebaseUser.uid, firebaseUser.email),
       role: 'doctor',
-      name: doctorData.name,
       doctorId: doctorDoc.id,
-      ...doctorData,
     }
   } catch (error) {
     throw handleAuthError(error)
@@ -409,6 +438,12 @@ const handleAuthError = (error) => {
     message = 'Incorrect password. Please try again.'
   } else if (error.code === 'auth/too-many-requests') {
     message = 'Too many login attempts. Please try again later.'
+  } else if (error.code === 'auth/invalid-api-key') {
+    message = 'Firebase API key is invalid or not authorized. Verify your VITE_FIREBASE_API_KEY and Firebase project configuration.'
+  } else if (error.code === 'auth/app-not-authorized') {
+    message = 'This Firebase API key is not authorized for this app. Verify the correct Firebase web app configuration and API key.'
+  } else if (error.code === 'auth/network-request-failed') {
+    message = 'Network error. Check your internet connection and try again.'
   } else if (error.message) {
     message = error.message
   }

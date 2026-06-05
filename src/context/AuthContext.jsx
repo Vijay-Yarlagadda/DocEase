@@ -4,10 +4,10 @@ import { useNavigate } from 'react-router-dom'
 // Optional Firebase client — initialize in src/services/firebase.js using VITE_FIREBASE_* env vars
 import { auth, db } from '../services/firebase'
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth'
-import { doc, setDoc, serverTimestamp, getDoc } from 'firebase/firestore'
+import { doc, setDoc, serverTimestamp, getDoc, collection, query, where, getDocs } from 'firebase/firestore'
 
-// Use provided collection id if set, otherwise fall back to this specific collection id
-const USERS_COLLECTION = import.meta.env.VITE_FIRESTORE_USERS_COLLECTION || 'ASjw9v0N0hggMbhwjpy5'
+// Use provided collection id if set, otherwise fall back to the standard users collection
+const USERS_COLLECTION = import.meta.env.VITE_FIRESTORE_USERS_COLLECTION || 'users'
 
 export const AuthContext = createContext(null)
 
@@ -65,7 +65,17 @@ export const AuthProvider = ({ children }) => {
         let firestoreProfile = null
         try {
           if (db) {
-            const snap = await getDoc(doc(db, USERS_COLLECTION, firebaseUser.uid))
+            let snap = await getDoc(doc(db, USERS_COLLECTION, firebaseUser.uid))
+            if (!snap.exists()) {
+              const usersRef = collection(db, USERS_COLLECTION)
+              let emailQuery = query(usersRef, where('email', '==', firebaseUser.email))
+              let querySnap = await getDocs(emailQuery)
+              if (querySnap.empty) {
+                emailQuery = query(usersRef, where('mail', '==', firebaseUser.email))
+                querySnap = await getDocs(emailQuery)
+              }
+              if (!querySnap.empty) snap = querySnap.docs[0]
+            }
             if (snap.exists()) firestoreProfile = snap.data()
           }
         } catch (readErr) {
@@ -101,6 +111,9 @@ export const AuthProvider = ({ children }) => {
         ) {
           throw new Error('Firebase email/password authentication is disabled. Enable it in Firebase console.')
         }
+        if (firebaseErr?.code === 'auth/invalid-api-key') {
+          throw new Error('Firebase API key is invalid. Verify your VITE_FIREBASE_API_KEY and that the web app config matches your project.')
+        }
         if (firebaseErr?.code === 'app/no-app') {
           throw new Error('Firebase client not initialized. Check VITE_FIREBASE_* configuration.')
         }
@@ -131,7 +144,9 @@ export const AuthProvider = ({ children }) => {
           if (db) {
             await setDoc(doc(db, USERS_COLLECTION, firebaseUser.uid), {
               fullName: name || firebaseUser.displayName || '',
+              name: name || firebaseUser.displayName || '',
               email: firebaseUser.email,
+              mail: firebaseUser.email,
               phone: phone || '',
               role: role || 'patient',
               uid: firebaseUser.uid,
@@ -192,6 +207,9 @@ export const AuthProvider = ({ children }) => {
           firebaseErr?.code === 'auth/configuration-not-found'
         ) {
           throw new Error('Firebase email/password authentication is disabled. Enable it in Firebase console.')
+        }
+        if (firebaseErr?.code === 'auth/invalid-api-key') {
+          throw new Error('Firebase API key is invalid. Verify your VITE_FIREBASE_API_KEY and that the web app config matches your project.')
         }
         if (firebaseErr?.code === 'app/no-app') {
           throw new Error('Firebase client not initialized. Check VITE_FIREBASE_* configuration.')
