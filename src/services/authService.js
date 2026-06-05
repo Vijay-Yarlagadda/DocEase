@@ -424,6 +424,9 @@ export const fetchDoctorData = async (uid) => {
  * Handle Firebase errors and return user-friendly messages
  */
 const handleAuthError = (error) => {
+  // Log full error to help debugging (shows code and message in browser console)
+  console.error('Firebase auth error:', error)
+
   let message = 'An authentication error occurred'
 
   if (error.code === 'auth/email-already-in-use') {
