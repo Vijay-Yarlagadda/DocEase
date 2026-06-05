@@ -105,7 +105,7 @@ const Login = () => {
   }
 
   return (
-    <div className="pt-20 min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-gray-900 dark:to-gray-800 py-12">
+    <div className="pt-20 min-h-screen flex items-center justify-center bg-slate-100 dark:bg-slate-950 py-12">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -113,11 +113,11 @@ const Login = () => {
           transition={{ duration: 0.8 }}
           className="text-center mb-8"
         >
-          <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 dark:text-white mb-4">
-            Welcome Back to <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">DocEase</span>
+          <h1 className="text-4xl sm:text-5xl font-bold text-slate-900 dark:text-white mb-4">
+            Welcome Back to <span className="text-primary">DocEase</span>
           </h1>
-          <p className="text-lg text-gray-600 dark:text-gray-300">
-            Sign in to access your portal
+          <p className="text-lg text-slate-600 dark:text-slate-300 max-w-2xl mx-auto">
+            Sign in to access your dashboard, manage patients, appointments, and hospital workflows.
           </p>
         </motion.div>
 
@@ -125,13 +125,15 @@ const Login = () => {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.2 }}
-          className="card max-w-2xl mx-auto"
+          className="bg-white dark:bg-slate-900 shadow-xl border border-slate-200 dark:border-slate-800 rounded-[28px] p-8 max-w-2xl mx-auto"
         >
-          {/* Role Selection */}
           <div className="mb-8">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-4">
-              Select Your Role
-            </label>
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">Select your role</p>
+                <p className="text-sm text-slate-500 dark:text-slate-400">Choose the portal you want to sign in to.</p>
+              </div>
+            </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {roles.map((role) => {
                 const Icon = role.icon
@@ -141,34 +143,39 @@ const Login = () => {
                     key={role.id}
                     type="button"
                     onClick={() => setSelectedRole(role.id)}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className={`p-4 rounded-lg border-2 transition-all ${
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.98 }}
+                    className={`p-5 rounded-3xl border transition duration-300 text-left ${
                       isSelected
-                        ? `border-primary bg-gradient-to-br ${role.gradient} text-white`
-                        : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:border-primary dark:hover:border-accent'
+                        ? 'border-primary bg-primary/10 text-slate-900 dark:text-white shadow-sm'
+                        : 'border-slate-300 bg-slate-50 dark:border-slate-700 dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:border-primary'
                     }`}
                   >
-                    <Icon className="w-8 h-8 mx-auto mb-2" />
-                    <p className="font-semibold">{role.label}</p>
-                    <p className="text-xs mt-1 opacity-80">{role.description}</p>
+                    <div className="flex items-center gap-3 mb-4">
+                      <span className={`inline-flex items-center justify-center w-11 h-11 rounded-2xl ${isSelected ? 'bg-primary text-white' : 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200'}`}>
+                        <Icon className="w-5 h-5" />
+                      </span>
+                      <div>
+                        <p className="font-semibold text-base">{role.label}</p>
+                        <p className="text-sm text-slate-500 dark:text-slate-400">{role.description}</p>
+                      </div>
+                    </div>
                   </motion.button>
                 )
               })}
             </div>
           </div>
 
-          {/* Login Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label
                 htmlFor="email"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-2"
               >
                 Email Address
               </label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
                 <input
                   type="email"
                   id="email"
@@ -177,7 +184,7 @@ const Login = () => {
                   onChange={handleChange}
                   disabled={loading}
                   required
-                  className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 placeholder-opacity-100 focus:ring-2 focus:ring-primary focus:border-transparent transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full pl-10 pr-4 py-3 rounded-2xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition"
                   placeholder="your.email@example.com"
                 />
               </div>
@@ -186,12 +193,12 @@ const Login = () => {
             <div>
               <label
                 htmlFor="password"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-2"
               >
                 Password
               </label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
                 <input
                   type={showPassword ? 'text' : 'password'}
                   id="password"
@@ -200,14 +207,14 @@ const Login = () => {
                   onChange={handleChange}
                   disabled={loading}
                   required
-                  className="w-full pl-10 pr-12 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 placeholder-opacity-100 focus:ring-2 focus:ring-primary focus:border-transparent transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  placeholder="Enter your password"
+                  className="w-full pl-10 pr-12 py-3 rounded-2xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition"
+                  placeholder="Enter password"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword((prev) => !prev)}
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:text-gray-300 dark:hover:text-white"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-500 hover:text-slate-700 dark:text-slate-300 dark:hover:text-white"
                 >
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
@@ -217,7 +224,7 @@ const Login = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-gradient-to-r from-primary to-secondary hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-lg transition-all duration-300 flex items-center justify-center gap-2"
+              className="w-full bg-primary text-white hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed font-semibold py-3 rounded-2xl transition-all duration-300 flex items-center justify-center gap-2 shadow-sm"
             >
               {loading ? (
                 <>
@@ -233,9 +240,9 @@ const Login = () => {
             </button>
           </form>
 
-          <p className="text-center text-gray-600 dark:text-gray-300 mt-6">
-            Don't have an account?{' '}
-            <Link to="/signup" className="text-primary hover:text-secondary font-semibold transition-colors">
+          <p className="text-center text-slate-600 dark:text-slate-400 mt-6">
+            Don’t have an account?{' '}
+            <Link to="/signup" className="text-primary hover:text-primary/80 font-semibold transition-colors">
               Sign up here
             </Link>
           </p>
