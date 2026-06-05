@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom'
 import { auth, db } from '../services/firebase'
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth'
 import { doc, setDoc, serverTimestamp, getDoc, collection, query, where, getDocs } from 'firebase/firestore'
+import { fetchFullUserProfile } from '../services/authService'
 
 // Use provided collection id if set, otherwise fall back to the standard users collection
 const USERS_COLLECTION = import.meta.env.VITE_FIRESTORE_USERS_COLLECTION || 'users'
@@ -17,31 +18,56 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true)
   const navigate = useNavigate()
 
-  // Try auto-login on mount
+  const refreshUserProfile = async (partialUser) => {
+    const base = partialUser || user
+    if (!base) return null
+    const fresh = await fetchFullUserProfile(base)
+    if (fresh) {
+      setUser(fresh)
+      localStorage.setItem('docease_user', JSON.stringify(fresh))
+    }
+    return fresh
+  }
+
+  // Restore session and load Firestore profile on mount
   useEffect(() => {
-    const t = localStorage.getItem('docease_token')
-    if (t) {
-      setAuthToken(t)
-      // Skip backend check if backend is not available
-      // This allows frontend to load instantly
+    const initSession = async () => {
+      const t = localStorage.getItem('docease_token')
+      const storedUser = localStorage.getItem('docease_user')
+
+      if (t) {
+        setAuthToken(t)
+        setToken(t)
+      }
+
+      if (storedUser) {
+        try {
+          const parsed = JSON.parse(storedUser)
+          setUser(parsed)
+          const fresh = await fetchFullUserProfile(parsed)
+          if (fresh) {
+            setUser(fresh)
+            localStorage.setItem('docease_user', JSON.stringify(fresh))
+          }
+        } catch (err) {
+          console.warn('Failed to restore user session:', err)
+        }
+      }
+
       setLoading(false)
-      
-      // Optionally sync with backend in background (non-blocking)
-      setTimeout(() => {
+
+      if (t) {
         api
           .get('/auth/dashboard')
           .then((res) => {
-            const userData = res.data.user || { name: res.data.message || 'User' }
-            setUser(userData)
-            setToken(t)
+            const userData = res.data.user
+            if (userData) refreshUserProfile(userData)
           })
-          .catch((err) => {
-            console.log('Backend unavailable:', err.message)
-          })
-      }, 1000)
-    } else {
-      setLoading(false)
+          .catch(() => {})
+      }
     }
+
+    initSession()
   }, [])
 
   const login = async (email, password) => {
@@ -228,15 +254,15 @@ export const AuthProvider = ({ children }) => {
 
   const logout = () => {
     localStorage.removeItem('docease_token')
+    localStorage.removeItem('docease_user')
     setAuthToken(null)
     setUser(null)
     setToken(null)
-    // send user to login page after logging out
     navigate('/login')
   }
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, signup, logout, setUser }}>
+    <AuthContext.Provider value={{ user, token, loading, login, signup, logout, setUser, refreshUserProfile }}>
       {children}
     </AuthContext.Provider>
   )

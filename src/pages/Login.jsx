@@ -1,7 +1,9 @@
-import { useState } from 'react'
+import { useState, useContext } from 'react'
+import { AuthContext } from '../context/AuthContext'
 import { useNavigate } from 'react-router-dom'
 import { Shield, UserCheck, Users, ArrowRight, Mail, Lock } from 'lucide-react'
 import { loginUser } from '../services/authService'
+import { auth } from '../services/firebase'
 import { useToast } from '../components/Toast'
 import AuthPageShell from '../components/auth/AuthPageShell'
 import AuthRoleSelector from '../components/auth/AuthRoleSelector'
@@ -17,6 +19,7 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false)
   const navigate = useNavigate()
   const { showSuccess, showError } = useToast()
+  const { setUser } = useContext(AuthContext)
 
   const roles = [
     {
@@ -84,7 +87,11 @@ const Login = () => {
         return
       }
 
+      const idToken = await auth.currentUser?.getIdToken()
+      if (idToken) localStorage.setItem('docease_token', idToken)
+
       showSuccess(`Welcome back, ${user.name}!`)
+      setUser(user)
       localStorage.setItem('docease_user', JSON.stringify(user))
 
       const roleData = roles.find((r) => r.id === selectedRole)

@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useContext } from 'react'
+import { AuthContext } from '../context/AuthContext'
 import { useNavigate } from 'react-router-dom'
 import { Shield, Users, Mail, Lock, User, ArrowRight } from 'lucide-react'
 import { adminSignup, patientSignup } from '../services/authService'
@@ -20,6 +21,7 @@ const Signup = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const navigate = useNavigate()
   const { showSuccess, showError } = useToast()
+  const { setUser } = useContext(AuthContext)
 
   const roles = [
     {
@@ -102,6 +104,7 @@ const Signup = () => {
       }
 
       showSuccess(`Welcome ${result.name}! Signup successful.`)
+      setUser(result)
       localStorage.setItem('docease_user', JSON.stringify(result))
 
       const roleData = roles.find((r) => r.id === selectedRole)

@@ -1,12 +1,54 @@
 import { useState, useContext, useRef, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Settings, LogOut, ChevronDown } from 'lucide-react'
+import { User, UserCog, UserPlus, LogOut } from 'lucide-react'
 import { AuthContext } from '../context/AuthContext'
+import { updateUserProfile } from '../services/authService'
+import { useToast } from './Toast'
+import EditProfileModal from './EditProfileModal'
+import ViewProfileModal from './ViewProfileModal'
+import {
+  getDisplayName,
+  getUserEmail,
+  getInitials,
+  getRoleStyle,
+} from '../utils/userProfile'
 
-const ProfileDropdown = ({ variant = 'sidebar' }) => {
+const MenuButton = ({ icon: Icon, label, onClick, danger = false }) => (
+  <button
+    onClick={onClick}
+    className={`w-full px-4 py-2.5 text-left text-sm flex items-center gap-2.5 transition-colors ${
+      danger
+        ? 'text-red-400 hover:bg-red-500/10'
+        : 'text-slate-300 hover:bg-slate-700/40'
+    }`}
+  >
+    <Icon className={`w-4 h-4 ${danger ? '' : 'text-accent'}`} />
+    <span>{label}</span>
+  </button>
+)
+
+const ProfileDropdown = ({ variant = 'navbar' }) => {
   const [isOpen, setIsOpen] = useState(false)
-  const { user, logout } = useContext(AuthContext)
+  const [showViewModal, setShowViewModal] = useState(false)
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const { user, logout, setUser, refreshUserProfile } = useContext(AuthContext)
+  const { showSuccess, showError } = useToast()
+  const navigate = useNavigate()
   const dropdownRef = useRef(null)
+
+  const displayName = getDisplayName(user)
+  const email = getUserEmail(user)
+  const initials = getInitials(user)
+  const roleStyle = getRoleStyle(user?.role)
+  const isAdmin = user?.role === 'admin'
+
+  useEffect(() => {
+    if (user?.uid || user?.email || user?.mail) {
+      refreshUserProfile?.(user)
+    }
+  }, [user?.uid])
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -18,124 +60,102 @@ const ProfileDropdown = ({ variant = 'sidebar' }) => {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
+  const closeMenu = () => setIsOpen(false)
+
+  const handleViewProfile = () => {
+    closeMenu()
+    setShowViewModal(true)
+  }
+
+  const handleEditProfile = () => {
+    closeMenu()
+    setShowEditModal(true)
+  }
+
+  const handleAddDoctor = () => {
+    closeMenu()
+    navigate('/admin/add-doctor')
+  }
+
   const handleLogout = () => {
-    setIsOpen(false)
+    closeMenu()
     logout()
   }
 
-  const initials = (user?.name || 'U')
-    .split(' ')
-    .map((n) => n[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase()
+  const handleSaveProfile = async (updates) => {
+    setSaving(true)
+    try {
+      const updated = await updateUserProfile(user, updates)
+      setUser(updated)
+      localStorage.setItem('docease_user', JSON.stringify(updated))
+      showSuccess('Profile updated successfully')
+    } catch (err) {
+      showError(err.message || 'Failed to update profile')
+    } finally {
+      setSaving(false)
+    }
+  }
 
-  if (variant === 'navbar') {
-    return (
+  return (
+    <>
       <div className="relative" ref={dropdownRef}>
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="flex items-center gap-2.5 pl-1 pr-2 py-1 rounded-xl hover:bg-slate-800/60 transition-colors"
+          className={`flex items-center justify-center rounded-full bg-gradient-to-br ${roleStyle.gradient} text-xs font-bold text-white ring-2 ${roleStyle.ring} hover:scale-105 transition-transform duration-200 ${
+            variant === 'navbar' ? 'w-9 h-9' : 'w-10 h-10'
+          }`}
+          aria-label="Open profile menu"
         >
-          <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-secondary text-xs font-bold text-white">
-            {initials}
-          </span>
-          <div className="hidden md:block text-left">
-            <p className="text-sm font-medium text-slate-200 leading-tight">
-              {user?.name || 'Profile'}
-            </p>
-            <p className="text-[11px] text-slate-500 capitalize leading-tight">
-              {user?.role}
-            </p>
-          </div>
-          <ChevronDown className={`w-4 h-4 text-slate-500 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+          {initials}
         </button>
 
         <AnimatePresence>
           {isOpen && (
             <motion.div
-              initial={{ opacity: 0, y: -8, scale: 0.96 }}
+              initial={{ opacity: 0, y: -8, scale: 0.97 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -8, scale: 0.96 }}
+              exit={{ opacity: 0, y: -8, scale: 0.97 }}
               transition={{ duration: 0.15 }}
-              className="absolute right-0 top-full mt-2 w-56 bg-slate-800/95 backdrop-blur-xl border border-slate-700/50 rounded-xl shadow-2xl shadow-black/40 py-1 z-50"
+              className={`absolute bg-slate-800/95 backdrop-blur-xl border border-slate-700/50 rounded-xl shadow-2xl shadow-black/50 overflow-hidden z-50 w-64 ${
+                variant === 'navbar' ? 'right-0 top-full mt-2' : 'bottom-full mb-2 right-0'
+              }`}
             >
-              <div className="px-4 py-3 border-b border-slate-700/50">
-                <p className="text-sm font-medium text-white truncate">{user?.name}</p>
-                <p className="text-xs text-slate-400 truncate">{user?.email}</p>
+              <div className="px-4 py-4 border-b border-slate-700/50">
+                <p className="text-sm font-semibold text-white truncate">{displayName}</p>
+                <p className="text-xs text-slate-400 truncate mt-0.5">{email || 'No email'}</p>
+                <span className={`inline-flex mt-2 px-2 py-0.5 rounded-full text-[10px] font-semibold border ${roleStyle.badge}`}>
+                  {roleStyle.label}
+                </span>
               </div>
 
-              <button
-                onClick={() => setIsOpen(false)}
-                className="w-full px-4 py-2.5 text-left text-sm text-slate-300 hover:bg-slate-700/50 flex items-center gap-2.5 transition-colors"
-              >
-                <Settings className="w-4 h-4" />
-                <span>Settings</span>
-              </button>
-
-              <button
-                onClick={handleLogout}
-                className="w-full px-4 py-2.5 text-left text-sm text-red-400 hover:bg-slate-700/50 flex items-center gap-2.5 transition-colors"
-              >
-                <LogOut className="w-4 h-4" />
-                <span>Logout</span>
-              </button>
+              <div className="py-1">
+                <MenuButton icon={User} label="View Profile" onClick={handleViewProfile} />
+                <MenuButton icon={UserCog} label="Edit Profile" onClick={handleEditProfile} />
+                {isAdmin && (
+                  <MenuButton icon={UserPlus} label="Add Doctors" onClick={handleAddDoctor} />
+                )}
+                <div className="my-1 border-t border-slate-700/50" />
+                <MenuButton icon={LogOut} label="Logout" onClick={handleLogout} danger />
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
       </div>
-    )
-  }
 
-  return (
-    <div className="relative" ref={dropdownRef}>
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center gap-2 p-2 rounded-lg hover:bg-slate-800/80 transition-colors"
-      >
-        <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-secondary text-xs font-bold text-white flex-shrink-0">
-          {initials}
-        </span>
-        <div className="flex-1 text-left min-w-0">
-          <p className="text-sm font-medium text-slate-200 truncate">{user?.name || 'Profile'}</p>
-          <p className="text-xs text-slate-500 capitalize truncate">{user?.role}</p>
-        </div>
-        <ChevronDown className={`w-4 h-4 text-slate-500 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
-      </button>
+      <ViewProfileModal
+        isOpen={showViewModal}
+        onClose={() => setShowViewModal(false)}
+        user={user}
+      />
 
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 8 }}
-            transition={{ duration: 0.15 }}
-            className="absolute bottom-full mb-2 left-0 right-0 bg-slate-800/95 backdrop-blur-xl border border-slate-700/50 rounded-xl shadow-xl py-1 z-50"
-          >
-            <div className="px-4 py-2.5 border-b border-slate-700/50">
-              <p className="text-sm font-medium text-white truncate">{user?.name}</p>
-              <p className="text-xs text-slate-400 truncate">{user?.email}</p>
-            </div>
-
-            <button
-              onClick={() => setIsOpen(false)}
-              className="w-full px-4 py-2 text-left text-sm text-slate-300 hover:bg-slate-700/50 flex items-center gap-2 transition-colors"
-            >
-              <Settings className="w-4 h-4" />
-              <span>Settings</span>
-            </button>
-
-            <button
-              onClick={handleLogout}
-              className="w-full px-4 py-2 text-left text-sm text-red-400 hover:bg-slate-700/50 flex items-center gap-2 transition-colors"
-            >
-              <LogOut className="w-4 h-4" />
-              <span>Logout</span>
-            </button>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
+      <EditProfileModal
+        isOpen={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        user={user}
+        onSave={handleSaveProfile}
+        saving={saving}
+      />
+    </>
   )
 }
 

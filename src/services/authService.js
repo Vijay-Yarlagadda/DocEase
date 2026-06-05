@@ -304,6 +304,83 @@ export const getCurrentUser = () => {
 }
 
 /**
+ * Fetch the full user profile from Firestore (users or doctors collection)
+ */
+export const fetchFullUserProfile = async (partialUser = {}) => {
+  try {
+    if (!db) return normalizeFirestoreUserDoc(partialUser, partialUser.uid, partialUser.email || partialUser.mail)
+
+    const uid = partialUser.uid || auth.currentUser?.uid || ''
+    const email = partialUser.email || partialUser.mail || auth.currentUser?.email || ''
+    const role = partialUser.role || 'patient'
+
+    if (role === 'doctor') {
+      if (uid) {
+        const doctorData = await fetchDoctorData(uid)
+        if (doctorData) {
+          return normalizeFirestoreUserDoc({ ...doctorData, role: 'doctor' }, uid, email)
+        }
+      }
+      if (email) {
+        const doctorDoc = await findDoctorDocByEmail(email)
+        if (doctorDoc) {
+          return normalizeFirestoreUserDoc({ ...doctorDoc.data(), role: 'doctor' }, doctorDoc.id, email)
+        }
+      }
+    } else {
+      if (uid) {
+        const userData = await fetchUserData(uid)
+        if (userData) {
+          return normalizeFirestoreUserDoc(userData, uid, email)
+        }
+      }
+      if (email) {
+        const userDoc = await findUserDocByEmail(email)
+        if (userDoc) {
+          return normalizeFirestoreUserDoc(userDoc.data(), userDoc.id, email)
+        }
+      }
+    }
+
+    return normalizeFirestoreUserDoc(partialUser, uid, email)
+  } catch (error) {
+    console.warn('Failed to fetch full user profile:', error)
+    return normalizeFirestoreUserDoc(partialUser, partialUser.uid, partialUser.email || partialUser.mail)
+  }
+}
+
+/**
+ * Update user profile in Firestore
+ */
+export const updateUserProfile = async (user, updates = {}) => {
+  try {
+    if (!user?.uid) throw new Error('User not found')
+
+    const collectionName = user.role === 'doctor' ? DOCTORS_COLLECTION : USERS_COLLECTION
+    const docRef = doc(db, collectionName, user.uid)
+
+    const payload = {}
+    if (updates.name !== undefined) {
+      payload.name = updates.name.trim()
+      payload.fullName = updates.name.trim()
+    }
+    if (updates.phone !== undefined) {
+      payload.phone = updates.phone.trim()
+    }
+
+    await updateDoc(docRef, payload)
+
+    return normalizeFirestoreUserDoc(
+      { ...user, ...payload },
+      user.uid,
+      user.email || user.mail
+    )
+  } catch (error) {
+    throw handleAuthError(error)
+  }
+}
+
+/**
  * Fetch user data from Firestore
  */
 export const fetchUserData = async (uid) => {
