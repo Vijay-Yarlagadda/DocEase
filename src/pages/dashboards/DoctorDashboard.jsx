@@ -63,10 +63,10 @@ const DoctorDashboard = () => {
           const Icon = s.icon
           return (
             <motion.div key={s.label} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 + i * 0.05 }}>
-              <Link to={s.to} className={`block p-5 rounded-xl bg-slate-800/40 border border-slate-700/40 ${s.color} hover:bg-slate-800/70 transition-all group h-full`}>
+              <Link to={s.to} className={`block p-5 rounded-xl bg-white/95 dark:bg-slate-900/50 border border-slate-200/70 dark:border-slate-700/40 ${s.color} hover:bg-slate-100 dark:hover:bg-slate-800/70 transition-all group h-full`}>
                 <Icon className="w-6 h-6 text-accent mb-3 group-hover:scale-110 transition-transform" />
-                <p className="font-semibold text-white text-sm">{s.label}</p>
-                <p className="text-xs text-slate-500 mt-1">{s.desc}</p>
+                <p className="font-semibold text-slate-900 dark:text-white text-sm">{s.label}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{s.desc}</p>
               </Link>
             </motion.div>
           )
@@ -76,7 +76,7 @@ const DoctorDashboard = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="lg:col-span-2 dashboard-card">
           <div className="flex items-center justify-between mb-5">
-            <h2 className="text-lg font-bold text-white">Assigned Appointments</h2>
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white">Assigned Appointments</h2>
             <Link to="/doctor/appointments" className="text-sm text-accent hover:text-cyan-300">View all</Link>
           </div>
           {loading ? (
@@ -90,10 +90,10 @@ const DoctorDashboard = () => {
           ) : (
             <div className="space-y-3">
               {appointments.slice(0, 5).map((a) => (
-                <motion.div key={a.id} whileHover={{ x: 4 }} className="flex items-center justify-between p-4 rounded-xl bg-slate-900/50 border border-slate-700/30 border-l-4 border-l-cyan-500">
+                <motion.div key={a.id} whileHover={{ x: 4 }} className="flex items-center justify-between p-4 rounded-xl bg-white/95 dark:bg-slate-900/50 border border-slate-200/70 dark:border-slate-700/30 border-l-4 border-l-cyan-500">
                   <div>
-                    <p className="font-medium text-white">{a.patientName || 'Patient'}</p>
-                    <p className="text-sm text-slate-500">{a.date} {a.time ? `at ${a.time}` : ''} &bull; {a.type || 'Consultation'}</p>
+                    <p className="font-medium text-slate-900 dark:text-white">{a.patientName || 'Patient'}</p>
+                    <p className="text-sm text-slate-500 dark:text-slate-400">{a.date} {a.time ? `at ${a.time}` : ''} &bull; {a.type || 'Consultation'}</p>
                   </div>
                   <span className="px-2.5 py-1 rounded-full text-[10px] font-medium bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 capitalize">
                     {a.status || 'confirmed'}
@@ -107,16 +107,16 @@ const DoctorDashboard = () => {
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="dashboard-card">
           <div className="flex items-center gap-2 mb-5">
             <Stethoscope className="w-5 h-5 text-accent" />
-            <h2 className="text-lg font-bold text-white">My Profile</h2>
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white">My Profile</h2>
           </div>
           <div className="space-y-4">
-            <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-900/50 border border-slate-700/30">
+            <div className="flex items-center gap-3 p-3 rounded-xl bg-white/95 dark:bg-slate-900/50 border border-slate-200/70 dark:border-slate-700/30">
               <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-600 to-cyan-400 flex items-center justify-center text-white font-bold">
                 {getDisplayName(user).slice(0, 2).toUpperCase()}
               </div>
               <div>
-                <p className="font-semibold text-white">{getDisplayName(user)}</p>
-                <p className="text-xs text-slate-500">{getUserEmail(user)}</p>
+                <p className="font-semibold text-slate-900 dark:text-white">{getDisplayName(user)}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">{getUserEmail(user)}</p>
               </div>
             </div>
             {user?.specialization && (

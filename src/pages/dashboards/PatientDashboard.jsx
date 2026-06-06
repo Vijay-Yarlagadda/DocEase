@@ -59,7 +59,7 @@ const PatientDashboard = () => {
           className="lg:col-span-2 dashboard-card"
         >
           <div className="flex items-center justify-between mb-5">
-            <h2 className="text-lg font-bold text-white">Upcoming Appointments</h2>
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white">Upcoming Appointments</h2>
             <Link to="#" className="text-sm text-accent hover:text-cyan-300 transition-colors">
               View all
             </Link>
@@ -69,15 +69,15 @@ const PatientDashboard = () => {
               <motion.div
                 key={appointment.id}
                 whileHover={{ x: 4 }}
-                className="flex items-center justify-between p-4 rounded-xl bg-slate-900/50 border border-slate-700/30 border-l-4 border-l-teal-500 hover:border-slate-600/50 transition-colors"
+                className="flex items-center justify-between p-4 rounded-xl bg-white/95 dark:bg-slate-900/50 border border-slate-200/70 dark:border-slate-700/30 border-l-4 border-l-teal-500 hover:border-slate-300 dark:hover:border-slate-600/50 transition-colors"
               >
                 <div className="flex items-center gap-4">
                   <div className="p-2 rounded-lg bg-teal-500/15">
                     <Calendar className="w-5 h-5 text-teal-400" />
                   </div>
                   <div>
-                    <p className="font-medium text-white">{appointment.doctor}</p>
-                    <p className="text-sm text-slate-500">
+                    <p className="font-medium text-slate-900 dark:text-white">{appointment.doctor}</p>
+                    <p className="text-sm text-slate-500 dark:text-slate-400">
                       {appointment.type} &bull; {appointment.date} at {appointment.time}
                     </p>
                   </div>
@@ -96,7 +96,7 @@ const PatientDashboard = () => {
           transition={{ duration: 0.5, delay: 0.4 }}
           className="dashboard-card"
         >
-          <h2 className="text-lg font-bold text-white mb-5">Quick Actions</h2>
+          <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-5">Quick Actions</h2>
           <div className="space-y-2">
             {quickActions.map((action) => {
               const Icon = action.icon
@@ -104,10 +104,10 @@ const PatientDashboard = () => {
                 <motion.button
                   key={action.label}
                   whileHover={{ x: 4 }}
-                  className="w-full flex items-center gap-3 p-3.5 rounded-xl bg-slate-900/50 border border-slate-700/30 hover:border-teal-500/30 hover:bg-slate-800/80 transition-all"
+                  className="w-full flex items-center gap-3 p-3.5 rounded-xl bg-white/95 dark:bg-slate-900/50 border border-slate-200/70 dark:border-slate-700/30 hover:border-teal-500/30 dark:hover:bg-slate-800/70 transition-all"
                 >
                   <Icon className="w-5 h-5 text-teal-400" />
-                  <span className="font-medium text-slate-300">{action.label}</span>
+                  <span className="font-medium text-slate-900 dark:text-slate-300">{action.label}</span>
                 </motion.button>
               )
             })}
@@ -122,7 +122,7 @@ const PatientDashboard = () => {
         className="dashboard-card"
       >
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
-          <h2 className="text-lg font-bold text-white">Recent Medical Files</h2>
+          <h2 className="text-lg font-bold text-slate-900 dark:text-white">Recent Medical Files</h2>
           <button className="btn-secondary inline-flex items-center text-sm">
             <Upload className="w-4 h-4 mr-2" />
             Upload New File
@@ -133,15 +133,15 @@ const PatientDashboard = () => {
             <motion.div
               key={file.id}
               whileHover={{ x: 4 }}
-              className="flex items-center justify-between p-4 rounded-xl bg-slate-900/50 border border-slate-700/30 hover:border-slate-600/50 transition-colors"
+              className="flex items-center justify-between p-4 rounded-xl bg-white/95 dark:bg-slate-900/50 border border-slate-200/70 dark:border-slate-700/30 hover:border-slate-300 dark:hover:border-slate-600/50 transition-colors"
             >
               <div className="flex items-center gap-4">
                 <div className="p-2 rounded-lg bg-accent/15">
                   <FileText className="w-5 h-5 text-accent" />
                 </div>
                 <div>
-                  <p className="font-medium text-white">{file.name}</p>
-                  <p className="text-sm text-slate-500">{file.date} &bull; {file.type}</p>
+                  <p className="font-medium text-slate-900 dark:text-white">{file.name}</p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">{file.date} &bull; {file.type}</p>
                 </div>
               </div>
               <button className="p-2 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition-colors">

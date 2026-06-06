@@ -34,7 +34,7 @@ const AnimatedStatCard = ({ icon: Icon, label, value, change, gradient, delay = 
       <div className="relative flex items-center justify-between">
         <div>
           <p className="text-sm text-slate-400 mb-1">{label}</p>
-          <p className="text-2xl sm:text-3xl font-bold text-white tabular-nums">
+          <p className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white tabular-nums">
             {loading ? '—' : displayValue.toLocaleString()}
           </p>
           {change && <p className="text-xs text-slate-500 mt-1">{change}</p>}

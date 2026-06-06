@@ -85,13 +85,13 @@ const AdminDashboard = () => {
             >
               <Link
                 to={link.to}
-                className={`flex items-center justify-between p-4 rounded-xl bg-slate-800/40 border border-slate-700/40 ${link.color} hover:bg-slate-800/70 transition-all group`}
+                className={`flex items-center justify-between p-4 rounded-xl bg-white/95 dark:bg-slate-900/50 border border-slate-200/70 dark:border-slate-700/40 ${link.color} hover:bg-slate-100 dark:hover:bg-slate-800/70 transition-all group`}
               >
                 <div className="flex items-center gap-3">
                   <Icon className="w-5 h-5 text-accent" />
-                  <span className="text-sm font-medium text-slate-200">{link.label}</span>
+                  <span className="text-sm font-medium text-slate-900 dark:text-white">{link.label}</span>
                 </div>
-                <ArrowRight className="w-4 h-4 text-slate-500 group-hover:text-accent group-hover:translate-x-1 transition-all" />
+                <ArrowRight className="w-4 h-4 text-slate-500 dark:text-slate-400 group-hover:text-accent group-hover:translate-x-1 transition-all" />
               </Link>
             </motion.div>
           )
@@ -113,17 +113,17 @@ const AdminDashboard = () => {
           className="dashboard-card mb-8"
         >
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-base font-semibold text-white">Upcoming Appointments</h3>
+            <h3 className="text-base font-semibold text-slate-900 dark:text-white">Upcoming Appointments</h3>
             <Link to="/admin/appointments" className="text-xs text-accent hover:text-cyan-300 flex items-center gap-1">
               View all <ArrowRight className="w-3 h-3" />
             </Link>
           </div>
           <div className="space-y-2">
             {upcoming.map((a) => (
-              <div key={a.id} className="flex items-center justify-between p-3 rounded-xl bg-slate-900/50 border border-slate-700/30">
+              <div key={a.id} className="flex items-center justify-between p-3 rounded-xl bg-white/95 dark:bg-slate-900/50 border border-slate-200/70 dark:border-slate-700/30">
                 <div>
-                  <p className="text-sm font-medium text-white">{a.patientName || 'Patient'}</p>
-                  <p className="text-xs text-slate-500">Dr. {a.doctorName || '—'} &bull; {a.date}</p>
+                  <p className="text-sm font-medium text-slate-900 dark:text-white">{a.patientName || 'Patient'}</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">Dr. {a.doctorName || '—'} &bull; {a.date}</p>
                 </div>
                 <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 capitalize">
                   {a.status || 'pending'}
