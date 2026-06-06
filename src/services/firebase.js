@@ -1,5 +1,5 @@
 // Initialize Firebase client (modular SDK)
-import { initializeApp } from 'firebase/app'
+import { initializeApp, getApps } from 'firebase/app'
 import { getAuth } from 'firebase/auth'
 import { getFirestore } from 'firebase/firestore'
 import { getFunctions } from 'firebase/functions'
@@ -45,4 +45,10 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const functions = getFunctions ? getFunctions(app) : null;
 
-export { auth, db, functions };
+// Secondary auth instance — used when admin creates doctor accounts
+// so the admin session is not replaced by the new doctor login
+const secondaryApp = getApps().find((a) => a.name === 'Secondary')
+  || initializeApp(firebaseConfig, 'Secondary')
+const secondaryAuth = getAuth(secondaryApp)
+
+export { auth, secondaryAuth, db, functions };

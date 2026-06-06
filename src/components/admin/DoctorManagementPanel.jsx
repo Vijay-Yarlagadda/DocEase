@@ -10,10 +10,10 @@ import {
   X,
   Filter,
   Stethoscope,
+  RefreshCw,
+  Lock,
 } from 'lucide-react'
-import {
-  adminCreateDoctor,
-} from '../../services/authService'
+import { adminCreateDoctor, generateTempPassword } from '../../services/authService'
 import {
   getAllDoctors,
   updateDoctor,
@@ -23,8 +23,16 @@ import {
 } from '../../services/adminService'
 import { useToast } from '../Toast'
 import { PanelSkeleton } from './SkeletonLoader'
+import DoctorCreatedSuccessModal from './DoctorCreatedSuccessModal'
 
-const emptyForm = { name: '', email: '', qualification: '', specialization: '', experience: '' }
+const emptyForm = {
+  name: '',
+  email: '',
+  tempPassword: '',
+  qualification: '',
+  specialization: '',
+  experience: '',
+}
 
 const DoctorManagementPanel = ({ showAddForm = true }) => {
   const [doctors, setDoctors] = useState([])
@@ -34,7 +42,8 @@ const DoctorManagementPanel = ({ showAddForm = true }) => {
   const [statusFilter, setStatusFilter] = useState('all')
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
-  const [createdTemp, setCreatedTemp] = useState(null)
+  const [createdDoctor, setCreatedDoctor] = useState(null)
+  const [showSuccessModal, setShowSuccessModal] = useState(false)
   const [resetResult, setResetResult] = useState(null)
   const { showSuccess, showError } = useToast()
 
@@ -51,6 +60,8 @@ const DoctorManagementPanel = ({ showAddForm = true }) => {
 
   useEffect(() => { fetchDoctors() }, [])
 
+  const needsPasswordChange = (d) => d.mustChangePassword === true || d.firstLogin === true
+
   const filteredDoctors = useMemo(() => {
     return doctors.filter((d) => {
       const q = search.toLowerCase()
@@ -61,24 +72,38 @@ const DoctorManagementPanel = ({ showAddForm = true }) => {
         d.specialization?.toLowerCase().includes(q)
       const matchesStatus =
         statusFilter === 'all' ||
-        (statusFilter === 'active' && d.active !== false && !d.firstLogin) ||
+        (statusFilter === 'active' && d.active !== false && !needsPasswordChange(d)) ||
         (statusFilter === 'inactive' && d.active === false) ||
-        (statusFilter === 'pending' && d.firstLogin)
+        (statusFilter === 'pending' && needsPasswordChange(d))
       return matchesSearch && matchesStatus
     })
   }, [doctors, search, statusFilter])
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value })
 
+  const handleGeneratePassword = () => {
+    setForm({ ...form, tempPassword: generateTempPassword(12) })
+  }
+
   const handleCreate = async (e) => {
     e.preventDefault()
     setSubmitting(true)
     try {
-      const { name, email, qualification, specialization, experience } = form
-      if (!name || !email) throw new Error('Name and email are required')
-      const res = await adminCreateDoctor(name.trim(), email.trim(), qualification.trim(), specialization.trim(), Number(experience || 0))
-      setCreatedTemp(res)
-      showSuccess('Doctor created successfully')
+      const { name, email, tempPassword, qualification, specialization, experience } = form
+      if (!name || !email || !tempPassword) throw new Error('Name, email, and temporary password are required')
+      if (tempPassword.length < 8) throw new Error('Temporary password must be at least 8 characters')
+
+      const res = await adminCreateDoctor(
+        name.trim(),
+        email.trim(),
+        tempPassword,
+        qualification.trim(),
+        specialization.trim(),
+        Number(experience || 0)
+      )
+
+      setCreatedDoctor({ ...res, name: name.trim() })
+      setShowSuccessModal(true)
       setForm(emptyForm)
       await fetchDoctors()
     } catch (err) {
@@ -132,11 +157,12 @@ const DoctorManagementPanel = ({ showAddForm = true }) => {
   }
 
   const handleResetPassword = async (doctor) => {
-    if (!window.confirm(`Reset password for Dr. ${doctor.name}?`)) return
+    if (!window.confirm(`Reset password for Dr. ${doctor.name}? A new temporary password will be generated.`)) return
     try {
       const res = await resetDoctorPassword(doctor.id)
-      setResetResult({ email: doctor.email, tempPassword: res.tempPassword })
-      showSuccess('Temporary password generated')
+      setResetResult({ email: doctor.email, tempPassword: res.tempPassword, name: doctor.name })
+      showSuccess('Temporary password generated — doctor must change it on next login')
+      await fetchDoctors()
     } catch (err) {
       showError(err.message || 'Unable to reset password')
     }
@@ -148,50 +174,72 @@ const DoctorManagementPanel = ({ showAddForm = true }) => {
     <div className="space-y-6">
       {showAddForm && (
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="dashboard-card">
-          <div className="flex items-center gap-2 mb-5">
+          <div className="flex items-center gap-2 mb-2">
             <UserPlus className="w-5 h-5 text-accent" />
             <h3 className="text-base font-semibold text-white">Add Doctor</h3>
           </div>
+          <p className="text-xs text-slate-500 mb-5">Only hospital admins can create doctor accounts. Doctors cannot self-register.</p>
+
           <form onSubmit={handleCreate} className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {['name', 'email', 'qualification', 'specialization'].map((field) => (
-              <input
-                key={field}
-                name={field}
-                value={form[field]}
-                onChange={handleChange}
-                placeholder={field.charAt(0).toUpperCase() + field.slice(1)}
-                className="dashboard-input capitalize-placeholder"
-                required={field === 'name' || field === 'email'}
-              />
-            ))}
-            <input
-              name="experience"
-              value={form.experience}
-              onChange={handleChange}
-              placeholder="Experience (years)"
-              type="number"
-              min="0"
-              className="dashboard-input sm:col-span-2"
-            />
-            <div className="flex justify-end sm:col-span-2">
-              <button type="submit" disabled={submitting} className="btn-primary text-sm">
-                {submitting ? 'Creating...' : 'Create Doctor'}
-              </button>
+            <div>
+              <label className="block text-xs text-slate-400 mb-1">Doctor Name *</label>
+              <input name="name" value={form.name} onChange={handleChange} placeholder="Dr. John Smith" className="dashboard-input" required />
             </div>
-          </form>
-          {createdTemp && (
-            <div className="mt-4 p-4 rounded-xl bg-primary/10 border border-primary/20">
-              <p className="text-sm text-slate-300">
-                Temporary password for <strong className="text-white">{createdTemp.email}</strong>:
-              </p>
-              <div className="mt-2 flex items-center gap-2 flex-wrap">
-                <code className="px-3 py-1.5 bg-slate-900 rounded-lg text-accent text-sm">{createdTemp.tempPassword}</code>
-                <button type="button" onClick={() => navigator.clipboard.writeText(createdTemp.tempPassword)} className="text-sm text-accent hover:text-cyan-300">
-                  Copy
+            <div>
+              <label className="block text-xs text-slate-400 mb-1">Email *</label>
+              <input name="email" type="email" value={form.email} onChange={handleChange} placeholder="doctor@hospital.com" className="dashboard-input" required />
+            </div>
+            <div className="sm:col-span-2">
+              <label className="block text-xs text-slate-400 mb-1">Temporary Password *</label>
+              <div className="flex gap-2">
+                <input
+                  name="tempPassword"
+                  type="text"
+                  value={form.tempPassword}
+                  onChange={handleChange}
+                  placeholder="Min. 8 characters"
+                  className="dashboard-input flex-1"
+                  required
+                  minLength={8}
+                />
+                <button
+                  type="button"
+                  onClick={handleGeneratePassword}
+                  className="px-3 py-2 rounded-lg border border-slate-700 text-slate-400 hover:text-accent hover:border-accent/30 transition-colors inline-flex items-center gap-1.5 text-sm whitespace-nowrap"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                  Generate
                 </button>
               </div>
             </div>
-          )}
+            <div>
+              <label className="block text-xs text-slate-400 mb-1">Qualification</label>
+              <input name="qualification" value={form.qualification} onChange={handleChange} placeholder="MBBS, MD" className="dashboard-input" />
+            </div>
+            <div>
+              <label className="block text-xs text-slate-400 mb-1">Specialization</label>
+              <input name="specialization" value={form.specialization} onChange={handleChange} placeholder="Cardiology" className="dashboard-input" />
+            </div>
+            <div className="sm:col-span-2">
+              <label className="block text-xs text-slate-400 mb-1">Experience (years)</label>
+              <input name="experience" type="number" min="0" value={form.experience} onChange={handleChange} placeholder="5" className="dashboard-input" />
+            </div>
+            <div className="flex justify-end sm:col-span-2">
+              <button type="submit" disabled={submitting} className="btn-primary text-sm inline-flex items-center gap-2">
+                {submitting ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Creating...
+                  </>
+                ) : (
+                  <>
+                    <UserPlus className="w-4 h-4" />
+                    Create Doctor Account
+                  </>
+                )}
+              </button>
+            </div>
+          </form>
         </motion.div>
       )}
 
@@ -205,23 +253,14 @@ const DoctorManagementPanel = ({ showAddForm = true }) => {
           <div className="flex flex-col sm:flex-row gap-2 sm:ml-auto w-full sm:w-auto">
             <div className="relative flex-1 sm:w-56">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-              <input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search doctors..."
-                className="dashboard-input pl-10 text-sm"
-              />
+              <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search doctors..." className="dashboard-input pl-10 text-sm" />
             </div>
             <div className="relative">
               <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="dashboard-input pl-10 text-sm appearance-none cursor-pointer"
-              >
+              <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="dashboard-input pl-10 text-sm appearance-none cursor-pointer">
                 <option value="all">All Status</option>
                 <option value="active">Active</option>
-                <option value="pending">Awaiting Login</option>
+                <option value="pending">Must Change Password</option>
                 <option value="inactive">Inactive</option>
               </select>
             </div>
@@ -229,19 +268,26 @@ const DoctorManagementPanel = ({ showAddForm = true }) => {
         </div>
 
         {resetResult && (
-          <div className="mb-4 p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-start justify-between gap-3">
-            <div>
-              <p className="text-sm text-amber-200">New temp password for {resetResult.email}</p>
-              <code className="text-accent text-sm mt-1 block">{resetResult.tempPassword}</code>
+          <div className="mb-4 p-4 rounded-xl bg-amber-500/10 border border-amber-500/20">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-sm text-amber-200 font-medium">Password reset for {resetResult.name}</p>
+                <p className="text-xs text-slate-400 mt-1">Email: {resetResult.email}</p>
+                <code className="text-accent text-sm mt-2 block">{resetResult.tempPassword}</code>
+              </div>
+              <button onClick={() => setResetResult(null)} className="text-slate-400 hover:text-white"><X className="w-4 h-4" /></button>
             </div>
-            <button onClick={() => setResetResult(null)} className="text-slate-400 hover:text-white"><X className="w-4 h-4" /></button>
+            <button
+              onClick={() => navigator.clipboard.writeText(resetResult.tempPassword)}
+              className="mt-2 text-xs text-accent hover:text-cyan-300"
+            >
+              Copy password
+            </button>
           </div>
         )}
 
         <div className="space-y-2">
-          {filteredDoctors.length === 0 && (
-            <p className="text-sm text-slate-500 text-center py-8">No doctors found</p>
-          )}
+          {filteredDoctors.length === 0 && <p className="text-sm text-slate-500 text-center py-8">No doctors found</p>}
           {filteredDoctors.map((d, i) => (
             <motion.div
               key={d.id}
@@ -254,8 +300,10 @@ const DoctorManagementPanel = ({ showAddForm = true }) => {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <p className="font-medium text-white">{d.name}</p>
-                    {d.firstLogin ? (
-                      <span className="px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/20 text-[10px] font-medium">Awaiting Login</span>
+                    {needsPasswordChange(d) ? (
+                      <span className="px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/20 text-[10px] font-medium inline-flex items-center gap-1">
+                        <Lock className="w-3 h-3" /> Must Change Password
+                      </span>
                     ) : d.active === false ? (
                       <span className="px-2 py-0.5 rounded-full bg-red-500/15 text-red-400 border border-red-500/20 text-[10px] font-medium">Inactive</span>
                     ) : (
@@ -263,7 +311,7 @@ const DoctorManagementPanel = ({ showAddForm = true }) => {
                     )}
                   </div>
                   <p className="text-sm text-slate-500 truncate">{d.email}</p>
-                  <p className="text-xs text-slate-600 mt-0.5">{d.specialization || 'General'} &bull; {d.experience || 0} yrs exp.</p>
+                  <p className="text-xs text-slate-600 mt-0.5">{d.specialization || 'General'} &bull; {d.experience || 0} yrs &bull; {d.qualification || '—'}</p>
                 </div>
                 <div className="flex items-center gap-1 flex-wrap">
                   <button onClick={() => setEditDoctor({ ...d })} className="p-2 rounded-lg text-slate-400 hover:text-accent hover:bg-slate-800 transition-colors" title="Edit"><Pencil className="w-4 h-4" /></button>
@@ -276,6 +324,12 @@ const DoctorManagementPanel = ({ showAddForm = true }) => {
           ))}
         </div>
       </motion.div>
+
+      <DoctorCreatedSuccessModal
+        isOpen={showSuccessModal}
+        onClose={() => setShowSuccessModal(false)}
+        doctor={createdDoctor}
+      />
 
       <AnimatePresence>
         {editDoctor && (

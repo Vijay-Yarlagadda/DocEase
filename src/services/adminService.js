@@ -94,6 +94,7 @@ export const resetDoctorPassword = async (doctorId) => {
   const tempPassword = generateTempPassword(12)
   await updateDoc(doc(db, DOCTORS_COLLECTION, doctorId), {
     tempPasswordReset: tempPassword,
+    mustChangePassword: true,
     firstLogin: true,
     passwordResetAt: serverTimestamp(),
   })

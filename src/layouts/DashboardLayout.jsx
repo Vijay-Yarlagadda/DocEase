@@ -1,9 +1,28 @@
-import { Outlet, useLocation } from 'react-router-dom'
+import { Outlet, useNavigate, useLocation } from 'react-router-dom'
+import { useEffect, useContext } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import DashboardNavbar from '../components/dashboard/DashboardNavbar'
+import { AuthContext } from '../context/AuthContext'
+import { doctorMustChangePassword } from '../services/authService'
 
 const DashboardLayout = ({ darkMode, toggleDarkMode }) => {
   const location = useLocation()
+  const navigate = useNavigate()
+  const { user } = useContext(AuthContext)
+
+  useEffect(() => {
+    if (
+      user?.role === 'doctor' &&
+      doctorMustChangePassword(user) &&
+      location.pathname.startsWith('/doctor') &&
+      !location.pathname.includes('change-password')
+    ) {
+      navigate('/doctor/change-password', {
+        replace: true,
+        state: { email: user.email, doctorName: user.name },
+      })
+    }
+  }, [user, location.pathname, navigate])
 
   return (
     <div className="dashboard-layout">

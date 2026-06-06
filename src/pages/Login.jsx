@@ -2,7 +2,7 @@ import { useState, useContext } from 'react'
 import { AuthContext } from '../context/AuthContext'
 import { useNavigate } from 'react-router-dom'
 import { Shield, UserCheck, Users, ArrowRight, Mail, Lock } from 'lucide-react'
-import { loginUser } from '../services/authService'
+import { loginUser, doctorMustChangePassword } from '../services/authService'
 import { auth } from '../services/firebase'
 import { useToast } from '../components/Toast'
 import AuthPageShell from '../components/auth/AuthPageShell'
@@ -12,92 +12,59 @@ import AuthInput from '../components/auth/AuthInput'
 const Login = () => {
   const [selectedRole, setSelectedRole] = useState(null)
   const [loading, setLoading] = useState(false)
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-  })
+  const [formData, setFormData] = useState({ email: '', password: '' })
   const [showPassword, setShowPassword] = useState(false)
   const navigate = useNavigate()
   const { showSuccess, showError } = useToast()
   const { setUser } = useContext(AuthContext)
 
   const roles = [
-    {
-      id: 'admin',
-      icon: Shield,
-      label: 'Admin',
-      description: 'Hospital administrators',
-      route: '/admin/dashboard',
-    },
-    {
-      id: 'doctor',
-      icon: UserCheck,
-      label: 'Doctor',
-      description: 'Medical professionals',
-      route: '/doctor/dashboard',
-    },
-    {
-      id: 'patient',
-      icon: Users,
-      label: 'Patient',
-      description: 'Patients and users',
-      route: '/patient/dashboard',
-    },
+    { id: 'admin', icon: Shield, label: 'Admin', description: 'Hospital administrators', route: '/admin/dashboard' },
+    { id: 'doctor', icon: UserCheck, label: 'Doctor', description: 'Medical professionals', route: '/doctor/dashboard' },
+    { id: 'patient', icon: Users, label: 'Patient', description: 'Patients and users', route: '/patient/dashboard' },
   ]
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    })
+    setFormData({ ...formData, [e.target.name]: e.target.value })
   }
 
   const validateForm = () => {
-    if (!selectedRole) {
-      showError('Please select a role')
-      return false
-    }
-
-    if (!formData.email.trim()) {
-      showError('Email is required')
-      return false
-    }
-
-    if (!formData.password.trim()) {
-      showError('Password is required')
-      return false
-    }
-
+    if (!selectedRole) { showError('Please select a role'); return false }
+    if (!formData.email.trim()) { showError('Email is required'); return false }
+    if (!formData.password.trim()) { showError('Password is required'); return false }
     return true
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-
     if (!validateForm()) return
 
     setLoading(true)
-
     try {
       const user = await loginUser(formData.email, formData.password, selectedRole)
-      if (selectedRole === 'doctor' && user.firstLogin) {
-        navigate('/doctor/change-password', {
-          state: { email: user.email, tempPassword: formData.password, doctorName: user.name },
-        })
-        return
-      }
 
       const idToken = await auth.currentUser?.getIdToken()
       if (idToken) localStorage.setItem('docease_token', idToken)
 
-      showSuccess(`Welcome back, ${user.name}!`)
-      setUser(user)
-      localStorage.setItem('docease_user', JSON.stringify(user))
+      const userWithRole = { ...user, role: selectedRole }
+      setUser(userWithRole)
+      localStorage.setItem('docease_user', JSON.stringify(userWithRole))
 
+      if (selectedRole === 'doctor' && doctorMustChangePassword(user)) {
+        showSuccess('Please set a new password to continue')
+        navigate('/doctor/change-password', {
+          state: {
+            email: user.email,
+            tempPassword: formData.password,
+            doctorName: user.name,
+          },
+        })
+        return
+      }
+
+      showSuccess(`Welcome back, ${user.name}!`)
       const roleData = roles.find((r) => r.id === selectedRole)
-      setTimeout(() => {
-        navigate(roleData.route)
-      }, 500)
+      setTimeout(() => navigate(roleData.route), 400)
     } catch (err) {
       console.error('Login error:', err)
       showError(err.message || 'Login failed. Please try again.')
@@ -118,49 +85,18 @@ const Login = () => {
       <div className="mb-7">
         <p className="text-sm font-semibold text-slate-200 mb-1">Select your role</p>
         <p className="text-xs text-slate-500 mb-4">Choose the portal you want to sign in to.</p>
-        <AuthRoleSelector
-          roles={roles}
-          selectedRole={selectedRole}
-          onSelect={setSelectedRole}
-          columns={3}
-        />
+        <AuthRoleSelector roles={roles} selectedRole={selectedRole} onSelect={setSelectedRole} columns={3} />
+        {selectedRole === 'doctor' && (
+          <p className="text-xs text-cyan-400/80 mt-3 bg-cyan-500/10 border border-cyan-500/20 rounded-lg px-3 py-2">
+            Doctor accounts are created by your hospital admin. Use the credentials provided to you.
+          </p>
+        )}
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-5">
-        <AuthInput
-          id="email"
-          name="email"
-          type="email"
-          label="Email Address"
-          value={formData.email}
-          onChange={handleChange}
-          placeholder="your.email@example.com"
-          icon={Mail}
-          disabled={loading}
-          required
-        />
-
-        <AuthInput
-          id="password"
-          name="password"
-          type={showPassword ? 'text' : 'password'}
-          label="Password"
-          value={formData.password}
-          onChange={handleChange}
-          placeholder="Enter your password"
-          icon={Lock}
-          disabled={loading}
-          required
-          showPasswordToggle
-          showPassword={showPassword}
-          onTogglePassword={() => setShowPassword((prev) => !prev)}
-        />
-
-        <button
-          type="submit"
-          disabled={loading || !selectedRole}
-          className="auth-btn"
-        >
+        <AuthInput id="email" name="email" type="email" label="Email Address" value={formData.email} onChange={handleChange} placeholder="your.email@example.com" icon={Mail} disabled={loading} required />
+        <AuthInput id="password" name="password" type={showPassword ? 'text' : 'password'} label="Password" value={formData.password} onChange={handleChange} placeholder="Enter your password" icon={Lock} disabled={loading} required showPasswordToggle showPassword={showPassword} onTogglePassword={() => setShowPassword((p) => !p)} />
+        <button type="submit" disabled={loading || !selectedRole} className="auth-btn">
           {loading ? (
             <>
               <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />

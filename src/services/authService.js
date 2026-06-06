@@ -1,4 +1,4 @@
-import { auth, db } from './firebase'
+import { auth, secondaryAuth, db } from './firebase'
 import { functions } from './firebase'
 import { httpsCallable } from 'firebase/functions'
 import {
@@ -25,6 +25,9 @@ import {
 
 const USERS_COLLECTION = import.meta.env.VITE_FIRESTORE_USERS_COLLECTION || 'users'
 const DOCTORS_COLLECTION = 'doctors'
+
+export const doctorMustChangePassword = (doctor = {}) =>
+  doctor.mustChangePassword === true || doctor.firstLogin === true
 
 const normalizeFirestoreUserDoc = (docData = {}, uid = '', fallbackEmail = '') => {
   const email = docData.email || docData.mail || fallbackEmail || ''
@@ -268,6 +271,10 @@ export const doctorLogin = async (email, password) => {
 
     const doctorData = doctorDoc.data()
 
+    if (doctorData.active === false) {
+      throw new Error('This doctor account has been deactivated. Contact your hospital admin.')
+    }
+
     // Authenticate with Firebase using the email and password
     const userCredential = await signInWithEmailAndPassword(auth, email, password)
     const firebaseUser = userCredential.user
@@ -276,6 +283,7 @@ export const doctorLogin = async (email, password) => {
       ...normalizeFirestoreUserDoc(doctorData, firebaseUser.uid, firebaseUser.email),
       role: 'doctor',
       doctorId: doctorDoc.id,
+      mustChangePassword: doctorMustChangePassword(doctorData),
     }
   } catch (error) {
     throw handleAuthError(error)
@@ -418,47 +426,51 @@ export const generateTempPassword = (length = 12) => {
 export const adminCreateDoctor = async (
   name,
   email,
+  tempPassword,
   qualification = '',
   specialization = '',
   experience = 0,
-  hospitalId = null
+  hospitalId = 'default'
 ) => {
   try {
     if (!name || !email) throw new Error('Name and email are required')
+    if (!tempPassword || tempPassword.length < 8) {
+      throw new Error('Temporary password must be at least 8 characters')
+    }
 
     // Prefer calling a backend Cloud Function to perform admin create (secure)
     if (functions) {
       try {
         const createDoctorFn = httpsCallable(functions, 'createDoctor')
-        const res = await createDoctorFn({ name, email, qualification, specialization, experience, hospitalId })
+        const res = await createDoctorFn({
+          name,
+          email,
+          tempPassword,
+          qualification,
+          specialization,
+          experience,
+          hospitalId,
+        })
         return res.data
       } catch (fnErr) {
-        // fall back to client-side creation if function call fails
         console.warn('createDoctor callable failed, falling back to client-side create:', fnErr)
       }
     }
 
-    const tempPassword = generateTempPassword(12)
-
-    // Create Firebase Auth account for doctor (fallback)
+    // Create Firebase Auth account on secondary auth so admin session stays active
     console.info('[authService] adminCreateDoctor - creating Firebase Auth user for', email)
     let userCredential
     try {
-      userCredential = await createUserWithEmailAndPassword(auth, email, tempPassword)
+      userCredential = await createUserWithEmailAndPassword(secondaryAuth, email, tempPassword)
     } catch (err) {
       console.error('[authService] adminCreateDoctor - createUserWithEmailAndPassword failed')
-      console.error('Code:', err?.code)
-      console.error('Message:', err?.message)
-      console.error('Full error:', err)
       throw handleAuthError(err)
     }
     const firebaseUser = userCredential.user
     console.info('[authService] adminCreateDoctor - Firebase user created', firebaseUser?.uid)
 
-    // Save doctor document using the Firebase UID as the doc ID
     const docRef = doc(db, DOCTORS_COLLECTION, firebaseUser.uid)
     try {
-      console.info('[authService] adminCreateDoctor - writing Firestore doc at', `${DOCTORS_COLLECTION}/${firebaseUser.uid}`)
       await setDoc(docRef, {
         uid: firebaseUser.uid,
         name,
@@ -466,28 +478,24 @@ export const adminCreateDoctor = async (
         qualification,
         specialization,
         experience: Number(experience) || 0,
-        hospitalId: hospitalId || null,
+        hospitalId: hospitalId || 'default',
+        mustChangePassword: true,
         firstLogin: true,
         active: true,
+        role: 'doctor',
         createdAt: serverTimestamp(),
       })
-      console.info('[authService] adminCreateDoctor - Firestore write successful for', firebaseUser.uid)
     } catch (writeErr) {
-      console.error('[authService] adminCreateDoctor - Firestore setDoc failed')
-      console.error('Code:', writeErr?.code)
-      console.error('Message:', writeErr?.message)
-      console.error('Full error:', writeErr)
-      // Roll back auth user if Firestore write fails
       try { await firebaseUser.delete() } catch (e) { console.error('Rollback delete failed', e) }
       throw handleAuthError(writeErr)
     }
 
-    // Return the temp password so the admin can show it once
     return {
       doctorId: firebaseUser.uid,
       uid: firebaseUser.uid,
       email: firebaseUser.email,
       tempPassword,
+      name,
     }
   } catch (error) {
     throw handleAuthError(error)
@@ -516,14 +524,23 @@ export const doctorChangePassword = async (currentPassword, newPassword, email) 
     const credential = EmailAuthProvider.credential(user.email, currentPassword)
     await reauthenticateWithCredential(user, credential)
 
-    // Update password
+    // Update password in Firebase Auth
     await updatePassword(user, newPassword)
 
-    // Mark firstLogin false in doctors collection (doc ID uses uid)
+    // Mark password change complete in Firestore
     const doctorDocRef = doc(db, DOCTORS_COLLECTION, user.uid)
-    await updateDoc(doctorDocRef, { firstLogin: false })
+    await updateDoc(doctorDocRef, {
+      mustChangePassword: false,
+      firstLogin: false,
+      passwordChangedAt: serverTimestamp(),
+    })
 
-    return { uid: user.uid, email: user.email }
+    return {
+      uid: user.uid,
+      email: user.email,
+      mustChangePassword: false,
+      role: 'doctor',
+    }
   } catch (error) {
     throw handleAuthError(error)
   }
