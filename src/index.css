@@ -64,7 +64,7 @@
   }
 
   .dashboard-layout {
-    @apply relative h-screen overflow-hidden bg-[#060b18];
+    @apply relative h-screen overflow-hidden bg-slate-100 dark:bg-[#060b18];
     background-image:
       radial-gradient(ellipse 70% 50% at 10% -10%, rgba(30, 58, 138, 0.25), transparent),
       radial-gradient(ellipse 50% 40% at 90% 100%, rgba(14, 165, 233, 0.12), transparent);
@@ -83,7 +83,7 @@
   }
 
   .dashboard-topbar {
-    @apply fixed top-0 left-0 right-0 h-16 z-50 flex items-center justify-between px-4 md:px-6 lg:px-8 border-b border-slate-700/40 bg-slate-900/80 backdrop-blur-xl;
+    @apply fixed top-0 left-0 right-0 h-16 z-50 flex items-center justify-between px-4 md:px-6 lg:px-8 border-b bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-slate-200/60 dark:border-slate-700/40;
   }
 
   .dashboard-main {
@@ -95,11 +95,11 @@
   }
 
   .dashboard-card {
-    @apply bg-slate-800/60 backdrop-blur-sm rounded-xl p-5 sm:p-6 border border-slate-700/50 shadow-lg shadow-black/20 hover:border-slate-600/60 transition-all duration-300;
+    @apply bg-white/85 dark:bg-slate-800/60 backdrop-blur-sm rounded-xl p-5 sm:p-6 border border-slate-200/70 dark:border-slate-700/50 shadow-lg shadow-black/10 dark:shadow-black/20 hover:border-slate-300/70 dark:hover:border-slate-600/60 transition-all duration-300;
   }
 
   .dashboard-nav-link {
-    @apply flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-800/80 transition-all duration-200;
+    @apply flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-700 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-800/80 transition-all duration-200;
   }
 
   .dashboard-nav-link--active {
