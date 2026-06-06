@@ -388,6 +388,31 @@ export const updateUserProfile = async (user, updates = {}) => {
   }
 }
 
+export const updateCurrentUserPassword = async (currentPassword, newPassword, email) => {
+  try {
+    if (!currentPassword || !newPassword) {
+      throw new Error('Both current and new passwords are required')
+    }
+    if (newPassword.length < 8) {
+      throw new Error('New password must be at least 8 characters')
+    }
+
+    if (!auth.currentUser) {
+      if (!email) throw new Error('No authenticated user; please provide email')
+      await signInWithEmailAndPassword(auth, email, currentPassword)
+    }
+
+    const user = auth.currentUser
+    const credential = EmailAuthProvider.credential(user.email, currentPassword)
+    await reauthenticateWithCredential(user, credential)
+    await updatePassword(user, newPassword)
+
+    return true
+  } catch (error) {
+    throw handleAuthError(error)
+  }
+}
+
 /**
  * Fetch user data from Firestore
  */

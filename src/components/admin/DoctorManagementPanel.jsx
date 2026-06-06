@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState, useMemo, useContext } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Search,
@@ -13,6 +13,7 @@ import {
   RefreshCw,
   Lock,
 } from 'lucide-react'
+import { AuthContext } from '../../context/AuthContext'
 import { adminCreateDoctor, generateTempPassword } from '../../services/authService'
 import {
   getAllDoctors,
@@ -35,6 +36,7 @@ const emptyForm = {
 }
 
 const DoctorManagementPanel = ({ showAddForm = true }) => {
+  const { user } = useContext(AuthContext)
   const [doctors, setDoctors] = useState([])
   const [form, setForm] = useState(emptyForm)
   const [editDoctor, setEditDoctor] = useState(null)
@@ -47,10 +49,15 @@ const DoctorManagementPanel = ({ showAddForm = true }) => {
   const [resetResult, setResetResult] = useState(null)
   const { showSuccess, showError } = useToast()
 
+  const hospitalId = user?.uid || 'default'
+
   const fetchDoctors = async () => {
     try {
       const list = await getAllDoctors()
-      setDoctors(list.map((d) => ({ ...d, active: d.active !== false })))
+      const filtered = list
+        .map((d) => ({ ...d, active: d.active !== false }))
+        .filter((d) => d.hospitalId === hospitalId)
+      setDoctors(filtered)
     } catch (err) {
       showError(err.message || 'Unable to load doctors')
     } finally {
@@ -58,7 +65,10 @@ const DoctorManagementPanel = ({ showAddForm = true }) => {
     }
   }
 
-  useEffect(() => { fetchDoctors() }, [])
+  useEffect(() => {
+    if (!hospitalId) return
+    fetchDoctors()
+  }, [hospitalId])
 
   const needsPasswordChange = (d) => d.mustChangePassword === true || d.firstLogin === true
 
@@ -99,7 +109,8 @@ const DoctorManagementPanel = ({ showAddForm = true }) => {
         tempPassword,
         qualification.trim(),
         specialization.trim(),
-        Number(experience || 0)
+        Number(experience || 0),
+        hospitalId
       )
 
       setCreatedDoctor({ ...res, name: name.trim() })

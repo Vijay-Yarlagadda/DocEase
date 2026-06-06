@@ -39,22 +39,34 @@ const parseAppointmentDate = (appt) => {
   return null
 }
 
-export const getAdminDashboardStats = async () => {
-  const [doctorsSnap, patientsSnap, appointmentsSnap] = await Promise.all([
-    getDocs(collection(db, DOCTORS_COLLECTION)),
-    getDocs(query(collection(db, USERS_COLLECTION), where('role', '==', 'patient'))),
-    getDocs(collection(db, APPOINTMENTS_COLLECTION)),
-  ])
+export const getAdminDashboardStats = async (hospitalId = null) => {
+  const doctorsSnap = await getDocs(collection(db, DOCTORS_COLLECTION))
+  const appointmentsSnap = await getDocs(collection(db, APPOINTMENTS_COLLECTION))
+  const patientsSnap = await getDocs(query(collection(db, USERS_COLLECTION), where('role', '==', 'patient')))
+  const hospitalsSnap = await getDocs(collection(db, HOSPITALS_COLLECTION))
 
+  const allDoctors = doctorsSnap.docs.map((d) => ({ id: d.id, ...d.data() }))
+  const allAppointments = appointmentsSnap.docs.map((d) => ({ id: d.id, ...d.data() }))
   const today = toDateString()
-  const appointments = appointmentsSnap.docs.map((d) => ({ id: d.id, ...d.data() }))
-  const todayCount = appointments.filter((a) => parseAppointmentDate(a) === today).length
+  const filteredAppointments = hospitalId
+    ? allAppointments.filter((appt) => {
+        const doctor = allDoctors.find((d) => d.id === appt.doctorId || d.uid === appt.doctorId || d.id === appt.doctorUid)
+        return doctor?.hospitalId === hospitalId
+      })
+    : allAppointments
+
+  const totalPatients = hospitalId
+    ? new Set(filteredAppointments.map((a) => a.patientEmail || a.patientId || a.patientName)).size
+    : patientsSnap.size
+
+  const todayCount = filteredAppointments.filter((a) => parseAppointmentDate(a) === today).length
 
   return {
-    totalDoctors: doctorsSnap.size,
-    totalPatients: patientsSnap.size,
+    totalHospitals: hospitalsSnap.size,
+    totalDoctors: hospitalId ? allDoctors.filter((d) => d.hospitalId === hospitalId).length : doctorsSnap.size,
+    totalPatients,
     todayAppointments: todayCount,
-    totalAppointments: appointmentsSnap.size,
+    totalAppointments: filteredAppointments.length,
   }
 }
 
@@ -104,6 +116,145 @@ export const resetDoctorPassword = async (doctorId) => {
 export const getAllPatients = async () => {
   const snap = await getDocs(query(collection(db, USERS_COLLECTION), where('role', '==', 'patient')))
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }))
+}
+
+export const getAllHospitals = async () => {
+  const snap = await getDocs(collection(db, HOSPITALS_COLLECTION))
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }))
+}
+
+export const getDoctorsByHospital = async (hospitalId) => {
+  const snap = await getDocs(collection(db, DOCTORS_COLLECTION))
+  return snap.docs
+    .map((d) => ({ id: d.id, ...d.data() }))
+    .filter((doctor) => doctor.hospitalId === hospitalId)
+}
+
+export const getAppointmentsByHospital = async (hospitalId) => {
+  const doctors = await getDoctorsByHospital(hospitalId)
+  const doctorIds = new Set(doctors.map((d) => d.id))
+  const snap = await getDocs(collection(db, APPOINTMENTS_COLLECTION))
+  return snap.docs
+    .map((d) => ({ id: d.id, ...d.data() }))
+    .filter(
+      (appt) =>
+        doctorIds.has(appt.doctorId) ||
+        doctorIds.has(appt.doctorUid)
+    )
+}
+
+export const getHospitalsWithStats = async () => {
+  const [hospitals, doctors, appointments] = await Promise.all([
+    getAllHospitals(),
+    getAllDoctors(),
+    getAllAppointments(),
+  ])
+
+  return hospitals.map((hospital) => {
+    const hospitalDoctors = doctors.filter((doctor) => doctor.hospitalId === hospital.id)
+    const appointmentCount = appointments.filter((appt) =>
+      hospitalDoctors.some(
+        (doctor) => doctor.id === appt.doctorId || doctor.id === appt.doctorUid
+      )
+    ).length
+    return {
+      ...hospital,
+      doctorCount: hospitalDoctors.length,
+      appointmentCount,
+    }
+  })
+}
+
+export const getDoctorAppointmentStats = async (hospitalId = null) => {
+  const doctors = await getAllDoctors()
+  const appointments = await getAllAppointments()
+  const filteredDoctors = hospitalId ? doctors.filter((d) => d.hospitalId === hospitalId) : doctors
+
+  return filteredDoctors.map((doctor) => ({
+    id: doctor.id,
+    name: doctor.name,
+    specialization: doctor.specialization,
+    appointmentCount: appointments.filter(
+      (appt) => appt.doctorId === doctor.id || appt.doctorUid === doctor.id
+    ).length,
+  }))
+}
+
+export const getMonthlyAppointmentTrends = async (rangeMonths = 6, hospitalId = null) => {
+  const appointments = hospitalId ? await getAppointmentsByHospital(hospitalId) : await getAllAppointments()
+  const now = new Date()
+  const months = []
+
+  for (let i = rangeMonths - 1; i >= 0; i -= 1) {
+    const date = new Date(now.getFullYear(), now.getMonth() - i, 1)
+    const label = date.toLocaleDateString('en-US', { month: 'short' })
+    const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+    months.push({ label, key, count: 0 })
+  }
+
+  appointments.forEach((appt) => {
+    const date = parseAppointmentDate(appt)
+    if (!date) return
+    const [year, month] = date.split('-')
+    const key = `${year}-${month}`
+    const bucket = months.find((m) => m.key === key)
+    if (bucket) bucket.count += 1
+  })
+
+  return months
+}
+
+export const getPatientRegistrationTrends = async (rangeMonths = 6) => {
+  const patients = await getAllPatients()
+  const now = new Date()
+  const months = []
+
+  for (let i = rangeMonths - 1; i >= 0; i -= 1) {
+    const date = new Date(now.getFullYear(), now.getMonth() - i, 1)
+    const label = date.toLocaleDateString('en-US', { month: 'short' })
+    const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+    months.push({ label, key, count: 0 })
+  }
+
+  patients.forEach((patient) => {
+    const createdAt = patient.createdAt
+    const date = createdAt?.toDate ? createdAt.toDate() : createdAt instanceof Date ? createdAt : null
+    if (!date) return
+    const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+    const bucket = months.find((m) => m.key === key)
+    if (bucket) bucket.count += 1
+  })
+
+  return months
+}
+
+export const getHospitalPerformanceMetrics = async () => {
+  const [hospitals, doctors, appointments] = await Promise.all([
+    getAllHospitals(),
+    getAllDoctors(),
+    getAllAppointments(),
+  ])
+
+  return hospitals.map((hospital) => {
+    const hospitalDoctors = doctors.filter((doctor) => doctor.hospitalId === hospital.id)
+    const appointmentCount = appointments.filter((appt) =>
+      hospitalDoctors.some((doctor) => doctor.id === appt.doctorId || doctor.id === appt.doctorUid)
+    ).length
+    const patientCount = new Set(
+      appointments
+        .filter((appt) => hospitalDoctors.some((doctor) => doctor.id === appt.doctorId || doctor.id === appt.doctorUid))
+        .map((appt) => appt.patientEmail || appt.patientId || appt.patientName)
+    ).size
+
+    return {
+      id: hospital.id,
+      name: hospital.name,
+      doctorCount: hospitalDoctors.length,
+      appointmentCount,
+      patientCount,
+      contact: hospital.phone || hospital.email || '',
+    }
+  })
 }
 
 export const getAllAppointments = async () => {

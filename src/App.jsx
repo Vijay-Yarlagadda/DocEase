@@ -12,6 +12,9 @@ import AdminDashboard from './pages/dashboards/AdminDashboard'
 import AdminHospitals from './pages/admin/AdminHospitals'
 import AdminDoctors from './pages/admin/AdminDoctors'
 import AdminAppointments from './pages/admin/AdminAppointments'
+import AdminUsers from './pages/admin/AdminUsers'
+import AdminAnalytics from './pages/admin/AdminAnalytics'
+import AdminSettings from './pages/admin/AdminSettings'
 import DoctorDashboard from './pages/dashboards/DoctorDashboard'
 import PatientDashboard from './pages/dashboards/PatientDashboard'
 import DoctorChangePassword from './pages/DoctorChangePassword'
@@ -76,10 +79,10 @@ function App() {
           <Route path="hospitals" element={<AdminHospitals />} />
           <Route path="doctors" element={<AdminDoctors />} />
           <Route path="add-doctor" element={<AdminDoctors />} />
-          <Route path="users" element={<DashboardPlaceholder title="User Management" />} />
+          <Route path="users" element={<AdminUsers />} />
           <Route path="appointments" element={<AdminAppointments />} />
-          <Route path="analytics" element={<DashboardPlaceholder title="Analytics Dashboard" />} />
-          <Route path="settings" element={<DashboardPlaceholder title="Admin Settings" />} />
+          <Route path="analytics" element={<AdminAnalytics />} />
+          <Route path="settings" element={<AdminSettings />} />
         </Route>
 
         <Route path="/doctor" element={<DashboardLayout darkMode={darkMode} toggleDarkMode={toggleDarkMode} />}>
