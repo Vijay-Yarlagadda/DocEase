@@ -116,7 +116,7 @@ const ProfileDropdown = ({ variant = 'navbar' }) => {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -8, scale: 0.97 }}
               transition={{ duration: 0.15 }}
-              className={`absolute bg-slate-800/95 backdrop-blur-xl border border-slate-700/50 rounded-xl shadow-2xl shadow-black/50 overflow-hidden z-50 w-64 ${
+              className={`absolute bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200/70 dark:border-slate-700/50 rounded-xl shadow-2xl shadow-black/10 dark:shadow-black/50 overflow-hidden z-50 w-64 ${
                 variant === 'navbar' ? 'right-0 top-full mt-2' : 'bottom-full mb-2 right-0'
               }`}
             >

@@ -107,11 +107,11 @@
   }
 
   .dashboard-input {
-    @apply w-full px-4 py-2.5 rounded-lg border border-slate-700/80 bg-slate-900/80 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-accent/60 focus:ring-2 focus:ring-accent/20 transition-all duration-200;
+    @apply w-full px-4 py-2.5 rounded-lg border border-slate-300/70 bg-white/95 text-slate-900 placeholder-slate-500 focus:outline-none focus:border-accent/60 focus:ring-2 focus:ring-accent/20 transition-all duration-200 dark:border-slate-700/80 dark:bg-slate-900/80 dark:text-slate-100;
   }
 
   select.dashboard-input option {
-    @apply bg-slate-900 text-slate-100;
+    @apply bg-white text-slate-900 dark:bg-slate-900 dark:text-slate-100;
   }
 }
 

@@ -17,13 +17,13 @@ const statusStyle = {
 }
 
 const StatPill = ({ icon: Icon, label, value, color }) => (
-  <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-900/50 border border-slate-700/30">
+  <div className="flex items-center gap-3 p-3 rounded-xl bg-white/90 dark:bg-slate-900/50 border border-slate-200/70 dark:border-slate-700/30">
     <div className={`p-2 rounded-lg ${color}`}>
       <Icon className="w-4 h-4" />
     </div>
     <div>
-      <p className="text-lg font-bold text-white tabular-nums">{value}</p>
-      <p className="text-[10px] text-slate-500 uppercase tracking-wide">{label}</p>
+      <p className="text-lg font-bold text-slate-900 dark:text-white tabular-nums">{value}</p>
+      <p className="text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-wide">{label}</p>
     </div>
   </div>
 )
@@ -81,7 +81,7 @@ const AppointmentManagementPanel = ({ compact = false }) => {
         <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-5">
           <div className="flex items-center gap-2">
             <Calendar className="w-5 h-5 text-accent" />
-            <h3 className="text-base font-semibold text-white">
+            <h3 className="text-base font-semibold text-slate-900 dark:text-white">
               {tab === 'upcoming' ? 'Upcoming Appointments' : 'All Appointments'}
             </h3>
           </div>
@@ -92,7 +92,7 @@ const AppointmentManagementPanel = ({ compact = false }) => {
                   key={t}
                   onClick={() => setTab(t)}
                   className={`px-3 py-1.5 text-xs font-medium capitalize transition-colors ${
-                    tab === t ? 'bg-primary/20 text-accent' : 'text-slate-400 hover:bg-slate-800'
+                    tab === t ? 'bg-primary/20 text-accent' : 'text-slate-500 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
                   }`}
                 >
                   {t}
@@ -122,10 +122,10 @@ const AppointmentManagementPanel = ({ compact = false }) => {
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: i * 0.03 }}
               whileHover={{ x: 4 }}
-              className="flex flex-col sm:flex-row sm:items-center gap-2 p-4 rounded-xl bg-slate-900/50 border border-slate-700/30 border-l-4 border-l-primary hover:border-slate-600/50 transition-colors"
+              className="flex flex-col sm:flex-row sm:items-center gap-2 p-4 rounded-xl bg-white/90 dark:bg-slate-900/50 border border-slate-200/70 dark:border-slate-700/30 border-l-4 border-l-primary hover:border-slate-300 dark:hover:border-slate-600/50 transition-colors"
             >
               <div className="flex-1 min-w-0">
-                <p className="font-medium text-white truncate">{a.patientName || 'Patient'}</p>
+                <p className="font-medium text-slate-900 dark:text-white truncate">{a.patientName || 'Patient'}</p>
                 <p className="text-sm text-slate-500 truncate">
                   Dr. {a.doctorName || '—'} &bull; {a.date} {a.time ? `at ${a.time}` : ''}
                 </p>

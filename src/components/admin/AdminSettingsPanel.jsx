@@ -98,7 +98,7 @@ const AdminSettingsPanel = () => {
         <div className="flex items-center gap-2 mb-5">
           <User className="w-5 h-5 text-accent" />
           <div>
-            <p className="text-base font-semibold text-white">Admin Profile</p>
+            <p className="text-base font-semibold text-slate-900 dark:text-white">Admin Profile</p>
             <p className="text-xs text-slate-500">Update the admin contact information used across the dashboard.</p>
           </div>
         </div>
@@ -124,7 +124,7 @@ const AdminSettingsPanel = () => {
         <div className="flex items-center gap-2 mb-5">
           <Globe className="w-5 h-5 text-accent" />
           <div>
-            <p className="text-base font-semibold text-white">Hospital Information</p>
+            <p className="text-base font-semibold text-slate-900 dark:text-white">Hospital Information</p>
             <p className="text-xs text-slate-500">Edit the hospital profile associated with your admin account.</p>
           </div>
         </div>
@@ -162,22 +162,22 @@ const AdminSettingsPanel = () => {
         <div className="flex items-center gap-2 mb-5">
           <Bell className="w-5 h-5 text-accent" />
           <div>
-            <p className="text-base font-semibold text-white">Notification Preferences</p>
-            <p className="text-xs text-slate-500">Manage alerts and system updates for your hospital team.</p>
+            <p className="text-base font-semibold text-slate-900 dark:text-white">Notification Preferences</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400">Manage alerts and system updates for your hospital team.</p>
           </div>
         </div>
         <div className="space-y-4">
           {Object.entries(notifications).map(([key, value]) => (
-            <label key={key} className="flex items-center justify-between rounded-2xl border border-slate-700/40 bg-slate-900/50 p-4">
+            <label key={key} className="flex items-center justify-between rounded-2xl border border-slate-200/70 dark:border-slate-700/40 bg-white/90 dark:bg-slate-900/50 p-4">
               <div>
-                <p className="text-sm text-white capitalize">{key.replace(/[A-Z]/g, ' $&')}</p>
+                <p className="text-sm text-slate-900 dark:text-white capitalize">{key.replace(/[A-Z]/g, ' $&')}</p>
                 <p className="text-xs text-slate-500">{key === 'emailUpdates' ? 'Receive email updates and announcements.' : 'System alerts for new activity and appointments.'}</p>
               </div>
               <input
                 type="checkbox"
                 checked={value}
                 onChange={() => setNotifications({ ...notifications, [key]: !value })}
-                className="h-4 w-4 text-accent rounded bg-slate-800 border-slate-700"
+                className="h-4 w-4 text-accent rounded bg-white border border-slate-300 dark:bg-slate-800 dark:border-slate-700"
               />
             </label>
           ))}
@@ -188,7 +188,7 @@ const AdminSettingsPanel = () => {
         <div className="flex items-center gap-2 mb-5">
           <Lock className="w-5 h-5 text-accent" />
           <div>
-            <p className="text-base font-semibold text-white">Security Settings</p>
+            <p className="text-base font-semibold text-slate-900 dark:text-white">Security Settings</p>
             <p className="text-xs text-slate-500">Change your password and keep your admin account secure.</p>
           </div>
         </div>

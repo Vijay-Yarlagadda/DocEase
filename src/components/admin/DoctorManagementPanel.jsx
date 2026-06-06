@@ -187,7 +187,7 @@ const DoctorManagementPanel = ({ showAddForm = true }) => {
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="dashboard-card">
           <div className="flex items-center gap-2 mb-2">
             <UserPlus className="w-5 h-5 text-accent" />
-            <h3 className="text-base font-semibold text-white">Add Doctor</h3>
+            <h3 className="text-base font-semibold text-slate-900 dark:text-white">Add Doctor</h3>
           </div>
           <p className="text-xs text-slate-500 mb-5">Only hospital admins can create doctor accounts. Doctors cannot self-register.</p>
 
@@ -258,7 +258,7 @@ const DoctorManagementPanel = ({ showAddForm = true }) => {
         <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-5">
           <div className="flex items-center gap-2">
             <Stethoscope className="w-5 h-5 text-accent" />
-            <h3 className="text-base font-semibold text-white">All Doctors</h3>
+            <h3 className="text-base font-semibold text-slate-900 dark:text-white">All Doctors</h3>
             <span className="text-xs text-slate-500">({filteredDoctors.length})</span>
           </div>
           <div className="flex flex-col sm:flex-row gap-2 sm:ml-auto w-full sm:w-auto">
@@ -286,7 +286,7 @@ const DoctorManagementPanel = ({ showAddForm = true }) => {
                 <p className="text-xs text-slate-400 mt-1">Email: {resetResult.email}</p>
                 <code className="text-accent text-sm mt-2 block">{resetResult.tempPassword}</code>
               </div>
-              <button onClick={() => setResetResult(null)} className="text-slate-400 hover:text-white"><X className="w-4 h-4" /></button>
+              <button onClick={() => setResetResult(null)} className="text-slate-500 hover:text-slate-900 dark:hover:text-white"><X className="w-4 h-4" /></button>
             </div>
             <button
               onClick={() => navigator.clipboard.writeText(resetResult.tempPassword)}
@@ -305,12 +305,12 @@ const DoctorManagementPanel = ({ showAddForm = true }) => {
               initial={{ opacity: 0, x: -8 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: i * 0.03 }}
-              className="p-4 rounded-xl bg-slate-900/50 border border-slate-700/30 hover:border-slate-600/50 transition-colors"
+              className="p-4 rounded-xl bg-white/90 dark:bg-slate-900/50 border border-slate-200/70 dark:border-slate-700/30 hover:border-slate-300 dark:hover:border-slate-600/50 transition-colors"
             >
               <div className="flex flex-col lg:flex-row lg:items-center gap-3">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <p className="font-medium text-white">{d.name}</p>
+                    <p className="font-medium text-slate-900 dark:text-white">{d.name}</p>
                     {needsPasswordChange(d) ? (
                       <span className="px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/20 text-[10px] font-medium inline-flex items-center gap-1">
                         <Lock className="w-3 h-3" /> Must Change Password
@@ -357,11 +357,11 @@ const DoctorManagementPanel = ({ showAddForm = true }) => {
               exit={{ scale: 0.95, y: 12 }}
               onSubmit={handleEditSave}
               onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-md bg-slate-800/95 border border-slate-700/50 rounded-2xl p-6 shadow-2xl"
+              className="w-full max-w-md bg-white/95 dark:bg-slate-800/95 border border-slate-200/70 dark:border-slate-700/50 rounded-2xl p-6 shadow-2xl"
             >
               <div className="flex items-center justify-between mb-5">
-                <h3 className="text-lg font-semibold text-white">Edit Doctor</h3>
-                <button type="button" onClick={() => setEditDoctor(null)} className="text-slate-400 hover:text-white"><X className="w-5 h-5" /></button>
+                <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Edit Doctor</h3>
+                <button type="button" onClick={() => setEditDoctor(null)} className="text-slate-500 hover:text-slate-900 dark:hover:text-white"><X className="w-5 h-5" /></button>
               </div>
               <div className="space-y-3">
                 <input value={editDoctor.name} onChange={(e) => setEditDoctor({ ...editDoctor, name: e.target.value })} className="dashboard-input" placeholder="Name" required />

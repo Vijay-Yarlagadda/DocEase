@@ -15,11 +15,11 @@ const barColors = ['from-blue-600 to-cyan-400', 'from-cyan-600 to-teal-400', 'fr
 
 const MiniBarRow = ({ label, value, percent }) => (
   <div className="space-y-2">
-    <div className="flex items-center justify-between text-sm text-slate-300">
+    <div className="flex items-center justify-between text-sm text-slate-600 dark:text-slate-300">
       <span>{label}</span>
-      <span className="font-semibold text-white">{value}</span>
+      <span className="font-semibold text-slate-900 dark:text-white">{value}</span>
     </div>
-    <div className="h-2 rounded-full bg-slate-800 overflow-hidden">
+    <div className="h-2 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
       <div className="h-full rounded-full bg-gradient-to-r from-accent to-secondary" style={{ width: `${percent}%` }} />
     </div>
   </div>
@@ -71,7 +71,7 @@ const AdminAnalyticsPanel = () => {
           <div className="flex items-center gap-2 mb-4">
             <CalendarDays className="w-5 h-5 text-accent" />
             <div>
-              <p className="text-base font-semibold text-white">Monthly Appointment Trends</p>
+              <p className="text-base font-semibold text-slate-900 dark:text-white">Monthly Appointment Trends</p>
               <p className="text-xs text-slate-500">Last 6 months</p>
             </div>
           </div>
@@ -95,7 +95,7 @@ const AdminAnalyticsPanel = () => {
           <div className="flex items-center gap-2 mb-4">
             <Users className="w-5 h-5 text-accent" />
             <div>
-              <p className="text-base font-semibold text-white">Patient Registrations</p>
+              <p className="text-base font-semibold text-slate-900 dark:text-white">Patient Registrations</p>
               <p className="text-xs text-slate-500">Recent patient signups</p>
             </div>
           </div>
@@ -121,17 +121,17 @@ const AdminAnalyticsPanel = () => {
           <div className="flex items-center gap-2">
             <Activity className="w-5 h-5 text-accent" />
             <div>
-              <p className="text-base font-semibold text-white">Top Performing Doctors</p>
+              <p className="text-base font-semibold text-slate-900 dark:text-white">Top Performing Doctors</p>
               <p className="text-xs text-slate-500">Doctor-wise appointment breakdown</p>
             </div>
           </div>
         </div>
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           {topDoctors.map((doctor, index) => (
-            <div key={doctor.id} className="rounded-2xl border border-slate-700/40 bg-slate-900/50 p-4">
-              <p className="text-sm text-slate-400">{doctor.name || 'Unnamed'}</p>
-              <p className="text-2xl font-semibold text-white">{doctor.appointmentCount}</p>
-              <p className="text-xs text-slate-500">{doctor.specialization || 'General'}</p>
+            <div key={doctor.id} className="rounded-2xl border border-slate-200/70 dark:border-slate-700/40 bg-white/90 dark:bg-slate-900/50 p-4">
+              <p className="text-sm text-slate-600 dark:text-slate-400">{doctor.name || 'Unnamed'}</p>
+              <p className="text-2xl font-semibold text-slate-900 dark:text-white">{doctor.appointmentCount}</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">{doctor.specialization || 'General'}</p>
             </div>
           ))}
         </div>
@@ -145,26 +145,26 @@ const AdminAnalyticsPanel = () => {
         <div className="flex items-center gap-2 mb-5">
           <BarChart3 className="w-5 h-5 text-accent" />
           <div>
-            <p className="text-base font-semibold text-white">Hospital Performance Metrics</p>
-            <p className="text-xs text-slate-500">Doctor and appointment performance by hospital</p>
+            <p className="text-base font-semibold text-slate-900 dark:text-white">Hospital Performance Metrics</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400">Doctor and appointment performance by hospital</p>
           </div>
         </div>
         <div className="grid gap-3 lg:grid-cols-2">
           {hospitalMetrics.map((hospital) => (
-            <div key={hospital.id} className="rounded-2xl border border-slate-700/40 bg-slate-900/50 p-4">
-              <p className="text-sm font-semibold text-white truncate">{hospital.name}</p>
-              <div className="grid gap-2 mt-3 text-slate-400 text-[13px]">
+            <div key={hospital.id} className="rounded-2xl border border-slate-200/70 dark:border-slate-700/40 bg-white/90 dark:bg-slate-900/50 p-4">
+              <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">{hospital.name}</p>
+              <div className="grid gap-2 mt-3 text-slate-500 dark:text-slate-400 text-[13px]">
                 <div className="flex items-center justify-between gap-2">
-                  <span>Doctors</span>
-                  <span className="text-white">{hospital.doctorCount}</span>
+                  <span className="text-slate-700 dark:text-slate-300">Doctors</span>
+                  <span className="text-slate-900 dark:text-white">{hospital.doctorCount}</span>
                 </div>
                 <div className="flex items-center justify-between gap-2">
-                  <span>Appointments</span>
-                  <span className="text-white">{hospital.appointmentCount}</span>
+                  <span className="text-slate-700 dark:text-slate-300">Appointments</span>
+                  <span className="text-slate-900 dark:text-white">{hospital.appointmentCount}</span>
                 </div>
                 <div className="flex items-center justify-between gap-2">
-                  <span>Patients</span>
-                  <span className="text-white">{hospital.patientCount}</span>
+                  <span className="text-slate-700 dark:text-slate-300">Patients</span>
+                  <span className="text-slate-900 dark:text-white">{hospital.patientCount}</span>
                 </div>
               </div>
             </div>

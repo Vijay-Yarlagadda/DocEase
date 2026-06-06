@@ -148,7 +148,7 @@ const DashboardNavbar = ({ darkMode, toggleDarkMode }) => {
             exit={{ opacity: 0, height: 0 }}
             className="lg:hidden absolute top-full left-0 right-0 border-b border-slate-700/40 bg-slate-900/95 backdrop-blur-xl overflow-hidden"
           >
-            <div className="px-4 py-3 space-y-1">
+            <div className="px-4 py-3 space-y-1 bg-white/95 dark:bg-slate-900/95">
               {menuItems.map((item) => {
                 const Icon = item.icon
                 return (
@@ -160,7 +160,7 @@ const DashboardNavbar = ({ darkMode, toggleDarkMode }) => {
                       `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                         isActive
                           ? 'bg-primary/15 text-accent border border-primary/20'
-                          : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+                          : 'text-slate-400 hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/60'
                       }`
                     }
                   >

@@ -10,9 +10,9 @@ const StatCard = ({ icon: Icon, label, value, change, gradient, delay = 0 }) => 
     >
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-sm text-slate-400 mb-1">{label}</p>
-          <p className="text-2xl sm:text-3xl font-bold text-white">{value}</p>
-          <p className="text-xs text-slate-500 mt-1">{change}</p>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mb-1">{label}</p>
+          <p className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">{value}</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{change}</p>
         </div>
         <div className={`p-3 sm:p-4 rounded-xl bg-gradient-to-br ${gradient} shadow-lg group-hover:scale-105 transition-transform duration-300`}>
           <Icon className="w-6 h-6 sm:w-8 sm:h-8 text-white" />

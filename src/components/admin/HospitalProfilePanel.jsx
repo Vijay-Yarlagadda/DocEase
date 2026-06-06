@@ -84,7 +84,7 @@ const HospitalProfilePanel = () => {
         <div className="flex items-center gap-2 mb-5">
           <Building2 className="w-5 h-5 text-accent" />
           <div>
-            <h3 className="text-base font-semibold text-white">My Hospital Profile</h3>
+            <h3 className="text-base font-semibold text-slate-900 dark:text-white">My Hospital Profile</h3>
             <p className="text-xs text-slate-500">Only your hospital details can be edited here.</p>
           </div>
         </div>
@@ -138,7 +138,7 @@ const HospitalProfilePanel = () => {
         <div className="flex items-center gap-2 mb-5">
           <MapPinOff className="w-5 h-5 text-accent" />
           <div>
-            <h3 className="text-base font-semibold text-white">Hospital Directory</h3>
+            <h3 className="text-base font-semibold text-slate-900 dark:text-white">Hospital Directory</h3>
             <p className="text-xs text-slate-500">Browse all registered hospitals. Your hospital is editable, others are view-only.</p>
           </div>
         </div>
@@ -147,11 +147,11 @@ const HospitalProfilePanel = () => {
           {hospitals.map((hospital) => (
             <div
               key={hospital.id}
-              className={`p-4 rounded-2xl border ${isOwnHospital(hospital) ? 'border-accent/40 bg-slate-900/70' : 'border-slate-700/40 bg-slate-900/50'} transition-all hover:shadow-lg`}
+              className={`p-4 rounded-2xl border ${isOwnHospital(hospital) ? 'border-accent/40 bg-white/90 dark:bg-slate-900/70' : 'border-slate-200/70 dark:border-slate-700/40 bg-white/90 dark:bg-slate-900/50'} transition-all hover:shadow-lg`}
             >
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <h4 className="text-sm font-semibold text-white">{hospital.name || 'Unnamed Hospital'}</h4>
+                  <h4 className="text-sm font-semibold text-slate-900 dark:text-white">{hospital.name || 'Unnamed Hospital'}</h4>
                   <p className="text-xs text-slate-400 mt-1">{hospital.address || 'Address not available'}</p>
                 </div>
                 <span className={`text-[10px] uppercase tracking-[0.18em] px-2 py-1 rounded-full ${isOwnHospital(hospital) ? 'bg-accent/15 text-accent border border-accent/20' : 'bg-slate-800/60 text-slate-300 border border-slate-700/40'}`}>

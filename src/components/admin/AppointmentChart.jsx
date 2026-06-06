@@ -6,7 +6,7 @@ const AppointmentChart = ({ data = [], loading = false }) => {
   if (loading) {
     return (
       <div className="dashboard-card">
-        <h3 className="text-base font-semibold text-white mb-4">Weekly Appointments</h3>
+        <h3 className="text-base font-semibold text-slate-900 dark:text-white mb-4">Weekly Appointments</h3>
         <div className="flex items-end gap-2 h-40">
           {Array.from({ length: 7 }).map((_, i) => (
             <div key={i} className="flex-1 animate-pulse bg-slate-700/40 rounded-t-lg" style={{ height: `${30 + i * 8}%` }} />
@@ -23,8 +23,8 @@ const AppointmentChart = ({ data = [], loading = false }) => {
       transition={{ duration: 0.5, delay: 0.2 }}
       className="dashboard-card"
     >
-      <h3 className="text-base font-semibold text-white mb-1">Weekly Appointments</h3>
-      <p className="text-xs text-slate-500 mb-5">Last 7 days overview</p>
+      <h3 className="text-base font-semibold text-slate-900 dark:text-white mb-1">Weekly Appointments</h3>
+      <p className="text-xs text-slate-500 dark:text-slate-400 mb-5">Last 7 days overview</p>
       <div className="flex items-end gap-2 sm:gap-3 h-44">
         {data.map((item, i) => (
           <div key={item.label} className="flex-1 flex flex-col items-center gap-2">
