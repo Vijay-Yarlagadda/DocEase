@@ -24,7 +24,7 @@ const AuthPageShell = ({ title, highlight, subtitle, children, footerText, foote
             </span>
           </Link>
 
-          <h1 className="text-3xl sm:text-4xl font-bold text-white mb-3 tracking-tight">
+          <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 dark:text-white mb-3 tracking-tight">
             {title}{' '}
             {highlight && (
               <span className="bg-gradient-to-r from-blue-400 via-cyan-400 to-teal-400 bg-clip-text text-transparent">
@@ -32,7 +32,7 @@ const AuthPageShell = ({ title, highlight, subtitle, children, footerText, foote
               </span>
             )}
           </h1>
-          <p className="text-slate-400 text-sm sm:text-base max-w-md mx-auto leading-relaxed">
+          <p className="text-slate-600 dark:text-slate-300 text-sm sm:text-base max-w-md mx-auto leading-relaxed">
             {subtitle}
           </p>
         </motion.div>
@@ -47,7 +47,7 @@ const AuthPageShell = ({ title, highlight, subtitle, children, footerText, foote
         </motion.div>
 
         {footerText && footerLink && (
-          <p className="text-center text-slate-500 text-sm mt-6">
+          <p className="text-center text-slate-500 dark:text-slate-400 text-sm mt-6">
             {footerText}{' '}
             <Link
               to={footerLink}

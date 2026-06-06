@@ -37,7 +37,7 @@ const AuthInput = ({
           disabled={disabled}
           required={required}
           autoComplete={type === 'password' ? 'current-password' : name === 'email' ? 'email' : 'off'}
-          className={`auth-input w-full pl-11 py-3.5 rounded-xl border border-slate-700/80 bg-slate-900/80 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-accent/60 focus:ring-2 focus:ring-accent/20 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed ${showPasswordToggle ? 'pr-12' : 'pr-4'}`}
+          className={`auth-input w-full pl-11 py-3.5 ${showPasswordToggle ? 'pr-12' : 'pr-4'} disabled:opacity-50 disabled:cursor-not-allowed`}
           placeholder={placeholder}
         />
         {showPasswordToggle && (

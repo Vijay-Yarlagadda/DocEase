@@ -90,7 +90,7 @@ const DashboardNavbar = ({ darkMode, toggleDarkMode }) => {
                 `relative px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
                   isActive
                     ? 'text-accent'
-                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+                    : 'text-slate-700 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/60'
                 }`
               }
             >
@@ -146,7 +146,7 @@ const DashboardNavbar = ({ darkMode, toggleDarkMode }) => {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="lg:hidden absolute top-full left-0 right-0 border-b border-slate-700/40 bg-slate-900/95 backdrop-blur-xl overflow-hidden"
+            className="lg:hidden absolute top-full left-0 right-0 border-b border-slate-700/40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl overflow-hidden"
           >
             <div className="px-4 py-3 space-y-1 bg-white/95 dark:bg-slate-900/95">
               {menuItems.map((item) => {

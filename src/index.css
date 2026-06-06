@@ -26,9 +26,9 @@
   }
 
   .auth-page {
-    @apply relative overflow-hidden bg-[#060b18];
+    @apply relative overflow-hidden bg-background-light dark:bg-[#060b18];
     background-image:
-      radial-gradient(ellipse 80% 50% at 50% -20%, rgba(30, 58, 138, 0.35), transparent),
+      radial-gradient(ellipse 80% 50% at 50% -20%, rgba(59, 130, 246, 0.18), transparent),
       radial-gradient(ellipse 60% 40% at 100% 100%, rgba(14, 165, 233, 0.12), transparent);
   }
 
@@ -45,11 +45,11 @@
   }
 
   .auth-card {
-    @apply bg-slate-900/70 backdrop-blur-xl border border-slate-700/50 shadow-2xl shadow-black/40;
+    @apply bg-white/90 dark:bg-slate-900/80 backdrop-blur-xl border border-slate-200/70 dark:border-slate-700/50 shadow-2xl shadow-black/10 dark:shadow-black/40;
   }
 
   .auth-input {
-    @apply text-slate-100;
+    @apply w-full rounded-xl border border-slate-300/70 bg-white/95 text-slate-900 placeholder-slate-500 focus:outline-none focus:border-accent/60 focus:ring-2 focus:ring-accent/20 transition-all duration-200 dark:border-slate-700/80 dark:bg-slate-900/80 dark:text-slate-100 dark:placeholder-slate-400;
   }
 
   .auth-input[type='password']::-ms-reveal,
@@ -95,7 +95,7 @@
   }
 
   .dashboard-card {
-    @apply bg-white/85 dark:bg-slate-800/60 backdrop-blur-sm rounded-xl p-5 sm:p-6 border border-slate-200/70 dark:border-slate-700/50 shadow-lg shadow-black/10 dark:shadow-black/20 hover:border-slate-300/70 dark:hover:border-slate-600/60 transition-all duration-300;
+    @apply bg-white/95 dark:bg-slate-900/80 backdrop-blur-sm rounded-xl p-5 sm:p-6 border border-slate-200/70 dark:border-slate-700/50 shadow-lg shadow-black/10 dark:shadow-black/20 hover:border-slate-300/70 dark:hover:border-slate-600/60 transition-all duration-300;
   }
 
   .dashboard-nav-link {
