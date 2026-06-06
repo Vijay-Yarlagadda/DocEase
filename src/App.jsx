@@ -9,6 +9,9 @@ import Contact from './pages/Contact'
 import Login from './pages/Login'
 import Signup from './pages/Signup'
 import AdminDashboard from './pages/dashboards/AdminDashboard'
+import AdminHospitals from './pages/admin/AdminHospitals'
+import AdminDoctors from './pages/admin/AdminDoctors'
+import AdminAppointments from './pages/admin/AdminAppointments'
 import DoctorDashboard from './pages/dashboards/DoctorDashboard'
 import PatientDashboard from './pages/dashboards/PatientDashboard'
 import DoctorChangePassword from './pages/DoctorChangePassword'
@@ -70,9 +73,11 @@ function App() {
         {/* Dashboard routes - using DashboardLayout */}
         <Route path="/admin" element={<DashboardLayout darkMode={darkMode} toggleDarkMode={toggleDarkMode} />}>
           <Route path="dashboard" element={<AdminDashboard />} />
-          <Route path="hospitals" element={<DashboardPlaceholder title="Hospitals Management" />} />
-          <Route path="add-doctor" element={<DashboardPlaceholder title="Add New Doctor" />} />
+          <Route path="hospitals" element={<AdminHospitals />} />
+          <Route path="doctors" element={<AdminDoctors />} />
+          <Route path="add-doctor" element={<AdminDoctors />} />
           <Route path="users" element={<DashboardPlaceholder title="User Management" />} />
+          <Route path="appointments" element={<AdminAppointments />} />
           <Route path="analytics" element={<DashboardPlaceholder title="Analytics Dashboard" />} />
           <Route path="settings" element={<DashboardPlaceholder title="Admin Settings" />} />
         </Route>

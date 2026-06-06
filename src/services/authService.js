@@ -468,6 +468,7 @@ export const adminCreateDoctor = async (
         experience: Number(experience) || 0,
         hospitalId: hospitalId || null,
         firstLogin: true,
+        active: true,
         createdAt: serverTimestamp(),
       })
       console.info('[authService] adminCreateDoctor - Firestore write successful for', firebaseUser.uid)

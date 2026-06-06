@@ -74,7 +74,7 @@ const ProfileDropdown = ({ variant = 'navbar' }) => {
 
   const handleAddDoctor = () => {
     closeMenu()
-    navigate('/admin/add-doctor')
+    navigate('/admin/doctors')
   }
 
   const handleLogout = () => {

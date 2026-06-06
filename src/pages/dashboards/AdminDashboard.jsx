@@ -1,104 +1,141 @@
+import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { Shield, Building2, UserPlus, BarChart3, Users, Activity, Settings } from 'lucide-react'
-import DoctorManagement from '../../components/DoctorManagement'
+import { Link } from 'react-router-dom'
+import { UserCheck, Users, Calendar, CalendarDays, ArrowRight, Building2, Stethoscope } from 'lucide-react'
 import DashboardPageHeader from '../../components/dashboard/DashboardPageHeader'
-import StatCard from '../../components/dashboard/StatCard'
+import AnimatedStatCard from '../../components/admin/AnimatedStatCard'
+import AppointmentChart from '../../components/admin/AppointmentChart'
+import NotificationsPanel from '../../components/admin/NotificationsPanel'
+import AppointmentManagementPanel from '../../components/admin/AppointmentManagementPanel'
+import { StatCardSkeleton } from '../../components/admin/SkeletonLoader'
+import {
+  getAdminDashboardStats,
+  getWeeklyAppointmentData,
+  getAdminNotifications,
+  getUpcomingAppointments,
+} from '../../services/adminService'
 
 const AdminDashboard = () => {
-  const stats = [
-    { icon: Building2, label: 'Hospitals', value: '12', change: '+2 this month', gradient: 'from-blue-600 to-blue-400' },
-    { icon: UserPlus, label: 'Doctors', value: '156', change: '+8 this month', gradient: 'from-cyan-600 to-cyan-400' },
-    { icon: Users, label: 'Patients', value: '2,458', change: '+124 this month', gradient: 'from-teal-600 to-teal-400' },
-    { icon: Activity, label: 'Active Sessions', value: '342', change: 'Real-time', gradient: 'from-purple-600 to-purple-400' },
-  ]
+  const [stats, setStats] = useState(null)
+  const [chartData, setChartData] = useState([])
+  const [notifications, setNotifications] = useState([])
+  const [upcoming, setUpcoming] = useState([])
+  const [loading, setLoading] = useState(true)
 
-  const quickActions = [
-    { icon: Building2, label: 'Manage Hospitals' },
-    { icon: UserPlus, label: 'Add Doctor' },
-    { icon: Users, label: 'View Users' },
-    { icon: BarChart3, label: 'Analytics' },
-    { icon: Settings, label: 'Settings' },
+  useEffect(() => {
+    Promise.all([
+      getAdminDashboardStats(),
+      getWeeklyAppointmentData(),
+      getAdminNotifications(),
+      getUpcomingAppointments(),
+    ])
+      .then(([s, chart, notifs, up]) => {
+        setStats(s)
+        setChartData(chart)
+        setNotifications(notifs)
+        setUpcoming(up.slice(0, 5))
+      })
+      .finally(() => setLoading(false))
+  }, [])
+
+  const statCards = stats
+    ? [
+        { icon: UserCheck, label: 'Total Doctors', value: stats.totalDoctors, change: 'Registered physicians', gradient: 'from-cyan-600 to-cyan-400' },
+        { icon: Users, label: 'Total Patients', value: stats.totalPatients, change: 'Active patient accounts', gradient: 'from-teal-600 to-teal-400' },
+        { icon: Calendar, label: "Today's Appointments", value: stats.todayAppointments, change: 'Scheduled for today', gradient: 'from-blue-600 to-blue-400' },
+        { icon: CalendarDays, label: 'Total Appointments', value: stats.totalAppointments, change: 'All time bookings', gradient: 'from-purple-600 to-purple-400' },
+      ]
+    : []
+
+  const quickLinks = [
+    { icon: Building2, label: 'Hospital Profile', to: '/admin/hospitals', color: 'hover:border-blue-500/30' },
+    { icon: Stethoscope, label: 'Manage Doctors', to: '/admin/doctors', color: 'hover:border-cyan-500/30' },
+    { icon: Calendar, label: 'Appointments', to: '/admin/appointments', color: 'hover:border-teal-500/30' },
   ]
 
   return (
-    <div>
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.4 }}
+    >
       <DashboardPageHeader
         role="admin"
         title="Admin Dashboard"
-        subtitle="Manage hospitals, doctors, and system settings"
+        subtitle="Overview of doctors, patients, appointments, and hospital operations"
       />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-6 mb-8">
-        {stats.map((stat, index) => (
-          <StatCard key={stat.label} {...stat} delay={index * 0.08} />
-        ))}
+        {loading
+          ? Array.from({ length: 4 }).map((_, i) => <StatCardSkeleton key={i} />)
+          : statCards.map((stat, index) => (
+              <AnimatedStatCard key={stat.label} {...stat} delay={index * 0.08} />
+            ))}
       </div>
 
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.3 }}
-        className="dashboard-card mb-8"
-      >
-        <h2 className="text-lg font-bold text-white mb-5">Quick Actions</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-          {quickActions.map((action) => {
-            const Icon = action.icon
-            return (
-              <motion.button
-                key={action.label}
-                whileHover={{ scale: 1.03, y: -2 }}
-                whileTap={{ scale: 0.98 }}
-                className="p-4 rounded-xl bg-slate-900/50 border border-slate-700/40 hover:border-primary/30 hover:bg-slate-800/80 transition-all text-center"
-              >
-                <Icon className="w-6 h-6 text-accent mx-auto mb-2" />
-                <p className="text-xs sm:text-sm font-medium text-slate-300">{action.label}</p>
-              </motion.button>
-            )
-          })}
-        </div>
-      </motion.div>
-
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.4 }}
-        className="dashboard-card mb-8"
-      >
-        <h2 className="text-lg font-bold text-white mb-5">Doctors</h2>
-        <DoctorManagement />
-      </motion.div>
-
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.5 }}
-        className="dashboard-card"
-      >
-        <h2 className="text-lg font-bold text-white mb-5">Recent Activity</h2>
-        <div className="space-y-3">
-          {[1, 2, 3, 4, 5].map((item) => (
-            <div
-              key={item}
-              className="flex items-center justify-between p-4 rounded-xl bg-slate-900/50 border border-slate-700/30 hover:border-slate-600/50 transition-colors"
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8">
+        {quickLinks.map((link, i) => {
+          const Icon = link.icon
+          return (
+            <motion.div
+              key={link.to}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 + i * 0.05 }}
             >
-              <div className="flex items-center gap-4">
-                <div className="p-2 rounded-lg bg-primary/15">
-                  <Shield className="w-5 h-5 text-accent" />
+              <Link
+                to={link.to}
+                className={`flex items-center justify-between p-4 rounded-xl bg-slate-800/40 border border-slate-700/40 ${link.color} hover:bg-slate-800/70 transition-all group`}
+              >
+                <div className="flex items-center gap-3">
+                  <Icon className="w-5 h-5 text-accent" />
+                  <span className="text-sm font-medium text-slate-200">{link.label}</span>
                 </div>
-                <div>
-                  <p className="font-medium text-white">System activity {item}</p>
-                  <p className="text-sm text-slate-500">{item} hour{item > 1 ? 's' : ''} ago</p>
-                </div>
-              </div>
-              <span className="px-3 py-1 rounded-full text-xs font-medium bg-emerald-500/15 text-emerald-400 border border-emerald-500/20">
-                Active
-              </span>
-            </div>
-          ))}
+                <ArrowRight className="w-4 h-4 text-slate-500 group-hover:text-accent group-hover:translate-x-1 transition-all" />
+              </Link>
+            </motion.div>
+          )
+        })}
+      </div>
+
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-8">
+        <div className="xl:col-span-2">
+          <AppointmentChart data={chartData} loading={loading} />
         </div>
-      </motion.div>
-    </div>
+        <NotificationsPanel notifications={notifications} loading={loading} />
+      </div>
+
+      {!loading && upcoming.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="dashboard-card mb-8"
+        >
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-base font-semibold text-white">Upcoming Appointments</h3>
+            <Link to="/admin/appointments" className="text-xs text-accent hover:text-cyan-300 flex items-center gap-1">
+              View all <ArrowRight className="w-3 h-3" />
+            </Link>
+          </div>
+          <div className="space-y-2">
+            {upcoming.map((a) => (
+              <div key={a.id} className="flex items-center justify-between p-3 rounded-xl bg-slate-900/50 border border-slate-700/30">
+                <div>
+                  <p className="text-sm font-medium text-white">{a.patientName || 'Patient'}</p>
+                  <p className="text-xs text-slate-500">Dr. {a.doctorName || '—'} &bull; {a.date}</p>
+                </div>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 capitalize">
+                  {a.status || 'pending'}
+                </span>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+      )}
+
+      <AppointmentManagementPanel compact />
+    </motion.div>
   )
 }
 

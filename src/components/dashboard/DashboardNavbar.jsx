@@ -33,7 +33,8 @@ const DashboardNavbar = ({ darkMode, toggleDarkMode }) => {
   const adminMenuItems = [
     { icon: LayoutDashboard, label: 'Overview', to: '/admin/dashboard' },
     { icon: Building2, label: 'Hospitals', to: '/admin/hospitals' },
-    { icon: UserPlus, label: 'Add Doctor', to: '/admin/add-doctor' },
+    { icon: UserPlus, label: 'Doctors', to: '/admin/doctors' },
+    { icon: Calendar, label: 'Appointments', to: '/admin/appointments' },
     { icon: Users, label: 'Users', to: '/admin/users' },
     { icon: Activity, label: 'Analytics', to: '/admin/analytics' },
     { icon: Settings, label: 'Settings', to: '/admin/settings' },
