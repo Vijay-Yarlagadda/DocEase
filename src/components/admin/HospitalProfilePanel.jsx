@@ -1,6 +1,6 @@
 import { useEffect, useState, useContext } from 'react'
 import { motion } from 'framer-motion'
-import { Building2, MapPin, Phone, Mail, Globe, Save, Eye, MapPinOff } from 'lucide-react'
+import { Building2, MapPin, Phone, Mail, Globe, Save, Eye, MapPinOff, Trash2 } from 'lucide-react'
 import { AuthContext } from '../../context/AuthContext'
 import { getHospitalProfile, updateHospitalProfile, deleteHospital, getHospitalsWithStats } from '../../services/adminService'
 import { useToast } from '../Toast'
@@ -138,7 +138,7 @@ const HospitalProfilePanel = () => {
           </div>
         </div>
 
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mt-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mt-6">
           <div className="flex items-center gap-2 text-xs text-slate-500">
             <Eye className="w-4 h-4" />
             Edit your hospital profile and ensure branding, contact, and address information is up to date.
@@ -148,11 +148,12 @@ const HospitalProfilePanel = () => {
               type="button"
               onClick={handleDelete}
               disabled={deleting || saving}
-              className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed bg-white dark:bg-slate-900/70 border-slate-200/70 dark:border-slate-700/40 text-slate-800 dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/60"
             >
+              <Trash2 className="w-4 h-4" />
               {deleting ? 'Deleting...' : 'Delete Hospital'}
             </button>
-            <button type="submit" disabled={saving || deleting} className="btn-primary text-sm inline-flex items-center gap-2 px-4 py-2">
+            <button type="submit" disabled={saving || deleting} className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-fuchsia-600 to-pink-500 hover:from-fuchsia-700 hover:to-pink-600 shadow-sm transition disabled:opacity-50">
               <Save className="w-4 h-4" />
               {saving ? 'Saving...' : 'Update Hospital'}
             </button>
