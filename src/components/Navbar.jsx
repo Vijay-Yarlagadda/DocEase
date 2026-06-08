@@ -120,7 +120,7 @@ const Navbar = ({ darkMode, toggleDarkMode, user }) => {
                   className={`relative text-sm font-medium transition-colors ${
                     location.pathname === link.path
                       ? 'text-primary dark:text-accent'
-                      : 'text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-accent'
+                      : 'text-slate-700 dark:text-gray-300 hover:text-primary dark:hover:text-accent'
                   }`}
                 >
                   {link.label}
@@ -140,7 +140,7 @@ const Navbar = ({ darkMode, toggleDarkMode, user }) => {
             {/* Dark Mode Toggle */}
             <button
               onClick={toggleDarkMode}
-              className="p-2 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+              className="p-2 rounded-lg bg-slate-100 dark:bg-gray-700 hover:bg-slate-200 dark:hover:bg-gray-600 transition-colors"
               aria-label="Toggle dark mode"
             >
               {darkMode ? (
@@ -154,20 +154,20 @@ const Navbar = ({ darkMode, toggleDarkMode, user }) => {
             {showUser ? (
               <div className="hidden md:flex items-center space-x-3">
                 {/* mail icon always visible when logged in */}
-                <Mail className="w-5 h-5 text-gray-700 dark:text-gray-300" />
+                <Mail className="w-5 h-5 text-slate-700 dark:text-gray-300" />
                 <button
                   onClick={() => navigate(getDashboardPath(getUserRole()))}
-                  className="flex items-center space-x-2 px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:shadow-md transition-all"
+                  className="flex items-center space-x-2 px-4 py-2 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-300 dark:border-gray-700 hover:shadow-md transition-all"
                   aria-label="Open dashboard"
                 >
                   <User className="w-4 h-4 text-primary dark:text-accent" />
-                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <span className="text-sm font-medium text-slate-700 dark:text-gray-300">
                     {userName}
                   </span>
                 </button>
                 <button
                   onClick={handleLogout}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-accent transition-colors flex items-center space-x-2"
+                  className="px-4 py-2 text-sm font-medium text-slate-700 dark:text-gray-300 hover:text-primary dark:hover:text-accent transition-colors flex items-center space-x-2"
                   aria-label="Logout"
                 >
                   <LogOut className="w-4 h-4" />
@@ -186,7 +186,7 @@ const Navbar = ({ darkMode, toggleDarkMode, user }) => {
             {/* Mobile Menu Button */}
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className="lg:hidden p-2 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+              className="lg:hidden p-2 rounded-lg bg-slate-100 dark:bg-gray-700 hover:bg-slate-200 dark:hover:bg-gray-600 transition-colors"
               aria-label="Toggle menu"
             >
               {isOpen ? (
@@ -217,7 +217,7 @@ const Navbar = ({ darkMode, toggleDarkMode, user }) => {
                     className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                       location.pathname === link.path
                         ? 'bg-primary text-white'
-                        : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                        : 'text-slate-700 dark:text-gray-300 hover:bg-slate-100 dark:hover:bg-gray-700'
                     }`}
                   >
                     {link.label}
@@ -227,14 +227,14 @@ const Navbar = ({ darkMode, toggleDarkMode, user }) => {
                 {/* Mobile User Profile or Login */}
                 {user ? (
                   <>
-                    <div className="flex items-center space-x-2 px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+                    <div className="flex items-center space-x-2 px-4 py-2 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-300 dark:border-gray-700">
                       <User className="w-4 h-4 text-primary dark:text-accent" />
                       <button
                         onClick={() => {
                           setIsOpen(false)
                           navigate(getDashboardPath(getUserRole()))
                         }}
-                        className="text-sm font-medium text-gray-700 dark:text-gray-300 text-left"
+                        className="text-sm font-medium text-slate-700 dark:text-gray-300 text-left"
                       >
                         {userName}
                       </button>
@@ -244,7 +244,7 @@ const Navbar = ({ darkMode, toggleDarkMode, user }) => {
                         handleLogout()
                         setIsOpen(false)
                       }}
-                      className="px-4 py-2 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center space-x-2"
+                      className="px-4 py-2 rounded-lg text-sm font-medium text-slate-700 dark:text-gray-300 hover:bg-slate-100 dark:hover:bg-gray-700 flex items-center space-x-2"
                     >
                       <LogOut className="w-4 h-4" />
                       <span>Logout</span>

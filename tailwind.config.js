@@ -14,7 +14,7 @@ export default {
         'secondary-dark': '#0284c7',
         accent: '#38BDF8',
         'accent-dark': '#0ea5e9',
-        'background-light': '#F9FAFB',
+        'background-light': '#FFFFFF',
         'background-dark': '#0F172A',
       },
       backgroundImage: {

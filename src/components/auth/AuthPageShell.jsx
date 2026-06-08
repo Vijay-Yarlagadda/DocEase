@@ -27,12 +27,12 @@ const AuthPageShell = ({ title, highlight, subtitle, children, footerText, foote
           <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 dark:text-white mb-3 tracking-tight">
             {title}{' '}
             {highlight && (
-              <span className="bg-gradient-to-r from-blue-400 via-cyan-400 to-teal-400 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-blue-500 via-cyan-500 to-teal-500 bg-clip-text text-transparent">
                 {highlight}
               </span>
             )}
           </h1>
-          <p className="text-slate-600 dark:text-slate-300 text-sm sm:text-base max-w-md mx-auto leading-relaxed">
+          <p className="text-slate-700 dark:text-slate-300 text-sm sm:text-base max-w-md mx-auto leading-relaxed">
             {subtitle}
           </p>
         </motion.div>
