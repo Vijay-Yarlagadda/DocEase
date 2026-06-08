@@ -62,9 +62,10 @@ const Login = () => {
         return
       }
 
-      showSuccess(`Welcome back, ${user.name}!`)
+      // Use a professional, non-personal toast and navigate immediately to avoid UI flashes
+      showSuccess('Signed in successfully — redirecting to your dashboard.', 2500)
       const roleData = roles.find((r) => r.id === selectedRole)
-      setTimeout(() => navigate(roleData.route), 400)
+      navigate(roleData.route)
     } catch (err) {
       console.error('Login error:', err)
       showError(err.message || 'Login failed. Please try again.')
