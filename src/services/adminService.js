@@ -85,6 +85,10 @@ export const updateHospitalProfile = async (hospitalId, data) => {
   return getHospitalProfile(hospitalId)
 }
 
+export const deleteHospital = async (hospitalId) => {
+  await deleteDoc(doc(db, HOSPITALS_COLLECTION, hospitalId))
+}
+
 export const updateDoctor = async (doctorId, updates) => {
   const payload = { ...updates, updatedAt: serverTimestamp() }
   if (updates.experience !== undefined) payload.experience = Number(updates.experience) || 0

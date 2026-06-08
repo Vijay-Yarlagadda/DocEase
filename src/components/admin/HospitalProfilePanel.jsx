@@ -2,7 +2,7 @@ import { useEffect, useState, useContext } from 'react'
 import { motion } from 'framer-motion'
 import { Building2, MapPin, Phone, Mail, Globe, Save, Eye, MapPinOff } from 'lucide-react'
 import { AuthContext } from '../../context/AuthContext'
-import { getHospitalProfile, updateHospitalProfile, getHospitalsWithStats } from '../../services/adminService'
+import { getHospitalProfile, updateHospitalProfile, deleteHospital, getHospitalsWithStats } from '../../services/adminService'
 import { useToast } from '../Toast'
 import { PanelSkeleton } from './SkeletonLoader'
 
@@ -19,6 +19,7 @@ const HospitalProfilePanel = () => {
   const [hospitals, setHospitals] = useState([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const { showSuccess, showError } = useToast()
 
   const hospitalId = user?.uid || 'default'
@@ -60,6 +61,25 @@ const HospitalProfilePanel = () => {
       showError(err.message || 'Failed to update hospital profile')
     } finally {
       setSaving(false)
+    }
+  }
+
+  const handleDelete = async () => {
+    const confirmed = window.confirm(
+      'Delete this hospital profile permanently? This cannot be undone.'
+    )
+    if (!confirmed) return
+
+    setDeleting(true)
+    try {
+      await deleteHospital(hospitalId)
+      setHospitals((prev) => prev.filter((hospital) => hospital.id !== hospitalId))
+      setForm({ name: '', address: '', phone: '', email: '', website: '', description: '' })
+      showSuccess('Hospital deleted successfully. You can re-add hospital details anytime.')
+    } catch (err) {
+      showError(err.message || 'Failed to delete hospital profile')
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -123,10 +143,20 @@ const HospitalProfilePanel = () => {
             <Eye className="w-4 h-4" />
             Edit your hospital profile and ensure branding, contact, and address information is up to date.
           </div>
-          <button type="submit" disabled={saving} className="btn-primary text-sm inline-flex items-center gap-2">
-            <Save className="w-4 h-4" />
-            {saving ? 'Saving...' : 'Update Hospital'}
-          </button>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+            <button
+              type="button"
+              onClick={handleDelete}
+              disabled={deleting || saving}
+              className="btn-secondary text-sm inline-flex items-center gap-2"
+            >
+              {deleting ? 'Deleting...' : 'Delete Hospital'}
+            </button>
+            <button type="submit" disabled={saving || deleting} className="btn-primary text-sm inline-flex items-center gap-2">
+              <Save className="w-4 h-4" />
+              {saving ? 'Saving...' : 'Update Hospital'}
+            </button>
+          </div>
         </div>
       </motion.form>
 
