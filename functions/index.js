@@ -64,3 +64,56 @@ exports.createDoctor = functions.https.onCall(async (data, context) => {
     throw new functions.https.HttpsError('internal', err.message || 'Unable to create doctor')
   }
 })
+
+const SUPER_ADMIN_EMAIL = 'docease06@gmail.com'
+const DEFAULT_SUPER_ADMIN_SETUP_SECRET = 'DocEaseSuperAdminForceCreate123!'
+
+exports.provisionSuperAdmin = functions.https.onCall(async (data, context) => {
+  const { email, password, setupSecret } = data || {}
+  if (!email || !password) {
+    throw new functions.https.HttpsError('invalid-argument', 'Email and password are required')
+  }
+
+  if (email.trim().toLowerCase() !== SUPER_ADMIN_EMAIL) {
+    throw new functions.https.HttpsError('permission-denied', 'Invalid Super Admin email')
+  }
+
+  const secret = setupSecret || ''
+  const configuredSecret = functions.config().superadmin?.secret || process.env.SUPER_ADMIN_SETUP_SECRET || DEFAULT_SUPER_ADMIN_SETUP_SECRET
+
+  if (secret !== configuredSecret) {
+    throw new functions.https.HttpsError('permission-denied', 'Invalid setup secret')
+  }
+
+  if (password.length < 8) {
+    throw new functions.https.HttpsError('invalid-argument', 'Password must be at least 8 characters')
+  }
+
+  try {
+    let userRecord
+    try {
+      userRecord = await admin.auth().getUserByEmail(email)
+      userRecord = await admin.auth().updateUser(userRecord.uid, { password })
+    } catch (err) {
+      if (err.code === 'auth/user-not-found') {
+        userRecord = await admin.auth().createUser({ email, password })
+      } else {
+        throw err
+      }
+    }
+
+    const userDocRef = db.collection('users').doc(userRecord.uid)
+    await userDocRef.set({
+      email: userRecord.email,
+      mail: userRecord.email,
+      role: 'superadmin',
+      uid: userRecord.uid,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    }, { merge: true })
+
+    return { uid: userRecord.uid, email: userRecord.email, createdAt: new Date().toISOString() }
+  } catch (err) {
+    console.error('provisionSuperAdmin error', err)
+    throw new functions.https.HttpsError('internal', err.message || 'Unable to provision Super Admin')
+  }
+})

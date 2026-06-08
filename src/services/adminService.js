@@ -77,12 +77,46 @@ export const getHospitalProfile = async (hospitalId = 'default') => {
 }
 
 export const updateHospitalProfile = async (hospitalId, data) => {
+  const hospitalRef = doc(db, HOSPITALS_COLLECTION, hospitalId)
+  const existingSnap = await getDoc(hospitalRef)
+  const currentStatus = existingSnap.exists() ? existingSnap.data()?.verificationStatus : null
+  const verificationStatus = currentStatus || 'pending'
+
   await setDoc(
-    doc(db, HOSPITALS_COLLECTION, hospitalId),
-    { ...data, updatedAt: serverTimestamp() },
+    hospitalRef,
+    { ...data, verificationStatus, updatedAt: serverTimestamp() },
     { merge: true }
   )
   return getHospitalProfile(hospitalId)
+}
+
+export const approveHospital = async (hospitalId) => {
+  await updateDoc(doc(db, HOSPITALS_COLLECTION, hospitalId), {
+    verificationStatus: 'verified',
+    verifiedAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  })
+}
+
+export const rejectHospital = async (hospitalId) => {
+  await updateDoc(doc(db, HOSPITALS_COLLECTION, hospitalId), {
+    verificationStatus: 'rejected',
+    rejectedAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  })
+}
+
+export const getHospitalVerificationCounts = async () => {
+  const hospitals = await getAllHospitals()
+  return hospitals.reduce(
+    (counts, hospital) => {
+      const status = hospital.verificationStatus || 'pending'
+      counts[status] = (counts[status] || 0) + 1
+      counts.total += 1
+      return counts
+    },
+    { verified: 0, pending: 0, rejected: 0, total: 0 }
+  )
 }
 
 export const deleteHospital = async (hospitalId) => {

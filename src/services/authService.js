@@ -25,9 +25,14 @@ import {
 
 const USERS_COLLECTION = import.meta.env.VITE_FIRESTORE_USERS_COLLECTION || 'users'
 const DOCTORS_COLLECTION = 'doctors'
+export const SUPER_ADMIN_EMAIL = 'docease06@gmail.com'
+export const SUPER_ADMIN_ROLE = 'superadmin'
 
 export const doctorMustChangePassword = (doctor = {}) =>
   doctor.mustChangePassword === true || doctor.firstLogin === true
+
+const isSuperAdminEmail = (email = '') =>
+  email.trim().toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase()
 
 const normalizeFirestoreUserDoc = (docData = {}, uid = '', fallbackEmail = '') => {
   const email = docData.email || docData.mail || fallbackEmail || ''
@@ -64,6 +69,80 @@ const findDoctorDocByEmail = async (email) => {
   return querySnapshot.docs[0] || null
 }
 
+const createSuperAdminFirestoreDoc = async (firebaseUser, normalizedEmail) => {
+  if (!db || !firebaseUser?.uid) {
+    throw new Error('Unable to create Super Admin Firestore document: missing Firestore or user UID.')
+  }
+
+  const userDocRef = doc(db, USERS_COLLECTION, firebaseUser.uid)
+  const existingDoc = await getDoc(userDocRef)
+  if (existingDoc.exists()) {
+    const existingData = existingDoc.data() || {}
+    if (existingData.role !== SUPER_ADMIN_ROLE || existingData.email !== normalizedEmail || existingData.mail !== normalizedEmail) {
+      await setDoc(userDocRef, {
+        email: normalizedEmail,
+        mail: normalizedEmail,
+        role: SUPER_ADMIN_ROLE,
+        uid: firebaseUser.uid,
+        updatedAt: serverTimestamp(),
+      }, { merge: true })
+      return await getDoc(userDocRef)
+    }
+    return existingDoc
+  }
+
+  await setDoc(userDocRef, {
+    email: normalizedEmail,
+    mail: normalizedEmail,
+    role: SUPER_ADMIN_ROLE,
+    uid: firebaseUser.uid,
+    createdAt: serverTimestamp(),
+  })
+
+  return await getDoc(userDocRef)
+}
+
+export const forceCreateSuperAdmin = async (email, password, setupSecret) => {
+  if (!email || !password) {
+    throw new Error('Email and password are required to force create Super Admin.')
+  }
+  if (!isSuperAdminEmail(email)) {
+    throw new Error('Force create is only available for the hidden Super Admin email.')
+  }
+
+  const normalizedEmail = email.trim().toLowerCase()
+
+  const localProvision = async () => {
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, normalizedEmail, password)
+      const firebaseUser = userCredential.user
+      await createSuperAdminFirestoreDoc(firebaseUser, normalizedEmail)
+      return { uid: firebaseUser.uid, email: firebaseUser.email, fallback: true }
+    } catch (err) {
+      if (err?.code === 'auth/email-already-in-use') {
+        throw new Error('Super Admin email already exists in Firebase Auth. Reset the password in Firebase Console or delete the user and retry.')
+      }
+      throw err
+    }
+  }
+
+  if (!functions) {
+    return await localProvision()
+  }
+
+  try {
+    const provisionSuperAdminFn = httpsCallable(functions, 'provisionSuperAdmin')
+    const response = await provisionSuperAdminFn({
+      email: normalizedEmail,
+      password,
+      setupSecret,
+    })
+    return response.data
+  } catch (err) {
+    console.warn('[authService] forceCreateSuperAdmin - remote provisioning failed, falling back to local auth create:', err)
+    return await localProvision()
+  }
+}
 
 /**
  * Admin Signup - Create Firebase Auth & Firestore user doc
@@ -73,6 +152,10 @@ export const adminSignup = async (email, password, name) => {
     // Validate inputs
     if (!email || !password || !name) {
       throw new Error('Email, password, and name are required')
+    }
+
+    if (isSuperAdminEmail(email)) {
+      throw new Error('This email address is reserved for super admin access.')
     }
 
     if (password.length < 8) {
@@ -145,6 +228,10 @@ export const patientSignup = async (email, password, name) => {
       throw new Error('Email, password, and name are required')
     }
 
+    if (isSuperAdminEmail(email)) {
+      throw new Error('This email address is reserved for super admin access.')
+    }
+
     if (password.length < 8) {
       throw new Error('Password must be at least 8 characters')
     }
@@ -214,24 +301,47 @@ export const loginUser = async (email, password, role) => {
       throw new Error('Email and password are required')
     }
 
-    if (!role) {
+    const normalizedEmail = email.trim().toLowerCase()
+    const isSuperAdmin = isSuperAdminEmail(normalizedEmail)
+    const expectedRole = isSuperAdmin ? SUPER_ADMIN_ROLE : role
+
+    if (!expectedRole) {
       throw new Error('Please select a role')
     }
 
     // Special handling for Doctor login
-    if (role === 'doctor') {
+    if (!isSuperAdmin && expectedRole === 'doctor') {
       return await doctorLogin(email, password)
     }
 
-    // For Admin and Patient, authenticate with Firebase
-    const userCredential = await signInWithEmailAndPassword(auth, email, password)
-    const firebaseUser = userCredential.user
+    // Authenticate with Firebase
+    let firebaseUser
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password)
+      firebaseUser = userCredential.user
+    } catch (signInError) {
+      if (isSuperAdmin && signInError?.code === 'auth/user-not-found') {
+        // If the hidden Super Admin email is not yet created in Firebase Auth,
+        // create it automatically with the supplied password and continue.
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password)
+        firebaseUser = userCredential.user
+      } else {
+        throw signInError
+      }
+    }
+
+    if (!firebaseUser) {
+      throw new Error('Unable to authenticate Super Admin user')
+    }
 
     // Get user document from Firestore to verify role
     let userDoc = await getDoc(doc(db, USERS_COLLECTION, firebaseUser.uid))
 
     if (!userDoc.exists()) {
       userDoc = await findUserDocByEmail(email)
+      if (!userDoc && isSuperAdmin) {
+        userDoc = await createSuperAdminFirestoreDoc(firebaseUser, normalizedEmail)
+      }
       if (!userDoc) {
         throw new Error('User document not found in database')
       }
@@ -240,9 +350,9 @@ export const loginUser = async (email, password, role) => {
     const userData = normalizeFirestoreUserDoc(userDoc.data(), firebaseUser.uid, firebaseUser.email)
 
     // Verify the selected role matches the user's actual role
-    if (userData.role !== role) {
+    if (userData.role !== expectedRole) {
       throw new Error(
-        `Invalid role. You are registered as a ${userData.role}, but tried to login as ${role}`
+        `Invalid role. You are registered as a ${userData.role}, but tried to login as ${expectedRole}`
       )
     }
 
@@ -607,9 +717,25 @@ const handleAuthError = (error) => {
   if (error?.code) console.error('[authService] handleAuthError - code:', error.code)
   if (error?.message) console.error('[authService] handleAuthError - message:', error.message)
 
-  // If this is a FirebaseError (has a code), return it unchanged so callers/UI can display the exact message.
+  // Map common Firebase auth errors to clearer messages.
   if (error && error.code) {
-    return error
+    switch (error.code) {
+      case 'auth/invalid-email':
+        return new Error('Please enter a valid email address.')
+      case 'auth/user-not-found':
+        return new Error('User not found. Confirm your email or contact support.')
+      case 'auth/wrong-password':
+      case 'auth/invalid-credential':
+        return new Error('Invalid email or password. Check your credentials and try again.')
+      case 'auth/email-already-in-use':
+        return new Error('This email is already in use.')
+      case 'auth/weak-password':
+        return new Error('Password must be at least 6 characters.')
+      case 'auth/too-many-requests':
+        return new Error('Too many sign-in attempts. Please wait and try again later.')
+      default:
+        return error
+    }
   }
 
   // Otherwise, preserve the original message when possible

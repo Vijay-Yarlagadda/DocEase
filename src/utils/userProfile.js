@@ -33,6 +33,12 @@ export const roleStyles = {
     gradient: 'from-cyan-600 to-cyan-400',
     ring: 'ring-cyan-500/30',
   },
+  superadmin: {
+    label: 'Super Admin',
+    badge: 'bg-fuchsia-500/15 text-fuchsia-400 border-fuchsia-500/25',
+    gradient: 'from-fuchsia-700 to-pink-500',
+    ring: 'ring-fuchsia-500/30',
+  },
   patient: {
     label: 'Patient',
     badge: 'bg-teal-500/15 text-teal-400 border-teal-500/25',

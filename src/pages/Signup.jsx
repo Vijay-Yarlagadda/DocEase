@@ -2,7 +2,7 @@ import { useState, useContext } from 'react'
 import { AuthContext } from '../context/AuthContext'
 import { useNavigate } from 'react-router-dom'
 import { Shield, Users, Mail, Lock, User, ArrowRight } from 'lucide-react'
-import { adminSignup, patientSignup } from '../services/authService'
+import { adminSignup, patientSignup, SUPER_ADMIN_EMAIL } from '../services/authService'
 import { useToast } from '../components/Toast'
 import AuthPageShell from '../components/auth/AuthPageShell'
 import AuthRoleSelector from '../components/auth/AuthRoleSelector'
@@ -65,6 +65,11 @@ const Signup = () => {
 
     if (!email) {
       showError('Email is required')
+      return false
+    }
+
+    if (email.trim().toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase()) {
+      showError('This email address is reserved for Super Admin access.')
       return false
     }
 

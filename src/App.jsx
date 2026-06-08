@@ -1,8 +1,9 @@
-import { Routes, Route, useLocation } from 'react-router-dom'
+import { Routes, Route, useLocation, Navigate } from 'react-router-dom'
 import { useState, useEffect, useContext } from 'react'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
 import DashboardLayout from './layouts/DashboardLayout'
+import SuperAdminLayout from './layouts/SuperAdminLayout'
 import Home from './pages/Home'
 import About from './pages/About'
 import Contact from './pages/Contact'
@@ -19,6 +20,12 @@ import DoctorDashboard from './pages/dashboards/DoctorDashboard'
 import PatientDashboard from './pages/dashboards/PatientDashboard'
 import DoctorChangePassword from './pages/DoctorChangePassword'
 import DashboardPlaceholder from './components/dashboard/DashboardPlaceholder'
+import SuperAdminDashboard from './pages/super-admin/SuperAdminDashboard'
+import SuperAdminVerification from './pages/super-admin/SuperAdminVerification'
+import SuperAdminHospitals from './pages/super-admin/SuperAdminHospitals'
+import SuperAdminAnalytics from './pages/super-admin/SuperAdminAnalytics'
+import SuperAdminSettings from './pages/super-admin/SuperAdminSettings'
+import { ProtectedRoute } from './components/ProtectedRoute'
 import { AuthContext } from './context/AuthContext'
 
 function App() {
@@ -50,7 +57,8 @@ function App() {
   // determine if current route is part of a dashboard
   const isDashboardRoute = location.pathname.startsWith('/admin') || 
                            location.pathname.startsWith('/doctor') || 
-                           location.pathname.startsWith('/patient')
+                           location.pathname.startsWith('/patient') || 
+                           location.pathname.startsWith('/super-admin')
   const showNavbar = !isDashboardRoute
   const showFooter = !isDashboardRoute
 
@@ -74,7 +82,7 @@ function App() {
         <Route path="/doctor/change-password" element={<DoctorChangePassword />} />
         
         {/* Dashboard routes - using DashboardLayout */}
-        <Route path="/admin" element={<DashboardLayout darkMode={darkMode} toggleDarkMode={toggleDarkMode} />}>
+        <Route path="/admin" element={<ProtectedRoute roles={['admin']}><DashboardLayout darkMode={darkMode} toggleDarkMode={toggleDarkMode} /></ProtectedRoute>}>
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="hospitals" element={<AdminHospitals />} />
           <Route path="doctors" element={<AdminDoctors />} />
@@ -85,7 +93,7 @@ function App() {
           <Route path="settings" element={<AdminSettings />} />
         </Route>
 
-        <Route path="/doctor" element={<DashboardLayout darkMode={darkMode} toggleDarkMode={toggleDarkMode} />}>
+        <Route path="/doctor" element={<ProtectedRoute roles={['doctor']}><DashboardLayout darkMode={darkMode} toggleDarkMode={toggleDarkMode} /></ProtectedRoute>}>
           <Route path="dashboard" element={<DoctorDashboard />} />
           <Route path="patients" element={<DashboardPlaceholder title="Patient List" />} />
           <Route path="appointments" element={<DashboardPlaceholder title="Appointments" />} />
@@ -93,11 +101,20 @@ function App() {
           <Route path="settings" element={<DashboardPlaceholder title="Doctor Settings" />} />
         </Route>
 
-        <Route path="/patient" element={<DashboardLayout darkMode={darkMode} toggleDarkMode={toggleDarkMode} />}>
+        <Route path="/patient" element={<ProtectedRoute roles={['patient']}><DashboardLayout darkMode={darkMode} toggleDarkMode={toggleDarkMode} /></ProtectedRoute>}>
           <Route path="dashboard" element={<PatientDashboard />} />
           <Route path="appointments" element={<DashboardPlaceholder title="My Appointments" />} />
           <Route path="history" element={<DashboardPlaceholder title="Medical History" />} />
           <Route path="settings" element={<DashboardPlaceholder title="Patient Settings" />} />
+        </Route>
+
+        <Route path="/super-admin" element={<ProtectedRoute roles={['superadmin']}><SuperAdminLayout darkMode={darkMode} toggleDarkMode={toggleDarkMode} /></ProtectedRoute>}>
+          <Route index element={<Navigate to="dashboard" replace />} />
+          <Route path="dashboard" element={<SuperAdminDashboard />} />
+          <Route path="verification" element={<SuperAdminVerification />} />
+          <Route path="hospitals" element={<SuperAdminHospitals />} />
+          <Route path="analytics" element={<SuperAdminAnalytics />} />
+          <Route path="settings" element={<SuperAdminSettings />} />
         </Route>
       </Routes>
       {showFooter && <Footer />}

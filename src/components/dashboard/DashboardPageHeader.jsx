@@ -4,6 +4,7 @@ const roleBadge = {
   admin: 'from-blue-900 to-blue-600',
   doctor: 'from-cyan-600 to-cyan-400',
   patient: 'from-teal-600 to-teal-400',
+  superadmin: 'from-fuchsia-600 to-pink-500',
 }
 
 const DashboardPageHeader = ({ title, subtitle, role, action }) => {
