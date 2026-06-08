@@ -3,7 +3,6 @@ import { useState, useEffect, useContext } from 'react'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
 import DashboardLayout from './layouts/DashboardLayout'
-import SuperAdminLayout from './layouts/SuperAdminLayout'
 import Home from './pages/Home'
 import About from './pages/About'
 import Contact from './pages/Contact'
@@ -108,7 +107,7 @@ function App() {
           <Route path="settings" element={<DashboardPlaceholder title="Patient Settings" />} />
         </Route>
 
-        <Route path="/super-admin" element={<ProtectedRoute roles={['superadmin']}><SuperAdminLayout darkMode={darkMode} toggleDarkMode={toggleDarkMode} /></ProtectedRoute>}>
+        <Route path="/super-admin" element={<ProtectedRoute roles={['superadmin']}><DashboardLayout darkMode={darkMode} toggleDarkMode={toggleDarkMode} /></ProtectedRoute>}>
           <Route index element={<Navigate to="dashboard" replace />} />
           <Route path="dashboard" element={<SuperAdminDashboard />} />
           <Route path="verification" element={<SuperAdminVerification />} />

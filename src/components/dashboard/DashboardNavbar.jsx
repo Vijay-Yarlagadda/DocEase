@@ -8,6 +8,7 @@ import {
   Settings,
   Activity,
   LayoutDashboard,
+  ShieldCheck,
   UserPlus,
   ClipboardList,
   Menu,
@@ -24,6 +25,7 @@ const rolePortal = {
   admin: { label: 'Admin', gradient: 'from-blue-900 to-blue-600' },
   doctor: { label: 'Doctor', gradient: 'from-cyan-600 to-cyan-400' },
   patient: { label: 'Patient', gradient: 'from-teal-600 to-teal-400' },
+  superadmin: { label: 'Super Admin', gradient: 'from-fuchsia-700 to-pink-500' },
 }
 
 const DashboardNavbar = ({ darkMode, toggleDarkMode }) => {
@@ -55,6 +57,14 @@ const DashboardNavbar = ({ darkMode, toggleDarkMode }) => {
     { icon: Settings, label: 'Settings', to: '/patient/settings' },
   ]
 
+  const superAdminMenuItems = [
+    { icon: LayoutDashboard, label: 'Dashboard', to: '/super-admin/dashboard' },
+    { icon: ShieldCheck, label: 'Verification', to: '/super-admin/verification' },
+    { icon: Building2, label: 'Hospitals', to: '/super-admin/hospitals' },
+    { icon: Activity, label: 'Analytics', to: '/super-admin/analytics' },
+    { icon: Settings, label: 'Settings', to: '/super-admin/settings' },
+  ]
+
   let menuItems = []
   switch (user?.role) {
     case 'admin':
@@ -65,6 +75,9 @@ const DashboardNavbar = ({ darkMode, toggleDarkMode }) => {
       break
     case 'patient':
       menuItems = patientMenuItems
+      break
+    case 'superadmin':
+      menuItems = superAdminMenuItems
       break
     default:
       menuItems = []

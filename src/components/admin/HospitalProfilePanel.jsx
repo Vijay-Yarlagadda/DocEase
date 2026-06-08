@@ -148,11 +148,11 @@ const HospitalProfilePanel = () => {
               type="button"
               onClick={handleDelete}
               disabled={deleting || saving}
-              className="btn-secondary text-sm inline-flex items-center gap-2"
+              className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {deleting ? 'Deleting...' : 'Delete Hospital'}
             </button>
-            <button type="submit" disabled={saving || deleting} className="btn-primary text-sm inline-flex items-center gap-2">
+            <button type="submit" disabled={saving || deleting} className="btn-primary text-sm inline-flex items-center gap-2 px-4 py-2">
               <Save className="w-4 h-4" />
               {saving ? 'Saving...' : 'Update Hospital'}
             </button>

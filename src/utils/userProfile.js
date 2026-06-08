@@ -1,5 +1,6 @@
 export const getDisplayName = (user) => {
   if (!user) return 'User'
+  if (user.role === 'superadmin') return 'DocEase'
   if (user.name?.trim()) return user.name.trim()
   if (user.fullName?.trim()) return user.fullName.trim()
   const email = user.email || user.mail
