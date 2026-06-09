@@ -1,0 +1,95 @@
+const CLOUDINARY_CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME
+const CLOUDINARY_UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET
+
+const HOSPITAL_DOCUMENT_TYPES = ['application/pdf']
+const PATIENT_DOCUMENT_TYPES = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png']
+
+const MAX_HOSPITAL_FILE_SIZE = 10 * 1024 * 1024
+const MAX_PATIENT_FILE_SIZE = 20 * 1024 * 1024
+
+const buildCloudinaryUrl = () => {
+  if (!CLOUDINARY_CLOUD_NAME || !CLOUDINARY_UPLOAD_PRESET) {
+    throw new Error('Cloudinary configuration is missing. Please set VITE_CLOUDINARY_CLOUD_NAME and VITE_CLOUDINARY_UPLOAD_PRESET in .env')
+  }
+  return `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/upload`
+}
+
+const normalizeExtension = (fileName) => fileName.split('.').pop()?.toLowerCase() || ''
+
+const isTypeAllowed = (file, allowedTypes) => {
+  const extension = normalizeExtension(file.name)
+  if (allowedTypes.includes(file.type)) return true
+  if (allowedTypes.includes('application/pdf') && extension === 'pdf') return true
+  if (allowedTypes.includes('image/jpeg') && ['jpg', 'jpeg'].includes(extension)) return true
+  if (allowedTypes.includes('image/png') && extension === 'png') return true
+  return false
+}
+
+export const validateCloudinaryFile = ({ file, allowedTypes, maxSize, label = 'File' }) => {
+  if (!file) {
+    return { valid: false, error: `${label} is required.` }
+  }
+
+  if (!isTypeAllowed(file, allowedTypes)) {
+    const allowedList = allowedTypes.map((type) => {
+      if (type === 'application/pdf') return 'PDF'
+      if (type === 'image/jpeg') return 'JPG/JPEG'
+      if (type === 'image/png') return 'PNG'
+      return type
+    }).join(', ')
+    return { valid: false, error: `${label} must be one of: ${allowedList}.` }
+  }
+
+  if (maxSize && file.size > maxSize) {
+    const sizeMb = Math.round(maxSize / 1024 / 1024)
+    return { valid: false, error: `${label} must be smaller than ${sizeMb}MB.` }
+  }
+
+  return { valid: true, error: null }
+}
+
+export const uploadFileToCloudinary = ({ file, folder, onProgress }) => {
+  return new Promise((resolve, reject) => {
+    try {
+      const url = buildCloudinaryUrl()
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET)
+      if (folder) {
+        formData.append('folder', folder)
+      }
+
+      const xhr = new XMLHttpRequest()
+      xhr.open('POST', url)
+
+      xhr.upload.onprogress = (event) => {
+        if (!event.lengthComputable || typeof onProgress !== 'function') return
+        const progress = Math.round((event.loaded / event.total) * 100)
+        onProgress(progress)
+      }
+
+      xhr.onreadystatechange = () => {
+        if (xhr.readyState !== 4) return
+
+        if (xhr.status >= 200 && xhr.status < 300) {
+          try {
+            const response = JSON.parse(xhr.responseText)
+            resolve(response)
+          } catch (parseErr) {
+            reject(new Error('Failed to parse Cloudinary response.'))
+          }
+        } else {
+          const message = xhr.responseText ? xhr.responseText : xhr.statusText
+          reject(new Error(`Cloudinary upload failed: ${message}`))
+        }
+      }
+
+      xhr.onerror = () => reject(new Error('Unable to upload file to Cloudinary. Please check your network connection.'))
+      xhr.send(formData)
+    } catch (err) {
+      reject(err)
+    }
+  })
+}
+
+export { HOSPITAL_DOCUMENT_TYPES, PATIENT_DOCUMENT_TYPES, MAX_HOSPITAL_FILE_SIZE, MAX_PATIENT_FILE_SIZE }

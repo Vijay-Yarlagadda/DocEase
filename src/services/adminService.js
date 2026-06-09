@@ -80,7 +80,11 @@ export const updateHospitalProfile = async (hospitalId, data) => {
   const hospitalRef = doc(db, HOSPITALS_COLLECTION, hospitalId)
   const existingSnap = await getDoc(hospitalRef)
   const currentStatus = existingSnap.exists() ? existingSnap.data()?.verificationStatus : null
-  const verificationStatus = currentStatus || 'pending'
+
+  let verificationStatus = currentStatus || 'pending'
+  if (currentStatus === 'rejected' && (data.registrationCertificateUrl || data.hospitalLicenseUrl)) {
+    verificationStatus = 'pending'
+  }
 
   await setDoc(
     hospitalRef,

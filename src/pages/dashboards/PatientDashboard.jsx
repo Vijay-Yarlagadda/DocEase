@@ -123,10 +123,10 @@ const PatientDashboard = () => {
       >
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
           <h2 className="text-lg font-bold text-slate-900 dark:text-white">Recent Medical Files</h2>
-          <button className="btn-secondary inline-flex items-center text-sm">
+          <Link to="/patient/documents" className="btn-secondary inline-flex items-center text-sm">
             <Upload className="w-4 h-4 mr-2" />
             Upload New File
-          </button>
+          </Link>
         </div>
         <div className="space-y-3">
           {recentFiles.map((file) => (

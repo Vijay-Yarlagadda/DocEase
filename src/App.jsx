@@ -18,6 +18,8 @@ import AdminSettings from './pages/admin/AdminSettings'
 import DoctorDashboard from './pages/dashboards/DoctorDashboard'
 import PatientDashboard from './pages/dashboards/PatientDashboard'
 import DoctorChangePassword from './pages/DoctorChangePassword'
+import PatientDocuments from './pages/patient/PatientDocuments'
+import DoctorRecords from './pages/doctor/DoctorRecords'
 import DashboardPlaceholder from './components/dashboard/DashboardPlaceholder'
 import SuperAdminDashboard from './pages/super-admin/SuperAdminDashboard'
 import SuperAdminVerification from './pages/super-admin/SuperAdminVerification'
@@ -96,14 +98,15 @@ function App() {
           <Route path="dashboard" element={<DoctorDashboard />} />
           <Route path="patients" element={<DashboardPlaceholder title="Patient List" />} />
           <Route path="appointments" element={<DashboardPlaceholder title="Appointments" />} />
-          <Route path="records" element={<DashboardPlaceholder title="Medical Records" />} />
+          <Route path="records" element={<DoctorRecords />} />
           <Route path="settings" element={<DashboardPlaceholder title="Doctor Settings" />} />
         </Route>
 
         <Route path="/patient" element={<ProtectedRoute roles={['patient']}><DashboardLayout darkMode={darkMode} toggleDarkMode={toggleDarkMode} /></ProtectedRoute>}>
           <Route path="dashboard" element={<PatientDashboard />} />
           <Route path="appointments" element={<DashboardPlaceholder title="My Appointments" />} />
-          <Route path="history" element={<DashboardPlaceholder title="Medical History" />} />
+          <Route path="documents" element={<PatientDocuments />} />
+          <Route path="history" element={<PatientDocuments />} />
           <Route path="settings" element={<DashboardPlaceholder title="Patient Settings" />} />
         </Route>
 

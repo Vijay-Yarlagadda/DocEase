@@ -1,8 +1,9 @@
 import { useEffect, useState, useContext } from 'react'
 import { motion } from 'framer-motion'
-import { Building2, MapPin, Phone, Mail, Globe, Save, Eye, MapPinOff, Trash2 } from 'lucide-react'
+import { Building2, MapPin, Phone, Mail, Globe, Save, Eye, MapPinOff, Trash2, Upload } from 'lucide-react'
 import { AuthContext } from '../../context/AuthContext'
 import { getHospitalProfile, updateHospitalProfile, deleteHospital, getHospitalsWithStats } from '../../services/adminService'
+import { uploadFileToCloudinary, validateCloudinaryFile, HOSPITAL_DOCUMENT_TYPES, MAX_HOSPITAL_FILE_SIZE } from '../../services/cloudinaryService'
 import { useToast } from '../Toast'
 import { PanelSkeleton } from './SkeletonLoader'
 
@@ -15,11 +16,16 @@ const HospitalProfilePanel = () => {
     email: '',
     website: '',
     description: '',
+    registrationCertificateUrl: '',
+    hospitalLicenseUrl: '',
+    verificationStatus: '',
   })
   const [hospitals, setHospitals] = useState([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [uploadingDocs, setUploadingDocs] = useState({ registrationCertificateUrl: false, hospitalLicenseUrl: false })
+  const [uploadProgress, setUploadProgress] = useState({ registrationCertificateUrl: 0, hospitalLicenseUrl: 0 })
   const { showSuccess, showError } = useToast()
 
   const hospitalId = user?.uid || 'default'
@@ -37,6 +43,9 @@ const HospitalProfilePanel = () => {
           email: profile.email || '',
           website: profile.website || '',
           description: profile.description || '',
+          registrationCertificateUrl: profile.registrationCertificateUrl || '',
+          hospitalLicenseUrl: profile.hospitalLicenseUrl || '',
+          verificationStatus: profile.verificationStatus || 'pending',
         })
         setHospitals(list)
       })
@@ -46,9 +55,60 @@ const HospitalProfilePanel = () => {
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value })
 
+  const uploadVerificationDocument = async (event, field, label) => {
+    const fileInput = event.target
+    const file = fileInput.files?.[0]
+    if (!file) return
+
+    const validation = validateCloudinaryFile({
+      file,
+      allowedTypes: HOSPITAL_DOCUMENT_TYPES,
+      maxSize: MAX_HOSPITAL_FILE_SIZE,
+      label,
+    })
+
+    if (!validation.valid) {
+      showError(validation.error)
+      return
+    }
+
+    setUploadingDocs((prev) => ({ ...prev, [field]: true }))
+    setUploadProgress((prev) => ({ ...prev, [field]: 0 }))
+
+    try {
+      const uploadResult = await uploadFileToCloudinary({
+        file,
+        folder: `hospital-documents/${hospitalId}`,
+        onProgress: (value) => setUploadProgress((prev) => ({ ...prev, [field]: value })),
+      })
+
+      setForm((prev) => ({
+        ...prev,
+        [field]: uploadResult.secure_url,
+      }))
+      showSuccess(`${label} uploaded successfully`)
+    } catch (err) {
+      showError(err.message || `Failed to upload ${label.toLowerCase()}`)
+      fileInput.value = ''
+    } finally {
+      setUploadingDocs((prev) => ({ ...prev, [field]: false }))
+    }
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     setSaving(true)
+    if (!form.registrationCertificateUrl) {
+      showError('Registration certificate is required for hospital verification.')
+      setSaving(false)
+      return
+    }
+    if (!form.hospitalLicenseUrl) {
+      showError('Hospital license is required for hospital verification.')
+      setSaving(false)
+      return
+    }
+
     try {
       await updateHospitalProfile(hospitalId, form)
       setHospitals((prev) =>
@@ -74,7 +134,17 @@ const HospitalProfilePanel = () => {
     try {
       await deleteHospital(hospitalId)
       setHospitals((prev) => prev.filter((hospital) => hospital.id !== hospitalId))
-      setForm({ name: '', address: '', phone: '', email: '', website: '', description: '' })
+      setForm({
+        name: '',
+        address: '',
+        phone: '',
+        email: '',
+        website: '',
+        description: '',
+        registrationCertificateUrl: '',
+        hospitalLicenseUrl: '',
+        verificationStatus: 'pending',
+      })
       showSuccess('Hospital deleted successfully. You can re-add hospital details anytime.')
     } catch (err) {
       showError(err.message || 'Failed to delete hospital profile')
@@ -138,7 +208,77 @@ const HospitalProfilePanel = () => {
           </div>
         </div>
 
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mt-6">
+        <div className="mt-6 rounded-3xl border border-slate-200/70 bg-slate-50 p-5 dark:border-slate-700/60 dark:bg-slate-900/50">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-sm font-semibold text-slate-900 dark:text-white">Hospital Verification Documents</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Upload PDFs for registration certificate and hospital license. These documents are reviewed by Super Admin before verification.</p>
+            </div>
+            <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${form.verificationStatus === 'verified' ? 'bg-emerald-100 text-emerald-700' : form.verificationStatus === 'rejected' ? 'bg-rose-100 text-rose-700' : 'bg-orange-100 text-orange-700'}`}>
+              {form.verificationStatus || 'pending'}
+            </span>
+          </div>
+
+          <div className="mt-5 grid gap-4 lg:grid-cols-2">
+            {[
+              { field: 'registrationCertificateUrl', label: 'Registration Certificate', hint: 'PDF only, max 10MB' },
+              { field: 'hospitalLicenseUrl', label: 'Hospital License', hint: 'PDF only, max 10MB' },
+            ].map(({ field, label, hint }) => (
+              <div key={field} className="rounded-3xl border border-slate-200/70 bg-white p-4 dark:border-slate-700/60 dark:bg-slate-950">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-semibold text-slate-900 dark:text-white">{label}</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{hint}</p>
+                  </div>
+                  <label htmlFor={field} className="btn-secondary inline-flex cursor-pointer items-center gap-2 rounded-full px-4 py-2 text-sm">
+                    <Upload className="w-4 h-4" />
+                    {form[field] ? 'Replace' : 'Upload'}
+                  </label>
+                </div>
+
+                <input
+                  id={field}
+                  type="file"
+                  accept=".pdf"
+                  className="hidden"
+                  onChange={(e) => uploadVerificationDocument(e, field, label)}
+                />
+
+                <div className="mt-4 text-sm text-slate-500 dark:text-slate-400">
+                  {form[field] ? (
+                    <div className="space-y-2">
+                      <p className="text-slate-700 dark:text-slate-200">Uploaded file is ready for review.</p>
+                      <div className="flex flex-wrap gap-2">
+                        <a href={form[field]} target="_blank" rel="noreferrer" className="text-accent hover:text-accent-600 underline">
+                          View document
+                        </a>
+                        <a href={form[field]} download className="text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white underline">
+                          Download
+                        </a>
+                      </div>
+                    </div>
+                  ) : (
+                    <p>No document uploaded yet.</p>
+                  )}
+                </div>
+
+                {uploadingDocs[field] && (
+                  <div className="mt-4 rounded-2xl bg-slate-200/70 p-3 dark:bg-slate-800/70">
+                    <div className="flex items-center justify-between text-xs text-slate-500">
+                      <span>Uploading {label.toLowerCase()}…</span>
+                      <span>{uploadProgress[field]}%</span>
+                    </div>
+                    <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-300 dark:bg-slate-700">
+                      <div className="h-full rounded-full bg-accent transition-all" style={{ width: `${uploadProgress[field]}%` }} />
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mt-6">
           <div className="flex items-center gap-2 text-xs text-slate-500">
             <Eye className="w-4 h-4" />
             Edit your hospital profile and ensure branding, contact, and address information is up to date.
