@@ -3,19 +3,30 @@ import { motion } from 'framer-motion'
 import { Search, CheckCircle2, XCircle, Eye, Filter, ArrowRight } from 'lucide-react'
 import DashboardPageHeader from '../../components/dashboard/DashboardPageHeader'
 import SuperAdminStatusBadge from '../../components/superadmin/SuperAdminStatusBadge'
+import PDFViewer from '../../components/PDFViewer'
 import { approveHospital, getAllHospitals, rejectHospital } from '../../services/adminService'
 
 const statusOptions = ['all', 'verified', 'pending', 'rejected']
 
-const HospitalDetailsModal = ({ hospital, onClose }) => {
+const HospitalDetailsModal = ({ hospital, onClose, onViewDocument }) => {
   if (!hospital) return null
+  
+  const handleViewDocument = (url, docName) => {
+    if (!url) return
+    console.log('[Document Viewer] Opening document', {
+      documentName: docName,
+      url,
+    })
+    onViewDocument(url, docName)
+  }
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm px-4 py-6">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm px-4 py-6 overflow-y-auto">
       <motion.div
         initial={{ opacity: 0, scale: 0.93 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
-        className="w-full max-w-3xl rounded-3xl border border-slate-800/80 bg-slate-950/95 p-6 shadow-2xl"
+        className="w-full max-w-3xl rounded-3xl border border-slate-800/80 bg-slate-950/95 p-6 shadow-2xl my-8"
       >
         <div className="flex items-start justify-between gap-4 mb-6">
           <div>
@@ -52,20 +63,39 @@ const HospitalDetailsModal = ({ hospital, onClose }) => {
               <p className="mt-2 text-slate-300">{hospital.description || 'No description available.'}</p>
             </div>
             <div>
-              <p className="text-xs text-slate-500 uppercase tracking-[0.2em]">Documents</p>
-              {hospital.documents?.length > 0 ? (
-                <ul className="mt-3 space-y-2">
-                  {hospital.documents.map((doc, index) => (
-                    <li key={index} className="rounded-2xl border border-slate-800/70 bg-slate-900/80 p-3 text-sm text-slate-200">
-                      <a href={doc.url} target="_blank" rel="noreferrer" className="text-cyan-300 hover:text-cyan-200 underline">
-                        {doc.name || `Document ${index + 1}`}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="mt-3 text-sm text-slate-400">No uploaded documents are available for this hospital.</p>
-              )}
+              <p className="text-xs text-slate-500 uppercase tracking-[0.2em]">Verification Documents</p>
+              <div className="mt-3 space-y-2">
+                {hospital.registrationCertificateUrl ? (
+                  <button
+                    onClick={() => handleViewDocument(hospital.registrationCertificateUrl, 'Registration Certificate')}
+                    className="w-full flex items-center gap-2 rounded-2xl border border-emerald-500/50 bg-emerald-500/10 p-3 text-sm text-emerald-300 hover:bg-emerald-500/20 hover:border-emerald-400 transition text-left font-medium cursor-pointer"
+                  >
+                    <span>📄</span>
+                    <span>Registration Certificate</span>
+                    <span className="ml-auto text-xs">→</span>
+                  </button>
+                ) : (
+                  <div className="flex items-center gap-2 rounded-2xl border border-slate-700/50 bg-slate-800/50 p-3 text-sm text-slate-500">
+                    <span>📄</span>
+                    <span>Registration Certificate - Not uploaded</span>
+                  </div>
+                )}
+                {hospital.hospitalLicenseUrl ? (
+                  <button
+                    onClick={() => handleViewDocument(hospital.hospitalLicenseUrl, 'Hospital License')}
+                    className="w-full flex items-center gap-2 rounded-2xl border border-blue-500/50 bg-blue-500/10 p-3 text-sm text-blue-300 hover:bg-blue-500/20 hover:border-blue-400 transition text-left font-medium cursor-pointer"
+                  >
+                    <span>📄</span>
+                    <span>Hospital License</span>
+                    <span className="ml-auto text-xs">→</span>
+                  </button>
+                ) : (
+                  <div className="flex items-center gap-2 rounded-2xl border border-slate-700/50 bg-slate-800/50 p-3 text-sm text-slate-500">
+                    <span>📄</span>
+                    <span>Hospital License - Not uploaded</span>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -81,6 +111,7 @@ const SuperAdminVerification = () => {
   const [loading, setLoading] = useState(true)
   const [updatingId, setUpdatingId] = useState(null)
   const [selectedHospital, setSelectedHospital] = useState(null)
+  const [pdfViewerState, setPdfViewerState] = useState({ isOpen: false, url: null, fileName: null })
 
   useEffect(() => {
     getAllHospitals()
@@ -192,7 +223,7 @@ const SuperAdminVerification = () => {
                     </div>
                     <div><SuperAdminStatusBadge status={hospital.verificationStatus} /></div>
                     <div>{hospital.phone || hospital.email || 'N/A'}</div>
-                    <div>{hospital.documents?.length ?? 0}</div>
+                    <div>{(hospital.registrationCertificateUrl ? 1 : 0) + (hospital.hospitalLicenseUrl ? 1 : 0)}</div>
                     <div className="flex items-center justify-end gap-2">
                       <button
                         type="button"
@@ -240,8 +271,19 @@ const SuperAdminVerification = () => {
       </div>
 
       {selectedHospital && (
-        <HospitalDetailsModal hospital={selectedHospital} onClose={() => setSelectedHospital(null)} />
+        <HospitalDetailsModal 
+          hospital={selectedHospital} 
+          onClose={() => setSelectedHospital(null)}
+          onViewDocument={(url, fileName) => setPdfViewerState({ isOpen: true, url, fileName })}
+        />
       )}
+
+      <PDFViewer
+        isOpen={pdfViewerState.isOpen}
+        url={pdfViewerState.url}
+        fileName={pdfViewerState.fileName}
+        onClose={() => setPdfViewerState({ isOpen: false, url: null, fileName: null })}
+      />
     </div>
   )
 }

@@ -6,6 +6,7 @@ import { getHospitalProfile, updateHospitalProfile, deleteHospital, getHospitals
 import { uploadFileToCloudinary, validateCloudinaryFile, HOSPITAL_DOCUMENT_TYPES, MAX_HOSPITAL_FILE_SIZE } from '../../services/cloudinaryService'
 import { useToast } from '../Toast'
 import { PanelSkeleton } from './SkeletonLoader'
+import PDFViewer from '../PDFViewer'
 
 const HospitalProfilePanel = () => {
   const { user } = useContext(AuthContext)
@@ -26,6 +27,7 @@ const HospitalProfilePanel = () => {
   const [deleting, setDeleting] = useState(false)
   const [uploadingDocs, setUploadingDocs] = useState({ registrationCertificateUrl: false, hospitalLicenseUrl: false })
   const [uploadProgress, setUploadProgress] = useState({ registrationCertificateUrl: 0, hospitalLicenseUrl: 0 })
+  const [pdfViewerState, setPdfViewerState] = useState({ isOpen: false, url: null, fileName: null })
   const { showSuccess, showError } = useToast()
 
   const hospitalId = user?.uid || 'default'
@@ -167,7 +169,19 @@ const HospitalProfilePanel = () => {
 
   const renderVerificationDocumentField = ({ field, label, hint }) => {
     const documentUrl = form[field] ? (form[field].startsWith('http') ? form[field] : `https://${form[field]}`) : ''
-    const downloadName = `${label.replace(/\s+/g, '-')}.pdf`
+
+    const handleViewDocument = (e) => {
+      e.preventDefault()
+      if (!documentUrl) {
+        showError('Document URL not found')
+        return
+      }
+      console.log('[Document Viewer] Opening document', {
+        label,
+        url: documentUrl,
+      })
+      setPdfViewerState({ isOpen: true, url: documentUrl, fileName: label })
+    }
 
     return (
       <div key={field} className="rounded-3xl border border-slate-200/70 bg-white p-4 dark:border-slate-700/60 dark:bg-slate-950">
@@ -199,21 +213,12 @@ const HospitalProfilePanel = () => {
                     <p className="text-xs text-slate-500 dark:text-slate-400">Your file is stored securely and is ready for review.</p>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    <a
-                      href={documentUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                    <button
+                      onClick={handleViewDocument}
                       className="inline-flex items-center justify-center rounded-full border border-transparent bg-slate-900 px-5 py-2 text-xs font-semibold text-white shadow-lg shadow-slate-900/30 transition duration-300 ease-out hover:-translate-y-0.5 hover:scale-[1.01] hover:shadow-xl hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-400/40"
                     >
                       View
-                    </a>
-                    <a
-                      href={documentUrl}
-                      download={downloadName}
-                      className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-5 py-2 text-xs font-semibold text-slate-900 shadow-sm transition duration-300 ease-out hover:border-slate-300 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400/40"
-                    >
-                      Download
-                    </a>
+                    </button>
                   </div>
                 </div>
               </div>
@@ -374,6 +379,13 @@ const HospitalProfilePanel = () => {
           ))}
         </div>
       </motion.div>
+
+      <PDFViewer
+        isOpen={pdfViewerState.isOpen}
+        url={pdfViewerState.url}
+        fileName={pdfViewerState.fileName}
+        onClose={() => setPdfViewerState({ isOpen: false, url: null, fileName: null })}
+      />
     </div>
   )
 }

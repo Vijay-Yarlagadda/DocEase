@@ -7,14 +7,21 @@ const PATIENT_DOCUMENT_TYPES = ['application/pdf', 'image/jpeg', 'image/jpg', 'i
 const MAX_HOSPITAL_FILE_SIZE = 10 * 1024 * 1024
 const MAX_PATIENT_FILE_SIZE = 20 * 1024 * 1024
 
-const buildCloudinaryUrl = () => {
+const normalizeExtension = (fileName) => fileName.split('.').pop()?.toLowerCase() || ''
+
+const getResourceType = (fileName) => {
+  const extension = normalizeExtension(fileName)
+  if (extension === 'pdf') return 'raw'
+  if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(extension)) return 'image'
+  return 'raw'
+}
+
+const buildCloudinaryUploadUrl = (resourceType) => {
   if (!CLOUDINARY_CLOUD_NAME || !CLOUDINARY_UPLOAD_PRESET) {
     throw new Error('Cloudinary configuration is missing. Please set VITE_CLOUDINARY_CLOUD_NAME and VITE_CLOUDINARY_UPLOAD_PRESET in .env')
   }
-  return `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/upload`
+  return `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/${resourceType}/upload`
 }
-
-const normalizeExtension = (fileName) => fileName.split('.').pop()?.toLowerCase() || ''
 
 const isTypeAllowed = (file, allowedTypes) => {
   const extension = normalizeExtension(file.name)
@@ -51,17 +58,29 @@ export const validateCloudinaryFile = ({ file, allowedTypes, maxSize, label = 'F
 export const uploadFileToCloudinary = ({ file, folder, onProgress }) => {
   return new Promise((resolve, reject) => {
     try {
-      const url = buildCloudinaryUrl()
+      // Determine resource type based on file extension
+      const resourceType = getResourceType(file.name)
+      const uploadUrl = buildCloudinaryUploadUrl(resourceType)
+      
+      console.log('[Cloudinary Upload] Starting upload', {
+        fileName: file.name,
+        fileType: file.type,
+        fileSize: file.size,
+        resourceType,
+        uploadEndpoint: uploadUrl,
+        folder: folder || 'root',
+      })
+
       const formData = new FormData()
       formData.append('file', file)
       formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET)
-      formData.append('resource_type', 'auto')
+      formData.append('resource_type', resourceType)
       if (folder) {
         formData.append('folder', folder)
       }
 
       const xhr = new XMLHttpRequest()
-      xhr.open('POST', url)
+      xhr.open('POST', uploadUrl, true)
 
       xhr.upload.onprogress = (event) => {
         if (!event.lengthComputable || typeof onProgress !== 'function') return
@@ -75,19 +94,39 @@ export const uploadFileToCloudinary = ({ file, folder, onProgress }) => {
         if (xhr.status >= 200 && xhr.status < 300) {
           try {
             const response = JSON.parse(xhr.responseText)
+            const secureUrl = response.secure_url
+
+            console.log('[Cloudinary Upload] Success', {
+              secureUrl,
+              resourceType: response.resource_type,
+              publicId: response.public_id,
+              format: response.format,
+            })
+
             resolve(response)
           } catch (parseErr) {
+            console.error('[Cloudinary Upload] Response parse error', parseErr)
             reject(new Error('Failed to parse Cloudinary response.'))
           }
         } else {
-          const message = xhr.responseText ? xhr.responseText : xhr.statusText
-          reject(new Error(`Cloudinary upload failed: ${message}`))
+          const errorMsg = xhr.responseText ? xhr.responseText : xhr.statusText
+          console.error('[Cloudinary Upload] Failed', {
+            status: xhr.status,
+            statusText: xhr.statusText,
+            error: errorMsg,
+          })
+          reject(new Error(`Cloudinary upload failed: ${errorMsg}`))
         }
       }
 
-      xhr.onerror = () => reject(new Error('Unable to upload file to Cloudinary. Please check your network connection.'))
+      xhr.onerror = () => {
+        console.error('[Cloudinary Upload] Network error')
+        reject(new Error('Unable to upload file to Cloudinary. Please check your network connection.'))
+      }
+
       xhr.send(formData)
     } catch (err) {
+      console.error('[Cloudinary Upload] Exception', err)
       reject(err)
     }
   })
