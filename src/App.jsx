@@ -106,7 +106,7 @@ function App() {
           <Route path="dashboard" element={<PatientDashboard />} />
           <Route path="appointments" element={<DashboardPlaceholder title="My Appointments" />} />
           <Route path="documents" element={<PatientDocuments />} />
-          <Route path="history" element={<PatientDocuments />} />
+          <Route path="history" element={<DashboardPlaceholder title="Medical History" />} />
           <Route path="settings" element={<DashboardPlaceholder title="Patient Settings" />} />
         </Route>
 
