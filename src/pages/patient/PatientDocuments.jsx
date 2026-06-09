@@ -3,6 +3,7 @@ import { motion } from 'framer-motion'
 import { Archive, FileText, Download, Trash2, Eye, Upload } from 'lucide-react'
 import { AuthContext } from '../../context/AuthContext'
 import { createPatientDocument, deletePatientDocument, getPatientDocuments } from '../../services/documentService'
+import { getAllDoctors } from '../../services/authService'
 import { uploadFileToCloudinary, validateCloudinaryFile, PATIENT_DOCUMENT_TYPES, MAX_PATIENT_FILE_SIZE } from '../../services/cloudinaryService'
 import FilePreviewModal from '../../components/FilePreviewModal'
 import { useToast } from '../../components/Toast'
@@ -15,6 +16,8 @@ const PatientDocuments = () => {
   const [uploading, setUploading] = useState(false)
   const [progress, setProgress] = useState(0)
   const [previewDocument, setPreviewDocument] = useState(null)
+  const [doctors, setDoctors] = useState([])
+  const [selectedDoctorUids, setSelectedDoctorUids] = useState([])
   const [dragActive, setDragActive] = useState(false)
   const { showSuccess, showError } = useToast()
 
@@ -33,6 +36,8 @@ const PatientDocuments = () => {
 
   useEffect(() => {
     fetchDocuments()
+    // load doctors for sharing
+    getAllDoctors().then(setDoctors).catch(() => {})
   }, [user])
 
   const handleFileSelected = async (file) => {
@@ -66,6 +71,7 @@ const PatientDocuments = () => {
         fileName: file.name,
         fileUrl: uploadResult.secure_url,
         mimeType: file.type,
+        sharedWith: selectedDoctorUids,
       })
       showSuccess('Document uploaded successfully')
       setSelectedFile(null)
@@ -158,6 +164,20 @@ const PatientDocuments = () => {
               Select a file
             </button>
           </label>
+          <div className="mt-4 w-full text-left">
+            <label className="block text-xs font-medium text-slate-400 mb-1.5">Share with doctors</label>
+            <select
+              multiple
+              value={selectedDoctorUids}
+              onChange={(e) => setSelectedDoctorUids(Array.from(e.target.selectedOptions).map((o) => o.value))}
+              className="w-full rounded-2xl border p-2 text-sm"
+            >
+              {doctors.map((d) => (
+                <option key={d.id} value={d.id}>{d.name || d.email || d.id}</option>
+              ))}
+            </select>
+            <p className="text-xs text-slate-500 mt-2">Select one or more doctors to share this document with.</p>
+          </div>
         </div>
         {uploading && (
           <div className="mt-4 rounded-2xl bg-slate-200/70 p-4 dark:bg-slate-800/70">

@@ -2,7 +2,7 @@ import { useEffect, useState, useContext } from 'react'
 import { motion } from 'framer-motion'
 import { FileText, Download, Eye } from 'lucide-react'
 import { AuthContext } from '../../context/AuthContext'
-import { getAllPatientDocuments } from '../../services/documentService'
+import { getDocumentsForDoctor } from '../../services/documentService'
 import FilePreviewModal from '../../components/FilePreviewModal'
 import { useToast } from '../../components/Toast'
 
@@ -16,7 +16,7 @@ const DoctorRecords = () => {
   const fetchDocuments = async () => {
     setLoading(true)
     try {
-      const docs = await getAllPatientDocuments()
+      const docs = await getDocumentsForDoctor(user?.uid)
       setDocuments(docs)
     } catch (err) {
       showError(err.message || 'Failed to load patient documents')
@@ -26,8 +26,9 @@ const DoctorRecords = () => {
   }
 
   useEffect(() => {
+    if (!user) return
     fetchDocuments()
-  }, [])
+  }, [user])
 
   return (
     <div>

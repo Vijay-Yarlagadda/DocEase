@@ -3,7 +3,7 @@ import { collection, addDoc, query, where, getDocs, deleteDoc, doc, serverTimest
 
 const DOCUMENTS_COLLECTION = 'documents'
 
-export const createPatientDocument = async ({ patientUid, patientName, patientEmail, fileName, fileUrl, mimeType }) => {
+export const createPatientDocument = async ({ patientUid, patientName, patientEmail, fileName, fileUrl, mimeType, sharedWith = [] }) => {
   const documentRef = await addDoc(collection(db, DOCUMENTS_COLLECTION), {
     patientUid,
     patientName,
@@ -11,6 +11,7 @@ export const createPatientDocument = async ({ patientUid, patientName, patientEm
     fileName,
     fileUrl,
     mimeType,
+    sharedWith,
     uploadedAt: serverTimestamp(),
   })
   return documentRef.id
@@ -24,6 +25,13 @@ export const getPatientDocuments = async (patientUid) => {
 
 export const getAllPatientDocuments = async () => {
   const snap = await getDocs(collection(db, DOCUMENTS_COLLECTION))
+  return snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
+}
+
+export const getDocumentsForDoctor = async (doctorUid) => {
+  if (!doctorUid) return []
+  const q = query(collection(db, DOCUMENTS_COLLECTION), where('sharedWith', 'array-contains', doctorUid))
+  const snap = await getDocs(q)
   return snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
 }
 
