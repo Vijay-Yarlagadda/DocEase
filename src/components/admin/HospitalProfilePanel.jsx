@@ -155,13 +155,88 @@ const HospitalProfilePanel = () => {
 
   if (loading) return <PanelSkeleton rows={6} />
 
+  const isNewHospital = !form.name && !form.email && !form.address && !form.registrationCertificateUrl && !form.hospitalLicenseUrl
+
   const fields = [
-    { name: 'name', label: 'Hospital Name', icon: Building2, type: 'text' },
-    { name: 'address', label: 'Address', icon: MapPin, type: 'text' },
-    { name: 'phone', label: 'Contact Phone', icon: Phone, type: 'tel' },
-    { name: 'email', label: 'Contact Email', icon: Mail, type: 'email' },
-    { name: 'website', label: 'Website', icon: Globe, type: 'text' },
+    { name: 'name', label: 'Hospital Name', icon: Building2, type: 'text', placeholder: 'e.g. Saint Mary’s Medical Center' },
+    { name: 'address', label: 'Address', icon: MapPin, type: 'text', placeholder: 'e.g. 124 Wellness Drive, Austin, TX' },
+    { name: 'phone', label: 'Contact Phone', icon: Phone, type: 'tel', placeholder: '+1 (555) 123-4567' },
+    { name: 'email', label: 'Contact Email', icon: Mail, type: 'email', placeholder: 'contact@hospital.com' },
+    { name: 'website', label: 'Website', icon: Globe, type: 'text', placeholder: 'www.hospital-example.com' },
   ]
+
+  const renderVerificationDocumentField = ({ field, label, hint }) => {
+    const documentUrl = form[field] ? (form[field].startsWith('http') ? form[field] : `https://${form[field]}`) : ''
+    const downloadName = `${label.replace(/\s+/g, '-')}.pdf`
+
+    return (
+      <div key={field} className="rounded-3xl border border-slate-200/70 bg-white p-4 dark:border-slate-700/60 dark:bg-slate-950">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="text-sm font-semibold text-slate-900 dark:text-white">{label}</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{hint}</p>
+          </div>
+          <label htmlFor={field} className="inline-flex cursor-pointer items-center gap-2 rounded-full bg-gradient-to-r from-sky-600 to-cyan-500 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-sky-500/20 transition duration-300 hover:from-sky-700 hover:to-cyan-600 focus:outline-none focus:ring-2 focus:ring-cyan-300/50">
+            <Upload className="w-4 h-4" />
+            {form[field] ? 'Replace file' : 'Upload file'}
+          </label>
+        </div>
+        <input
+          id={field}
+          type="file"
+          accept=".pdf"
+          className="hidden"
+          onChange={(e) => uploadVerificationDocument(e, field, label)}
+        />
+
+        <div className="mt-4">
+          {form[field] ? (
+            <div className="animated-border-ring animate-animated-border">
+              <div className="animated-border-ring__content rounded-3xl border border-slate-200/70 p-4 shadow-sm dark:border-slate-700/60">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p className="text-sm font-semibold text-slate-900 dark:text-white">Document uploaded successfully</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">Your file is stored securely and is ready for review.</p>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <a
+                      href={documentUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center justify-center rounded-full border border-transparent bg-slate-900 px-5 py-2 text-xs font-semibold text-white shadow-lg shadow-slate-900/30 transition duration-300 ease-out hover:-translate-y-0.5 hover:scale-[1.01] hover:shadow-xl hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-400/40"
+                    >
+                      View
+                    </a>
+                    <a
+                      href={documentUrl}
+                      download={downloadName}
+                      className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-5 py-2 text-xs font-semibold text-slate-900 shadow-sm transition duration-300 ease-out hover:border-slate-300 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400/40"
+                    >
+                      Download
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <p className="text-sm text-slate-500 dark:text-slate-400">No document uploaded yet.</p>
+          )}
+        </div>
+
+        {uploadingDocs[field] && (
+          <div className="mt-4 rounded-2xl bg-slate-200/70 p-3 dark:bg-slate-800/70">
+            <div className="flex items-center justify-between text-xs text-slate-500">
+              <span>Uploading {label.toLowerCase()}…</span>
+              <span>{uploadProgress[field]}%</span>
+            </div>
+            <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-300 dark:bg-slate-700">
+              <div className="h-full rounded-full bg-accent transition-all" style={{ width: `${uploadProgress[field]}%` }} />
+            </div>
+          </div>
+        )}
+      </div>
+    )
+  }
 
   return (
     <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
@@ -170,6 +245,7 @@ const HospitalProfilePanel = () => {
         animate={{ opacity: 1, y: 0 }}
         onSubmit={handleSubmit}
         className="dashboard-card xl:col-span-2"
+        autoComplete="off"
       >
         <div className="flex items-center gap-2 mb-5">
           <Building2 className="w-5 h-5 text-accent" />
@@ -180,7 +256,7 @@ const HospitalProfilePanel = () => {
         </div>
 
         <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
-          {fields.map(({ name, label, icon: Icon, type }) => (
+          {fields.map(({ name, label, icon: Icon, type, placeholder }) => (
             <div key={name} className={name === 'address' ? 'md:col-span-2' : ''}>
               <label className="block text-xs font-medium text-slate-400 mb-1.5">{label}</label>
               <div className="relative">
@@ -190,7 +266,9 @@ const HospitalProfilePanel = () => {
                   name={name}
                   value={form[name]}
                   onChange={handleChange}
-                  className="dashboard-input pl-10"
+                  placeholder={placeholder}
+                  autoComplete="off"
+                  className="block w-full rounded-3xl border border-slate-200/70 bg-white/90 px-4 py-3 pl-10 text-sm text-slate-900 shadow-sm outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-accent/10 dark:border-slate-700/60 dark:bg-slate-950 dark:text-slate-100"
                   required={name === 'name' || name === 'email'}
                 />
               </div>
@@ -203,7 +281,9 @@ const HospitalProfilePanel = () => {
               value={form.description}
               onChange={handleChange}
               rows={4}
-              className="dashboard-input resize-none"
+              placeholder="Describe the hospital, specialties, and services offered."
+              autoComplete="off"
+              className="block w-full rounded-3xl border border-slate-200/70 bg-white/90 px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-accent/10 resize-none dark:border-slate-700/60 dark:bg-slate-950 dark:text-slate-100"
             />
           </div>
         </div>
@@ -223,79 +303,34 @@ const HospitalProfilePanel = () => {
             {[
               { field: 'registrationCertificateUrl', label: 'Registration Certificate', hint: 'PDF only, max 10MB' },
               { field: 'hospitalLicenseUrl', label: 'Hospital License', hint: 'PDF only, max 10MB' },
-            ].map(({ field, label, hint }) => (
-              <div key={field} className="rounded-3xl border border-slate-200/70 bg-white p-4 dark:border-slate-700/60 dark:bg-slate-950">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-sm font-semibold text-slate-900 dark:text-white">{label}</p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{hint}</p>
-                  </div>
-                  <label htmlFor={field} className="btn-secondary inline-flex cursor-pointer items-center gap-2 rounded-full px-4 py-2 text-sm">
-                    <Upload className="w-4 h-4" />
-                    {form[field] ? 'Replace' : 'Upload'}
-                  </label>
-                </div>
-
-                <input
-                  id={field}
-                  type="file"
-                  accept=".pdf"
-                  className="hidden"
-                  onChange={(e) => uploadVerificationDocument(e, field, label)}
-                />
-
-                <div className="mt-4 text-sm text-slate-500 dark:text-slate-400">
-                  {form[field] ? (
-                    <div className="space-y-2">
-                      <p className="text-slate-700 dark:text-slate-200">Uploaded file is ready for review.</p>
-                      <div className="flex flex-wrap gap-2">
-                        <a href={form[field]} target="_blank" rel="noreferrer" className="text-accent hover:text-accent-600 underline">
-                          View document
-                        </a>
-                        <a href={form[field]} download className="text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white underline">
-                          Download
-                        </a>
-                      </div>
-                    </div>
-                  ) : (
-                    <p>No document uploaded yet.</p>
-                  )}
-                </div>
-
-                {uploadingDocs[field] && (
-                  <div className="mt-4 rounded-2xl bg-slate-200/70 p-3 dark:bg-slate-800/70">
-                    <div className="flex items-center justify-between text-xs text-slate-500">
-                      <span>Uploading {label.toLowerCase()}…</span>
-                      <span>{uploadProgress[field]}%</span>
-                    </div>
-                    <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-300 dark:bg-slate-700">
-                      <div className="h-full rounded-full bg-accent transition-all" style={{ width: `${uploadProgress[field]}%` }} />
-                    </div>
-                  </div>
-                )}
-              </div>
-            ))}
+            ].map(renderVerificationDocumentField)}
           </div>
         </div>
 
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mt-6">
           <div className="flex items-center gap-2 text-xs text-slate-500">
             <Eye className="w-4 h-4" />
-            Edit your hospital profile and ensure branding, contact, and address information is up to date.
+            {isNewHospital ? 'Complete your hospital registration details and submit to begin the verification process.' : 'Update your hospital details when changes are required.'}
           </div>
           <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+            {!isNewHospital && (
+              <button
+                type="button"
+                onClick={handleDelete}
+                disabled={deleting || saving}
+                className="inline-flex items-center gap-2 rounded-full border border-rose-200 bg-rose-50 px-4 py-2 text-sm font-semibold text-rose-700 transition hover:bg-rose-100 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Trash2 className="w-4 h-4" />
+                {deleting ? 'Deleting...' : 'Delete Hospital'}
+              </button>
+            )}
             <button
-              type="button"
-              onClick={handleDelete}
-              disabled={deleting || saving}
-              className="inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed bg-white dark:bg-slate-900/70 border-slate-200/70 dark:border-slate-700/40 text-slate-800 dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/60"
+              type="submit"
+              disabled={saving || deleting}
+              className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold text-white shadow-sm transition ${isNewHospital ? 'bg-gradient-to-r from-sky-600 to-cyan-500 hover:from-sky-700 hover:to-cyan-600' : 'bg-gradient-to-r from-fuchsia-600 to-pink-500 hover:from-fuchsia-700 hover:to-pink-600'}`}
             >
-              <Trash2 className="w-4 h-4" />
-              {deleting ? 'Deleting...' : 'Delete Hospital'}
-            </button>
-            <button type="submit" disabled={saving || deleting} className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-fuchsia-600 to-pink-500 hover:from-fuchsia-700 hover:to-pink-600 shadow-sm transition disabled:opacity-50">
               <Save className="w-4 h-4" />
-              {saving ? 'Saving...' : 'Update Hospital'}
+              {saving ? (isNewHospital ? 'Creating...' : 'Saving...') : isNewHospital ? 'Create Hospital' : 'Update Hospital'}
             </button>
           </div>
         </div>

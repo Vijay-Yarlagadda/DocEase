@@ -19,15 +19,6 @@ const DOCTORS_COLLECTION = 'doctors'
 const HOSPITALS_COLLECTION = 'hospitals'
 const APPOINTMENTS_COLLECTION = 'appointments'
 
-const DEFAULT_HOSPITAL = {
-  name: 'DocEase General Hospital',
-  address: '123 Healthcare Avenue, Medical District',
-  phone: '+1 (555) 123-4567',
-  email: 'contact@docease.com',
-  website: 'www.docease.com',
-  description: 'Leading healthcare facility providing comprehensive medical services.',
-}
-
 const toDateString = (date = new Date()) => date.toISOString().split('T')[0]
 
 const parseAppointmentDate = (appt) => {
@@ -72,7 +63,7 @@ export const getAdminDashboardStats = async (hospitalId = null) => {
 
 export const getHospitalProfile = async (hospitalId = 'default') => {
   const snap = await getDoc(doc(db, HOSPITALS_COLLECTION, hospitalId))
-  if (!snap.exists()) return { id: hospitalId, ...DEFAULT_HOSPITAL }
+  if (!snap.exists()) return { id: hospitalId }
   return { id: snap.id, ...snap.data() }
 }
 

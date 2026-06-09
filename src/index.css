@@ -25,6 +25,27 @@
     @apply bg-white dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl transition-all duration-300 p-6 border border-slate-200 dark:border-gray-700;
   }
 
+  .animated-border-ring {
+    @apply rounded-3xl p-[1px] bg-[length:300%_300%] bg-gradient-to-r from-sky-500 via-fuchsia-500 to-emerald-500;
+  }
+
+  .animated-border-ring__content {
+    @apply rounded-3xl bg-slate-50 dark:bg-slate-900/80;
+  }
+
+  .animate-animated-border {
+    animation: animated-border 6s ease infinite;
+  }
+
+  @keyframes animated-border {
+    0%, 100% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+  }
+
   .auth-page {
     @apply relative overflow-hidden;
     background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 35%, #ecf7ff 100%);

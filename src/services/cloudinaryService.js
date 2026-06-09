@@ -55,6 +55,7 @@ export const uploadFileToCloudinary = ({ file, folder, onProgress }) => {
       const formData = new FormData()
       formData.append('file', file)
       formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET)
+      formData.append('resource_type', 'auto')
       if (folder) {
         formData.append('folder', folder)
       }
