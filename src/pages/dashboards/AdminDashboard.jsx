@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useContext } from 'react'
 import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import { UserCheck, Users, Calendar, CalendarDays, ArrowRight, Building2, Stethoscope } from 'lucide-react'
@@ -14,6 +14,7 @@ import {
   getAdminNotifications,
   getUpcomingAppointments,
 } from '../../services/adminService'
+import { AuthContext } from '../../context/AuthContext'
 
 const AdminDashboard = () => {
   const [stats, setStats] = useState(null)
@@ -22,10 +23,18 @@ const AdminDashboard = () => {
   const [upcoming, setUpcoming] = useState([])
   const [loading, setLoading] = useState(true)
 
+  const { user } = useContext(AuthContext)
+
   useEffect(() => {
+    const hospitalId = user?.uid || user?.hospitalId || null
+    if (!hospitalId) {
+      setLoading(false)
+      return
+    }
+
     Promise.all([
-      getAdminDashboardStats(),
-      getWeeklyAppointmentData(),
+      getAdminDashboardStats(hospitalId),
+      getWeeklyAppointmentData(undefined, hospitalId),
       getAdminNotifications(),
       getUpcomingAppointments(),
     ])
@@ -36,7 +45,7 @@ const AdminDashboard = () => {
         setUpcoming(up.slice(0, 5))
       })
       .finally(() => setLoading(false))
-  }, [])
+  }, [user])
 
   const statCards = stats
     ? [

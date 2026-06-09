@@ -185,6 +185,52 @@ export const getAppointmentsByHospital = async (hospitalId) => {
     )
 }
 
+export const getPatientsByHospital = async (hospitalId) => {
+  // Get appointments for this hospital and derive unique patient identifiers
+  const appointments = await getAppointmentsByHospital(hospitalId)
+  const patientUidSet = new Set()
+  const patientEmailSet = new Set()
+  const patientsFromAppts = {}
+
+  appointments.forEach((appt) => {
+    if (appt.patientId) patientUidSet.add(appt.patientId)
+    if (appt.patientEmail) patientEmailSet.add(appt.patientEmail)
+    const key = appt.patientId || appt.patientEmail || appt.patientName
+    if (!patientsFromAppts[key]) {
+      patientsFromAppts[key] = {
+        id: appt.patientId || appt.patientEmail || key,
+        name: appt.patientName || null,
+        email: appt.patientEmail || null,
+        createdAt: null,
+        phone: '',
+      }
+    }
+  })
+
+  // Fetch known patient user documents and merge
+  const allPatients = await getAllPatients()
+  const matched = allPatients.filter((p) => patientUidSet.has(p.id) || patientEmailSet.has(p.email) || patientEmailSet.has(p.mail))
+
+  // Build a map of matched patients by id/email
+  const finalMap = {}
+  matched.forEach((p) => {
+    finalMap[p.id] = p
+    if (p.email) finalMap[p.email] = p
+    if (p.mail) finalMap[p.mail] = p
+  })
+
+  // Combine explicit users with derived ones from appointments
+  const combinedKeys = new Set([...Object.keys(patientsFromAppts), ...matched.map((m) => m.id)])
+  const result = []
+  combinedKeys.forEach((k) => {
+    const fromUser = finalMap[k]
+    if (fromUser) result.push(fromUser)
+    else if (patientsFromAppts[k]) result.push(patientsFromAppts[k])
+  })
+
+  return result
+}
+
 export const getHospitalsWithStats = async () => {
   const [hospitals, doctors, appointments] = await Promise.all([
     getAllHospitals(),

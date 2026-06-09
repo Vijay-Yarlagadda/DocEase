@@ -1,7 +1,8 @@
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState, useMemo, useContext } from 'react'
 import { motion } from 'framer-motion'
 import { Search, User, Clock, ClipboardList } from 'lucide-react'
-import { getAllPatients, getAllAppointments } from '../../services/adminService'
+import { getPatientsByHospital, getAppointmentsByHospital } from '../../services/adminService'
+import { AuthContext } from '../../context/AuthContext'
 import { useToast } from '../Toast'
 import { PanelSkeleton } from './SkeletonLoader'
 
@@ -13,15 +14,23 @@ const PatientManagementPanel = () => {
   const [loading, setLoading] = useState(true)
   const { showError } = useToast()
 
+  const { user } = useContext(AuthContext)
+
   useEffect(() => {
-    Promise.all([getAllPatients(), getAllAppointments()])
+    const hospitalId = user?.uid || user?.hospitalId || null
+    if (!hospitalId) {
+      setLoading(false)
+      return
+    }
+
+    Promise.all([getPatientsByHospital(hospitalId), getAppointmentsByHospital(hospitalId)])
       .then(([patientList, appointmentList]) => {
         setPatients(patientList)
         setAppointments(appointmentList)
       })
       .catch((err) => showError(err.message || 'Failed to load patient data'))
       .finally(() => setLoading(false))
-  }, [showError])
+  }, [showError, user])
 
   const patientsWithStats = useMemo(() => {
     return patients.map((patient) => {
