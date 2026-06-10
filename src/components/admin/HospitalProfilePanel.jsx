@@ -6,7 +6,6 @@ import { getHospitalProfile, updateHospitalProfile, deleteHospital, getHospitals
 import { uploadFileToCloudinary, validateCloudinaryFile, HOSPITAL_DOCUMENT_TYPES, MAX_HOSPITAL_FILE_SIZE } from '../../services/cloudinaryService'
 import { useToast } from '../Toast'
 import { PanelSkeleton } from './SkeletonLoader'
-import PDFViewer from '../PDFViewer'
 
 const HospitalProfilePanel = () => {
   const { user } = useContext(AuthContext)
@@ -28,7 +27,6 @@ const HospitalProfilePanel = () => {
   const [deleting, setDeleting] = useState(false)
   const [uploadingDocs, setUploadingDocs] = useState({ registrationCertificateUrl: false, hospitalLicenseUrl: false })
   const [uploadProgress, setUploadProgress] = useState({ registrationCertificateUrl: 0, hospitalLicenseUrl: 0 })
-  const [pdfViewerState, setPdfViewerState] = useState({ isOpen: false, url: null, fileName: null })
   const { showSuccess, showError } = useToast()
 
   const hospitalId = user?.uid || 'default'
@@ -217,11 +215,11 @@ const HospitalProfilePanel = () => {
         showError('Document URL not found')
         return
       }
-      console.log('[Document Viewer] Opening hospital document', {
+      console.log('[Document Viewer] Opening hospital document in new tab', {
         label,
         url: documentUrl,
       })
-      setPdfViewerState({ isOpen: true, url: documentUrl, fileName: documentMeta.fileName })
+      window.open(documentUrl, '_blank', 'noopener')
     }
 
     return (
@@ -260,23 +258,6 @@ const HospitalProfilePanel = () => {
                     >
                       View
                     </button>
-                    <a
-                      href={documentUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 transition duration-300 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900"
-                    >
-                      Open
-                    </a>
-                    <a
-                      href={documentUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      download={documentMeta.fileName}
-                      className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-xs font-semibold text-slate-700 transition duration-300 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900"
-                    >
-                      Download
-                    </a>
                   </div>
                 </div>
               </div>
@@ -438,12 +419,6 @@ const HospitalProfilePanel = () => {
         </div>
       </motion.div>
 
-      <PDFViewer
-        isOpen={pdfViewerState.isOpen}
-        url={pdfViewerState.url}
-        fileName={pdfViewerState.fileName}
-        onClose={() => setPdfViewerState({ isOpen: false, url: null, fileName: null })}
-      />
     </div>
   )
 }
