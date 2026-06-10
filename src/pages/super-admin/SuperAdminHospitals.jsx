@@ -5,6 +5,11 @@ import DashboardPageHeader from '../../components/dashboard/DashboardPageHeader'
 import SuperAdminStatusBadge from '../../components/superadmin/SuperAdminStatusBadge'
 import { getAllHospitals } from '../../services/adminService'
 
+const getHospitalDocCount = (hospital) => {
+  if (Array.isArray(hospital.documents) && hospital.documents.length > 0) return hospital.documents.length
+  return (hospital.registrationCertificateUrl ? 1 : 0) + (hospital.hospitalLicenseUrl ? 1 : 0)
+}
+
 const SuperAdminHospitals = () => {
   const [hospitals, setHospitals] = useState([])
   const [search, setSearch] = useState('')
@@ -94,8 +99,8 @@ const SuperAdminHospitals = () => {
                 </div>
                 <div><SuperAdminStatusBadge status={hospital.verificationStatus} /></div>
                 <div>{hospital.phone || hospital.email || 'N/A'}</div>
-                <div>{hospital.documents?.length ?? 0}</div>
-                <div className="text-right text-slate-500">{hospital.documents?.length ? 'Documents ready' : 'No docs'}</div>
+                <div>{getHospitalDocCount(hospital)}</div>
+                <div className="text-right text-slate-500">{getHospitalDocCount(hospital) ? 'Documents ready' : 'No docs'}</div>
               </div>
             ))
           )}

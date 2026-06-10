@@ -38,8 +38,8 @@ const PDFViewer = ({ isOpen, url, fileName, onClose }) => {
     setError('Could not load PDF in viewer. Try downloading instead.')
   }
 
-  // Use Cloudinary PDF rendering endpoint with full URL
-  const pdfUrl = url.includes('?') ? `${url}&fl_attachment` : `${url}?fl_attachment`
+  // Use direct URL for inline preview, avoid forcing download in the browser.
+  const pdfUrl = url
 
   return (
     <motion.div

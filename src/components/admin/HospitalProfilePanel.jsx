@@ -20,6 +20,7 @@ const HospitalProfilePanel = () => {
     registrationCertificateUrl: '',
     hospitalLicenseUrl: '',
     verificationStatus: '',
+    hospitalDocuments: [],
   })
   const [hospitals, setHospitals] = useState([])
   const [loading, setLoading] = useState(true)
@@ -32,6 +33,26 @@ const HospitalProfilePanel = () => {
 
   const hospitalId = user?.uid || 'default'
   const isOwnHospital = (hospital) => hospital.id === hospitalId
+
+  const normalizeCloudinaryUrl = (value) => {
+    if (!value) return ''
+    try {
+      return new URL(value).href
+    } catch {
+      return value.startsWith('http') ? value : `https://${value}`
+    }
+  }
+
+  const getHospitalDocument = (field) => {
+    const metadata = form.hospitalDocuments?.find((doc) => doc.id === field)
+    const url = normalizeCloudinaryUrl(metadata?.url || form[field])
+    const defaultName = field === 'registrationCertificateUrl' ? 'Registration Certificate.pdf' : 'Hospital License.pdf'
+    return {
+      ...metadata,
+      url,
+      fileName: metadata?.name || defaultName,
+    }
+  }
 
   useEffect(() => {
     if (!user) return
@@ -48,6 +69,7 @@ const HospitalProfilePanel = () => {
           registrationCertificateUrl: profile.registrationCertificateUrl || '',
           hospitalLicenseUrl: profile.hospitalLicenseUrl || '',
           verificationStatus: profile.verificationStatus || 'pending',
+          hospitalDocuments: profile.hospitalDocuments || [],
         })
         setHospitals(list)
       })
@@ -84,9 +106,25 @@ const HospitalProfilePanel = () => {
         onProgress: (value) => setUploadProgress((prev) => ({ ...prev, [field]: value })),
       })
 
+      const existingDocs = form.hospitalDocuments?.filter((doc) => doc.id !== field) || []
+      const fileName = uploadResult.original_filename
+        ? `${uploadResult.original_filename}.${uploadResult.format}`
+        : file.name
+
       setForm((prev) => ({
         ...prev,
         [field]: uploadResult.secure_url,
+        hospitalDocuments: [
+          ...existingDocs,
+          {
+            id: field,
+            label,
+            url: uploadResult.secure_url,
+            name: fileName,
+            uploadedAt: new Date().toISOString(),
+            type: file.type || 'application/pdf',
+          },
+        ],
       }))
       showSuccess(`${label} uploaded successfully`)
     } catch (err) {
@@ -146,6 +184,7 @@ const HospitalProfilePanel = () => {
         registrationCertificateUrl: '',
         hospitalLicenseUrl: '',
         verificationStatus: 'pending',
+        hospitalDocuments: [],
       })
       showSuccess('Hospital deleted successfully. You can re-add hospital details anytime.')
     } catch (err) {
@@ -168,7 +207,9 @@ const HospitalProfilePanel = () => {
   ]
 
   const renderVerificationDocumentField = ({ field, label, hint }) => {
-    const documentUrl = form[field] ? (form[field].startsWith('http') ? form[field] : `https://${form[field]}`) : ''
+    const documentMeta = getHospitalDocument(field)
+    const documentUrl = documentMeta.url
+    const uploadedAt = documentMeta.uploadedAt ? new Date(documentMeta.uploadedAt).toLocaleString() : 'Unknown upload time'
 
     const handleViewDocument = (e) => {
       e.preventDefault()
@@ -176,11 +217,11 @@ const HospitalProfilePanel = () => {
         showError('Document URL not found')
         return
       }
-      console.log('[Document Viewer] Opening document', {
+      console.log('[Document Viewer] Opening hospital document', {
         label,
         url: documentUrl,
       })
-      setPdfViewerState({ isOpen: true, url: documentUrl, fileName: label })
+      setPdfViewerState({ isOpen: true, url: documentUrl, fileName: documentMeta.fileName })
     }
 
     return (
@@ -204,21 +245,38 @@ const HospitalProfilePanel = () => {
         />
 
         <div className="mt-4">
-          {form[field] ? (
+          {documentUrl ? (
             <div className="animated-border-ring animate-animated-border">
               <div className="animated-border-ring__content rounded-3xl border border-slate-200/70 p-4 shadow-sm dark:border-slate-700/60">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="grid gap-4 sm:grid-cols-[1fr_auto]">
                   <div>
                     <p className="text-sm font-semibold text-slate-900 dark:text-white">Document uploaded successfully</p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">Your file is stored securely and is ready for review.</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">Uploaded on {uploadedAt}</p>
                   </div>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-2 justify-end">
                     <button
                       onClick={handleViewDocument}
-                      className="inline-flex items-center justify-center rounded-full border border-transparent bg-slate-900 px-5 py-2 text-xs font-semibold text-white shadow-lg shadow-slate-900/30 transition duration-300 ease-out hover:-translate-y-0.5 hover:scale-[1.01] hover:shadow-xl hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-400/40"
+                      className="inline-flex items-center justify-center rounded-full border border-transparent bg-slate-900 px-4 py-2 text-xs font-semibold text-white shadow-lg shadow-slate-900/30 transition duration-300 ease-out hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-400/40"
                     >
                       View
                     </button>
+                    <a
+                      href={documentUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 transition duration-300 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900"
+                    >
+                      Open
+                    </a>
+                    <a
+                      href={documentUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      download={documentMeta.fileName}
+                      className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-xs font-semibold text-slate-700 transition duration-300 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900"
+                    >
+                      Download
+                    </a>
                   </div>
                 </div>
               </div>

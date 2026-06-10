@@ -8,9 +8,63 @@ import { approveHospital, getAllHospitals, rejectHospital } from '../../services
 
 const statusOptions = ['all', 'verified', 'pending', 'rejected']
 
+const normalizeCloudinaryUrl = (url) => {
+  if (!url) return ''
+  try {
+    return new URL(url).href
+  } catch {
+    return url.startsWith('http') ? url : `https://${url}`
+  }
+}
+
+const formatDate = (value) => {
+  if (!value) return 'Unknown upload time'
+  const date = value?.toDate ? value.toDate() : new Date(value)
+  return !isNaN(date) ? date.toLocaleString() : 'Unknown upload time'
+}
+
+const getHospitalDocuments = (hospital) => {
+  const metadata = hospital.hospitalDocuments || []
+  const sourceDocs = [
+    { id: 'registrationCertificateUrl', label: 'Registration Certificate', url: hospital.registrationCertificateUrl },
+    { id: 'hospitalLicenseUrl', label: 'Hospital License', url: hospital.hospitalLicenseUrl },
+  ]
+
+  const baseDocs = sourceDocs
+    .filter((doc) => doc.url)
+    .map((doc) => {
+      const meta = metadata.find((item) => item.id === doc.id) || {}
+      return {
+        id: doc.id,
+        title: doc.label,
+        url: normalizeCloudinaryUrl(meta.url || doc.url),
+        name: meta.name || `${doc.label}.pdf`,
+        uploadedAt: meta.uploadedAt || hospital.updatedAt || hospital.createdAt || null,
+        mimeType: meta.type || 'application/pdf',
+      }
+    })
+
+  const extraDocs = metadata
+    .filter((item) => !['registrationCertificateUrl', 'hospitalLicenseUrl'].includes(item.id))
+    .map((item) => ({
+      ...item,
+      url: normalizeCloudinaryUrl(item.url),
+      name: item.name || 'Document',
+      uploadedAt: item.uploadedAt || hospital.updatedAt || hospital.createdAt || null,
+    }))
+
+  return [...baseDocs, ...extraDocs]
+}
+
+const getHospitalDocCount = (hospital) => {
+  if (Array.isArray(hospital.documents) && hospital.documents.length > 0) return hospital.documents.length
+  return (hospital.registrationCertificateUrl ? 1 : 0) + (hospital.hospitalLicenseUrl ? 1 : 0)
+}
+
 const HospitalDetailsModal = ({ hospital, onClose, onViewDocument }) => {
   if (!hospital) return null
   
+  const documents = getHospitalDocuments(hospital)
   const handleViewDocument = (url, docName) => {
     if (!url) return
     console.log('[Document Viewer] Opening document', {
@@ -64,36 +118,46 @@ const HospitalDetailsModal = ({ hospital, onClose, onViewDocument }) => {
             </div>
             <div>
               <p className="text-xs text-slate-500 uppercase tracking-[0.2em]">Verification Documents</p>
-              <div className="mt-3 space-y-2">
-                {hospital.registrationCertificateUrl ? (
-                  <button
-                    onClick={() => handleViewDocument(hospital.registrationCertificateUrl, 'Registration Certificate')}
-                    className="w-full flex items-center gap-2 rounded-2xl border border-emerald-500/50 bg-emerald-500/10 p-3 text-sm text-emerald-300 hover:bg-emerald-500/20 hover:border-emerald-400 transition text-left font-medium cursor-pointer"
-                  >
-                    <span>📄</span>
-                    <span>Registration Certificate</span>
-                    <span className="ml-auto text-xs">→</span>
-                  </button>
+              <div className="mt-3 space-y-3">
+                {documents.length === 0 ? (
+                  <div className="rounded-3xl border border-slate-700/50 bg-slate-800/50 p-4 text-sm text-slate-500">No documents uploaded for this hospital.</div>
                 ) : (
-                  <div className="flex items-center gap-2 rounded-2xl border border-slate-700/50 bg-slate-800/50 p-3 text-sm text-slate-500">
-                    <span>📄</span>
-                    <span>Registration Certificate - Not uploaded</span>
-                  </div>
-                )}
-                {hospital.hospitalLicenseUrl ? (
-                  <button
-                    onClick={() => handleViewDocument(hospital.hospitalLicenseUrl, 'Hospital License')}
-                    className="w-full flex items-center gap-2 rounded-2xl border border-blue-500/50 bg-blue-500/10 p-3 text-sm text-blue-300 hover:bg-blue-500/20 hover:border-blue-400 transition text-left font-medium cursor-pointer"
-                  >
-                    <span>📄</span>
-                    <span>Hospital License</span>
-                    <span className="ml-auto text-xs">→</span>
-                  </button>
-                ) : (
-                  <div className="flex items-center gap-2 rounded-2xl border border-slate-700/50 bg-slate-800/50 p-3 text-sm text-slate-500">
-                    <span>📄</span>
-                    <span>Hospital License - Not uploaded</span>
-                  </div>
+                  documents.map((doc) => (
+                    <div key={doc.id} className="rounded-3xl border border-slate-700/50 bg-slate-900/70 p-4 text-sm text-slate-100">
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                          <p className="font-semibold text-white">{doc.title}</p>
+                          <p className="text-xs text-slate-400">{doc.name}</p>
+                          <p className="text-xs text-slate-500 mt-1">Uploaded: {formatDate(doc.uploadedAt)}</p>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          <button
+                            type="button"
+                            onClick={() => handleViewDocument(doc.url, doc.name)}
+                            className="rounded-full bg-fuchsia-500 px-4 py-2 text-xs font-semibold text-white hover:bg-fuchsia-400 transition"
+                          >
+                            View Document
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => window.open(doc.url, '_blank', 'noopener')}
+                            className="rounded-full border border-slate-700 bg-slate-950 px-4 py-2 text-xs font-semibold text-slate-200 hover:bg-slate-900 transition"
+                          >
+                            Open in New Tab
+                          </button>
+                          <a
+                            href={doc.url}
+                            target="_blank"
+                            rel="noreferrer"
+                            download={doc.name}
+                            className="rounded-full border border-slate-700 bg-slate-950 px-4 py-2 text-xs font-semibold text-slate-200 hover:bg-slate-900 transition"
+                          >
+                            Download
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+                  ))
                 )}
               </div>
             </div>

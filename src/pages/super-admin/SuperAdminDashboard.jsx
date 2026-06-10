@@ -104,7 +104,7 @@ const SuperAdminDashboard = () => {
                   <p className="text-sm text-slate-500 mt-1">{hospital.address || 'No address provided'}</p>
                   <div className="mt-3 flex flex-wrap gap-2 text-xs text-slate-500">
                     <span className="px-2 py-1 rounded-full bg-orange-500/10 text-orange-400 border border-orange-500/15">Pending verification</span>
-                    <span className="px-2 py-1 rounded-full bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">{hospital.documents?.length ?? 0} documents</span>
+                    <span className="px-2 py-1 rounded-full bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">{getHospitalDocCount(hospital)} documents</span>
                   </div>
                 </div>
               ))
@@ -184,7 +184,7 @@ const SuperAdminDashboard = () => {
                     {hospital.verificationStatus || 'pending'}
                   </span>
                 </div>
-                <div className="text-right text-sm font-semibold text-slate-900 dark:text-white">{hospital.documents?.length ?? 0} documents</div>
+                <div className="text-right text-sm font-semibold text-slate-900 dark:text-white">{getHospitalDocCount(hospital)} documents</div>
               </div>
             </div>
           ))}
