@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom'
 import DashboardPageHeader from '../../components/dashboard/DashboardPageHeader'
 import StatCard from '../../components/dashboard/StatCard'
 import { getAllHospitals } from '../../services/adminService'
+import { getHospitalDocCount } from '../../utils/hospitalHelpers'
 
 const SuperAdminDashboard = () => {
   const [hospitals, setHospitals] = useState([])

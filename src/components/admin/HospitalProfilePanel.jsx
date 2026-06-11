@@ -77,6 +77,37 @@ const HospitalProfilePanel = () => {
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value })
 
+  const saveUploadedDocument = async (field, url, docs) => {
+    const previousUrl = form[field]
+    console.log('[Hospital Document] Saving uploaded document', { field, previousUrl, newUrl: url })
+
+    try {
+      const updatedProfile = await updateHospitalProfile(hospitalId, {
+        [field]: url,
+        hospitalDocuments: docs,
+      })
+
+      console.log('[Hospital Document] Firestore update result', updatedProfile)
+
+      setForm((prev) => ({
+        ...prev,
+        [field]: updatedProfile[field] || url,
+        hospitalDocuments: updatedProfile.hospitalDocuments || docs,
+      }))
+
+      setHospitals((prev) =>
+        prev.map((hospital) =>
+          hospital.id === hospitalId ? { ...hospital, ...updatedProfile } : hospital
+        )
+      )
+
+      return updatedProfile
+    } catch (err) {
+      console.error('[Hospital Document] Firestore update failed', err)
+      throw err
+    }
+  }
+
   const uploadVerificationDocument = async (event, field, label) => {
     const fileInput = event.target
     const file = fileInput.files?.[0]
@@ -104,26 +135,37 @@ const HospitalProfilePanel = () => {
         onProgress: (value) => setUploadProgress((prev) => ({ ...prev, [field]: value })),
       })
 
+      const secureUrl = uploadResult.secure_url || uploadResult.url || uploadResult.secureUrl
+      if (!secureUrl) {
+        throw new Error('Cloudinary upload did not return a valid secure URL.')
+      }
       const existingDocs = form.hospitalDocuments?.filter((doc) => doc.id !== field) || []
       const fileName = uploadResult.original_filename
-        ? `${uploadResult.original_filename}.${uploadResult.format}`
+        ? uploadResult.format
+          ? `${uploadResult.original_filename}.${uploadResult.format}`
+          : uploadResult.original_filename
         : file.name
 
-      setForm((prev) => ({
-        ...prev,
-        [field]: uploadResult.secure_url,
-        hospitalDocuments: [
-          ...existingDocs,
-          {
-            id: field,
-            label,
-            url: uploadResult.secure_url,
-            name: fileName,
-            uploadedAt: new Date().toISOString(),
-            type: file.type || 'application/pdf',
-          },
-        ],
-      }))
+      const newDocs = [
+        ...existingDocs,
+        {
+          id: field,
+          label,
+          url: secureUrl,
+          name: fileName,
+          uploadedAt: new Date().toISOString(),
+          type: file.type || 'application/pdf',
+        },
+      ]
+
+      console.log('[Hospital Document] Upload completed', {
+        field,
+        previousUrl: form[field],
+        newCloudinaryUrl: secureUrl,
+        uploadResult,
+      })
+
+      await saveUploadedDocument(field, secureUrl, newDocs)
       showSuccess(`${label} uploaded successfully`)
     } catch (err) {
       showError(err.message || `Failed to upload ${label.toLowerCase()}`)
@@ -209,7 +251,14 @@ const HospitalProfilePanel = () => {
     const documentUrl = documentMeta.url
     const uploadedAt = documentMeta.uploadedAt ? new Date(documentMeta.uploadedAt).toLocaleString() : 'Unknown upload time'
 
-    const handleViewDocument = (e) => {
+    const openBlankTab = () => {
+      const win = window.open('', '_blank', 'noopener,noreferrer')
+      if (!win) throw new Error('Popup blocked by browser')
+      win.document.write('<title>Loading document...</title><p style="font-family:system-ui,sans-serif; padding:16px;">Loading document...</p>')
+      return win
+    }
+
+    const handleViewDocument = async (e) => {
       e.preventDefault()
       if (!documentUrl) {
         showError('Document URL not found')
@@ -219,7 +268,28 @@ const HospitalProfilePanel = () => {
         label,
         url: documentUrl,
       })
-      window.open(documentUrl, '_blank', 'noopener')
+
+      try {
+        const win = window.open(documentUrl, '_blank', 'noopener,noreferrer')
+        if (win) return
+      } catch (err) {
+        // popup blocked or invalid URL; continue to fallback
+      }
+
+      try {
+        const token = localStorage.getItem('docease_token')
+        const headers = token ? { Authorization: `Bearer ${token}` } : {}
+        const resp = await fetch(documentUrl, { method: 'GET', headers })
+        if (!resp.ok) throw new Error(`Fetch failed: ${resp.status}`)
+        const blob = await resp.blob()
+        const objectUrl = URL.createObjectURL(blob)
+        const win = openBlankTab()
+        win.location.href = objectUrl
+        setTimeout(() => URL.revokeObjectURL(objectUrl), 60 * 1000)
+      } catch (err) {
+        console.error('[Document Viewer] open in new tab failed', err)
+        showError('Unable to open document in new tab. Try downloading instead.')
+      }
     }
 
     return (

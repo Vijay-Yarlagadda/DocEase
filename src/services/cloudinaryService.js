@@ -1,5 +1,6 @@
 const CLOUDINARY_CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME
 const CLOUDINARY_UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET
+const CLOUDINARY_UPLOAD_PRESET_RAW = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET_RAW
 
 const HOSPITAL_DOCUMENT_TYPES = ['application/pdf']
 const PATIENT_DOCUMENT_TYPES = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png']
@@ -9,11 +10,23 @@ const MAX_PATIENT_FILE_SIZE = 20 * 1024 * 1024
 
 const normalizeExtension = (fileName) => fileName.split('.').pop()?.toLowerCase() || ''
 
-const getResourceType = (fileName) => {
-  const extension = normalizeExtension(fileName)
-  if (extension === 'pdf') return 'raw'
-  if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(extension)) return 'image'
+const getResourceType = (file) => {
+  const extension = normalizeExtension(file.name)
+  const mime = file.type?.toLowerCase() || ''
+
+  if (mime === 'application/pdf' || extension === 'pdf') return 'raw'
+  if (mime.startsWith('image/') || ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(extension)) return 'image'
   return 'raw'
+}
+
+const getUploadPreset = (resourceType) => {
+  if (resourceType === 'raw' && CLOUDINARY_UPLOAD_PRESET_RAW) {
+    return CLOUDINARY_UPLOAD_PRESET_RAW
+  }
+  if (resourceType === 'raw' && !CLOUDINARY_UPLOAD_PRESET_RAW) {
+    console.warn('[Cloudinary Upload] Raw resource type requested but no raw preset is configured. Using default upload preset. Set VITE_CLOUDINARY_UPLOAD_PRESET_RAW for raw PDF uploads.')
+  }
+  return CLOUDINARY_UPLOAD_PRESET
 }
 
 const buildCloudinaryUploadUrl = (resourceType) => {
@@ -58,25 +71,41 @@ export const validateCloudinaryFile = ({ file, allowedTypes, maxSize, label = 'F
 export const uploadFileToCloudinary = ({ file, folder, onProgress }) => {
   return new Promise((resolve, reject) => {
     try {
-      // Determine resource type based on file extension
-      const resourceType = getResourceType(file.name)
+      // Determine resource type based on file object and mime type
+      const resourceType = getResourceType(file)
       const uploadUrl = buildCloudinaryUploadUrl(resourceType)
       
+      const uploadPreset = getUploadPreset(resourceType)
       console.log('[Cloudinary Upload] Starting upload', {
         fileName: file.name,
         fileType: file.type,
         fileSize: file.size,
         resourceType,
+        uploadPreset,
         uploadEndpoint: uploadUrl,
         folder: folder || 'root',
       })
 
+      const extension = normalizeExtension(file.name)
       const formData = new FormData()
       formData.append('file', file)
-      formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET)
+      formData.append('upload_preset', uploadPreset)
       formData.append('resource_type', resourceType)
       if (folder) {
         formData.append('folder', folder)
+      }
+
+      for (const [key, value] of formData.entries()) {
+        if (key === 'file' && value instanceof File) {
+          console.log('[Cloudinary Upload] FormData file entry', {
+            key,
+            valueName: value.name,
+            valueType: value.type,
+            valueSize: value.size,
+          })
+        } else {
+          console.log('[Cloudinary Upload] FormData entry', { key, value })
+        }
       }
 
       const xhr = new XMLHttpRequest()
@@ -95,15 +124,45 @@ export const uploadFileToCloudinary = ({ file, folder, onProgress }) => {
           try {
             const response = JSON.parse(xhr.responseText)
             const secureUrl = response.secure_url
+            const returnedType = response.resource_type
+            const correctedResponse = { ...response }
+
+            if (resourceType === 'raw' && returnedType !== 'raw' && response.public_id && response.format) {
+              const fallbackUrl = `https://res.cloudinary.com/${CLOUDINARY_CLOUD_NAME}/raw/upload/${response.version ? `v${response.version}/` : ''}${response.public_id}.${response.format}`
+              console.warn('[Cloudinary Upload] PDF raw type mismatch detected. Correcting secure_url fallback.', {
+                expectedResourceType: resourceType,
+                returnedResourceType: returnedType,
+                originalSecureUrl: secureUrl,
+                fallbackUrl,
+              })
+              correctedResponse.secure_url = fallbackUrl
+            }
 
             console.log('[Cloudinary Upload] Success', {
-              secureUrl,
-              resourceType: response.resource_type,
+              secureUrl: correctedResponse.secure_url,
+              originalSecureUrl: secureUrl,
+              resourceType: returnedType,
+              requestedResourceType: resourceType,
               publicId: response.public_id,
               format: response.format,
+              fallbackApplied: correctedResponse.secure_url !== secureUrl,
             })
 
-            resolve(response)
+            if (correctedResponse.secure_url && typeof window !== 'undefined' && window.fetch) {
+              window.fetch(correctedResponse.secure_url, { method: 'HEAD' })
+                .then((headResponse) => {
+                  console.log('[Cloudinary Upload] URL verification HEAD request', {
+                    url: correctedResponse.secure_url,
+                    status: headResponse.status,
+                    contentType: headResponse.headers.get('content-type'),
+                  })
+                })
+                .catch((verifyErr) => {
+                  console.warn('[Cloudinary Upload] URL verification failed', verifyErr)
+                })
+            }
+
+            resolve(correctedResponse)
           } catch (parseErr) {
             console.error('[Cloudinary Upload] Response parse error', parseErr)
             reject(new Error('Failed to parse Cloudinary response.'))

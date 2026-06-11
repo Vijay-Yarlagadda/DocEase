@@ -1,16 +1,19 @@
 import { useState, useRef, useEffect } from 'react'
+import { normalizeCloudinaryUrl } from '../utils/hospitalHelpers'
 import { motion } from 'framer-motion'
 import { X, Download } from 'lucide-react'
 
 const PDFViewer = ({ isOpen, url, fileName, onClose }) => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [pdfSrc, setPdfSrc] = useState(null)
   const iframeRef = useRef(null)
 
   useEffect(() => {
     if (isOpen && url) {
       setLoading(true)
       setError(null)
+      setPdfSrc(null)
     }
   }, [isOpen, url])
 
@@ -38,8 +41,68 @@ const PDFViewer = ({ isOpen, url, fileName, onClose }) => {
     setError('Could not load PDF in viewer. Try downloading instead.')
   }
 
-  // Use direct URL for inline preview, avoid forcing download in the browser.
-  const pdfUrl = url
+  // Resolve URL and attempt an authenticated fetch fallback when necessary.
+  const resolved = normalizeCloudinaryUrl(url)
+
+  useEffect(() => {
+    if (!isOpen || !resolved) return
+
+    let cancelled = false
+    let objectUrl = null
+
+    const tryLoad = async () => {
+      setLoading(true)
+      setError(null)
+
+      try {
+        // First try a simple fetch to verify accessibility
+        const resp = await fetch(resolved, { method: 'GET' })
+        if (resp.ok) {
+          // If it's a CORS-friendly response we can use the direct URL (embed will work)
+          if (!cancelled) setPdfSrc(resolved)
+          setLoading(false)
+          return
+        }
+
+        // If we got a 401/403, try fetching with Authorization header (token)
+        if (resp.status === 401 || resp.status === 403) {
+          const token = localStorage.getItem('docease_token')
+          if (token) {
+            const authResp = await fetch(resolved, { method: 'GET', headers: { Authorization: `Bearer ${token}` } })
+            if (authResp.ok) {
+              const blob = await authResp.blob()
+              objectUrl = URL.createObjectURL(blob)
+              if (!cancelled) setPdfSrc(objectUrl)
+              setLoading(false)
+              return
+            }
+            throw new Error(`Authenticated fetch failed: ${authResp.status}`)
+          }
+          throw new Error('Resource requires authentication')
+        }
+
+        // Other non-ok responses - attempt to download as blob (works if CORS allows)
+        const blob = await resp.blob()
+        objectUrl = URL.createObjectURL(blob)
+        if (!cancelled) setPdfSrc(objectUrl)
+        setLoading(false)
+      } catch (err) {
+        console.warn('[PDF Viewer] Prefetch failed, falling back to embeding remote URL', err)
+        // As final fallback, use the original resolved URL and let embed attempt to load it
+        if (!cancelled) setPdfSrc(resolved)
+        setLoading(false)
+      }
+    }
+
+    tryLoad()
+
+    return () => {
+      cancelled = true
+      if (objectUrl) URL.revokeObjectURL(objectUrl)
+    }
+  }, [isOpen, resolved])
+
+  const pdfUrl = pdfSrc
 
   return (
     <motion.div

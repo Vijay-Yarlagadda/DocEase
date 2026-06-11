@@ -4,62 +4,13 @@ import { Search, CheckCircle2, XCircle, Eye, Filter, ArrowRight } from 'lucide-r
 import DashboardPageHeader from '../../components/dashboard/DashboardPageHeader'
 import SuperAdminStatusBadge from '../../components/superadmin/SuperAdminStatusBadge'
 import PDFViewer from '../../components/PDFViewer'
+import ErrorBoundary from '../../components/ErrorBoundary'
 import { approveHospital, getAllHospitals, rejectHospital } from '../../services/adminService'
+import { normalizeCloudinaryUrl, getHospitalDocuments, getHospitalDocCount, formatDate } from '../../utils/hospitalHelpers'
 
 const statusOptions = ['all', 'verified', 'pending', 'rejected']
 
-const normalizeCloudinaryUrl = (url) => {
-  if (!url) return ''
-  try {
-    return new URL(url).href
-  } catch {
-    return url.startsWith('http') ? url : `https://${url}`
-  }
-}
-
-const formatDate = (value) => {
-  if (!value) return 'Unknown upload time'
-  const date = value?.toDate ? value.toDate() : new Date(value)
-  return !isNaN(date) ? date.toLocaleString() : 'Unknown upload time'
-}
-
-const getHospitalDocuments = (hospital) => {
-  const metadata = hospital.hospitalDocuments || []
-  const sourceDocs = [
-    { id: 'registrationCertificateUrl', label: 'Registration Certificate', url: hospital.registrationCertificateUrl },
-    { id: 'hospitalLicenseUrl', label: 'Hospital License', url: hospital.hospitalLicenseUrl },
-  ]
-
-  const baseDocs = sourceDocs
-    .filter((doc) => doc.url)
-    .map((doc) => {
-      const meta = metadata.find((item) => item.id === doc.id) || {}
-      return {
-        id: doc.id,
-        title: doc.label,
-        url: normalizeCloudinaryUrl(meta.url || doc.url),
-        name: meta.name || `${doc.label}.pdf`,
-        uploadedAt: meta.uploadedAt || hospital.updatedAt || hospital.createdAt || null,
-        mimeType: meta.type || 'application/pdf',
-      }
-    })
-
-  const extraDocs = metadata
-    .filter((item) => !['registrationCertificateUrl', 'hospitalLicenseUrl'].includes(item.id))
-    .map((item) => ({
-      ...item,
-      url: normalizeCloudinaryUrl(item.url),
-      name: item.name || 'Document',
-      uploadedAt: item.uploadedAt || hospital.updatedAt || hospital.createdAt || null,
-    }))
-
-  return [...baseDocs, ...extraDocs]
-}
-
-const getHospitalDocCount = (hospital) => {
-  if (Array.isArray(hospital.documents) && hospital.documents.length > 0) return hospital.documents.length
-  return (hospital.registrationCertificateUrl ? 1 : 0) + (hospital.hospitalLicenseUrl ? 1 : 0)
-}
+// Helpers are provided by src/utils/hospitalHelpers.js
 
 const HospitalDetailsModal = ({ hospital, onClose, onViewDocument }) => {
   if (!hospital) return null
@@ -67,11 +18,77 @@ const HospitalDetailsModal = ({ hospital, onClose, onViewDocument }) => {
   const documents = getHospitalDocuments(hospital)
   const handleViewDocument = (url, docName) => {
     if (!url) return
+    // Defensive: unwrap common object shapes to a string URL
+    let resolvedUrl = url
+    if (typeof url === 'object') {
+      resolvedUrl = url.secure_url || url.url || url.path || (url.toString && url.toString()) || null
+    }
+    if (!resolvedUrl) {
+      console.error('[Document Viewer] Could not resolve document URL', url)
+      return
+    }
     console.log('[Document Viewer] Opening document', {
       documentName: docName,
-      url,
+      url: resolvedUrl,
     })
-    onViewDocument(url, docName)
+    onViewDocument(resolvedUrl, docName)
+  }
+
+  const openBlankTab = () => {
+    const win = window.open('', '_blank', 'noopener,noreferrer')
+    if (!win) throw new Error('Popup blocked by browser')
+    win.document.write('<title>Loading document...</title><p style="font-family:system-ui,sans-serif; padding:16px;">Loading document...</p>')
+    return win
+  }
+
+  const openResourceInNewTab = async (url) => {
+    const resolved = normalizeCloudinaryUrl(url)
+    try {
+      // Try direct open first
+      const win = window.open(resolved, '_blank', 'noopener,noreferrer')
+      if (win) return
+    } catch (e) {
+      // continue to auth fetch fallback
+    }
+
+    try {
+      const token = localStorage.getItem('docease_token')
+      const headers = token ? { Authorization: `Bearer ${token}` } : {}
+      const resp = await fetch(resolved, { method: 'GET', headers })
+      if (!resp.ok) throw new Error(`Fetch failed: ${resp.status}`)
+      const blob = await resp.blob()
+      const objectUrl = URL.createObjectURL(blob)
+      const win = openBlankTab()
+      win.location.href = objectUrl
+      // revoke after short delay
+      setTimeout(() => URL.revokeObjectURL(objectUrl), 60 * 1000)
+    } catch (err) {
+      console.error('[Document Viewer] open in new tab failed', err)
+      // best-effort: notify user
+      alert('Unable to open document in new tab. Try downloading instead.')
+    }
+  }
+
+  const downloadResource = async (url, fileName) => {
+    const resolved = normalizeCloudinaryUrl(url)
+    try {
+      const token = localStorage.getItem('docease_token')
+      const headers = token ? { Authorization: `Bearer ${token}` } : {}
+      const resp = await fetch(resolved, { method: 'GET', headers })
+      if (!resp.ok) throw new Error(`Fetch failed: ${resp.status}`)
+      const blob = await resp.blob()
+      const link = document.createElement('a')
+      const objectUrl = URL.createObjectURL(blob)
+      link.href = objectUrl
+      link.download = fileName || 'document.pdf'
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      setTimeout(() => URL.revokeObjectURL(objectUrl), 60 * 1000)
+    } catch (err) {
+      console.error('[Document Viewer] download failed', err)
+      alert('Download failed. Please try again or contact support.')
+    }
   }
 
   return (
@@ -140,20 +157,18 @@ const HospitalDetailsModal = ({ hospital, onClose, onViewDocument }) => {
                           </button>
                           <button
                             type="button"
-                            onClick={() => window.open(doc.url, '_blank', 'noopener')}
+                            onClick={() => openResourceInNewTab(doc.url)}
                             className="rounded-full border border-slate-700 bg-slate-950 px-4 py-2 text-xs font-semibold text-slate-200 hover:bg-slate-900 transition"
                           >
                             Open in New Tab
                           </button>
-                          <a
-                            href={doc.url}
-                            target="_blank"
-                            rel="noreferrer"
-                            download={doc.name}
+                          <button
+                            type="button"
+                            onClick={() => downloadResource(doc.url, doc.name)}
                             className="rounded-full border border-slate-700 bg-slate-950 px-4 py-2 text-xs font-semibold text-slate-200 hover:bg-slate-900 transition"
                           >
                             Download
-                          </a>
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -342,12 +357,14 @@ const SuperAdminVerification = () => {
         />
       )}
 
-      <PDFViewer
-        isOpen={pdfViewerState.isOpen}
-        url={pdfViewerState.url}
-        fileName={pdfViewerState.fileName}
-        onClose={() => setPdfViewerState({ isOpen: false, url: null, fileName: null })}
-      />
+      <ErrorBoundary>
+        <PDFViewer
+          isOpen={pdfViewerState.isOpen}
+          url={pdfViewerState.url}
+          fileName={pdfViewerState.fileName}
+          onClose={() => setPdfViewerState({ isOpen: false, url: null, fileName: null })}
+        />
+      </ErrorBoundary>
     </div>
   )
 }

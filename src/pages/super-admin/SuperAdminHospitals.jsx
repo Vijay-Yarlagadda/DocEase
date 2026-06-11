@@ -4,11 +4,7 @@ import { Search, Eye } from 'lucide-react'
 import DashboardPageHeader from '../../components/dashboard/DashboardPageHeader'
 import SuperAdminStatusBadge from '../../components/superadmin/SuperAdminStatusBadge'
 import { getAllHospitals } from '../../services/adminService'
-
-const getHospitalDocCount = (hospital) => {
-  if (Array.isArray(hospital.documents) && hospital.documents.length > 0) return hospital.documents.length
-  return (hospital.registrationCertificateUrl ? 1 : 0) + (hospital.hospitalLicenseUrl ? 1 : 0)
-}
+import { getHospitalDocCount } from '../../utils/hospitalHelpers'
 
 const SuperAdminHospitals = () => {
   const [hospitals, setHospitals] = useState([])
