@@ -410,24 +410,26 @@ const HospitalProfilePanel = () => {
           </div>
         </div>
 
-        <div className="mt-6 rounded-3xl border border-slate-200/70 bg-slate-50 p-5 dark:border-slate-700/60 dark:bg-slate-900/50">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="text-sm font-semibold text-slate-900 dark:text-white">Hospital Verification Documents</p>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Upload PDFs for registration certificate and hospital license. These documents are reviewed by Super Admin before verification.</p>
+        {form.verificationStatus !== 'verified' && (
+          <div className="mt-6 rounded-3xl border border-slate-200/70 bg-slate-50 p-5 dark:border-slate-700/60 dark:bg-slate-900/50">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm font-semibold text-slate-900 dark:text-white">Hospital Verification Documents</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Upload PDFs for registration certificate and hospital license. These documents are reviewed by Super Admin before verification.</p>
+              </div>
+              <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${form.verificationStatus === 'verified' ? 'bg-emerald-100 text-emerald-700' : form.verificationStatus === 'rejected' ? 'bg-rose-100 text-rose-700' : 'bg-orange-100 text-orange-700'}`}>
+                {form.verificationStatus || 'pending'}
+              </span>
             </div>
-            <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${form.verificationStatus === 'verified' ? 'bg-emerald-100 text-emerald-700' : form.verificationStatus === 'rejected' ? 'bg-rose-100 text-rose-700' : 'bg-orange-100 text-orange-700'}`}>
-              {form.verificationStatus || 'pending'}
-            </span>
-          </div>
 
-          <div className="mt-5 grid gap-4 lg:grid-cols-2">
-            {[
-              { field: 'registrationCertificateUrl', label: 'Registration Certificate', hint: 'PDF only, max 10MB' },
-              { field: 'hospitalLicenseUrl', label: 'Hospital License', hint: 'PDF only, max 10MB' },
-            ].map(renderVerificationDocumentField)}
+            <div className="mt-5 grid gap-4 lg:grid-cols-2">
+              {[
+                { field: 'registrationCertificateUrl', label: 'Registration Certificate', hint: 'PDF only, max 10MB' },
+                { field: 'hospitalLicenseUrl', label: 'Hospital License', hint: 'PDF only, max 10MB' },
+              ].map(renderVerificationDocumentField)}
+            </div>
           </div>
-        </div>
+        )}
 
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mt-6">
           <div className="flex items-center gap-2 text-xs text-slate-500">
