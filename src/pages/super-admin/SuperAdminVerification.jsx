@@ -5,6 +5,7 @@ import DashboardPageHeader from '../../components/dashboard/DashboardPageHeader'
 import SuperAdminStatusBadge from '../../components/superadmin/SuperAdminStatusBadge'
 import PDFViewer from '../../components/PDFViewer'
 import ErrorBoundary from '../../components/ErrorBoundary'
+import { useToast } from '../../components/Toast'
 import { approveHospital, getAllHospitals, rejectHospital } from '../../services/adminService'
 import { normalizeCloudinaryUrl, getHospitalDocuments, getHospitalDocCount, formatDate } from '../../utils/hospitalHelpers'
 
@@ -13,6 +14,8 @@ const statusOptions = ['all', 'verified', 'pending', 'rejected']
 // Helpers are provided by src/utils/hospitalHelpers.js
 
 const HospitalDetailsModal = ({ hospital, onClose, onViewDocument }) => {
+  const { showError } = useToast()
+  
   if (!hospital) return null
   
   const documents = getHospitalDocuments(hospital)
@@ -101,7 +104,7 @@ const HospitalDetailsModal = ({ hospital, onClose, onViewDocument }) => {
       setTimeout(() => URL.revokeObjectURL(objectUrl), 60 * 1000)
     } catch (err) {
       console.error('[Document Viewer] download failed', err)
-      alert('Download failed. Please try again or contact support.')
+      showError('Download failed. Please try again or contact support.')
     }
   }
 
@@ -194,8 +197,9 @@ const HospitalDetailsModal = ({ hospital, onClose, onViewDocument }) => {
 }
 
 const SuperAdminVerification = () => {
+  const { showSuccess, showError } = useToast()
   const [hospitals, setHospitals] = useState([])
-  const [filter, setFilter] = useState('all')
+  const [filter, setFilter] = useState('pending')
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
   const [updatingId, setUpdatingId] = useState(null)
@@ -228,8 +232,10 @@ const SuperAdminVerification = () => {
     try {
       if (status === 'verified') {
         await approveHospital(hospitalId)
+        showSuccess('Hospital approved successfully')
       } else {
         await rejectHospital(hospitalId)
+        showSuccess('Hospital rejected successfully')
       }
       setHospitals((prev) => prev.map((hospital) => (
         hospital.id === hospitalId ? { ...hospital, verificationStatus: status } : hospital

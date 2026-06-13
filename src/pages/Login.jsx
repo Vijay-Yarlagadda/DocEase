@@ -66,7 +66,6 @@ const Login = () => {
         return
       }
 
-      showSuccess('Signed in successfully — redirecting to your dashboard.', 2500)
       if (isSuperAdminLogin) {
         navigate('/super-admin/dashboard')
         return

@@ -108,7 +108,6 @@ const Signup = () => {
         result = await patientSignup(formData.email, formData.password, formData.name)
       }
 
-      showSuccess(`Welcome ${result.name}! Signup successful.`)
       setUser(result)
       localStorage.setItem('docease_user', JSON.stringify(result))
 

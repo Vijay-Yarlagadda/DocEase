@@ -52,8 +52,8 @@ export const ToastProvider = ({ children }) => {
 
 const ToastContainer = ({ toasts, removeToast }) => {
   return (
-    <div className="fixed top-4 right-4 z-50 space-y-2 max-w-md">
-      <AnimatePresence>
+    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center gap-2 pointer-events-none">
+      <AnimatePresence mode="popLayout">
         {toasts.map((toast) => (
           <Toast key={toast.id} toast={toast} onClose={() => removeToast(toast.id)} />
         ))}
@@ -67,45 +67,43 @@ const Toast = ({ toast, onClose }) => {
     switch (type) {
       case 'success':
         return {
-          bg: 'bg-green-500',
-          icon: <CheckCircle className="w-5 h-5" />,
+          icon: <CheckCircle className="w-4 h-4 text-emerald-400" />,
         }
       case 'error':
         return {
-          bg: 'bg-red-500',
-          icon: <XCircle className="w-5 h-5" />,
+          icon: <XCircle className="w-4 h-4 text-rose-400" />,
         }
       case 'warning':
         return {
-          bg: 'bg-yellow-500',
-          icon: <AlertCircle className="w-5 h-5" />,
+          icon: <AlertCircle className="w-4 h-4 text-amber-400" />,
         }
       case 'info':
       default:
         return {
-          bg: 'bg-blue-500',
-          icon: <Info className="w-5 h-5" />,
+          icon: <Info className="w-4 h-4 text-blue-400" />,
         }
     }
   }
 
-  const { bg, icon } = getStyles(toast.type)
+  const { icon } = getStyles(toast.type)
 
   return (
     <motion.div
-      initial={{ opacity: 0, x: 400 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: 400 }}
-      transition={{ type: 'spring', stiffness: 300 }}
-      className={`${bg} text-white px-4 py-3 rounded-lg shadow-lg flex items-center gap-3`}
+      layout
+      initial={{ opacity: 0, y: 20, scale: 0.9 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: -20, scale: 0.9 }}
+      transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+      className="pointer-events-auto bg-slate-900/90 backdrop-blur-md border border-slate-700/60 text-slate-100 px-4 py-2.5 rounded-full shadow-2xl flex items-center gap-2 max-w-[90vw]"
     >
       {icon}
-      <p className="text-sm flex-1">{toast.message}</p>
+      <p className="text-xs sm:text-sm font-medium pr-1">{toast.message}</p>
       <button
         onClick={onClose}
-        className="text-white opacity-70 hover:opacity-100 transition-opacity"
+        className="ml-2 text-slate-400 hover:text-white transition-colors"
       >
-        ×
+        <span className="sr-only">Close</span>
+        <XCircle className="w-4 h-4 opacity-0 hover:opacity-100 absolute -right-2" style={{display: 'none'}} />
       </button>
     </motion.div>
   )
