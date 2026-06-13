@@ -139,5 +139,3 @@ const PatientDashboard = () => {
 }
 
 export default PatientDashboard
-
-export default PatientDashboard
