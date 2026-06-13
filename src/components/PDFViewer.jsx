@@ -65,15 +65,22 @@ const PDFViewer = ({ isOpen, url, fileName, onClose }) => {
           const fallbackResp = await fetch(imageFallback, { method: 'GET' })
           if (fallbackResp.ok) {
             resp = fallbackResp
-            if (!cancelled) setPdfSrc(imageFallback)
-            setLoading(false)
-            return
+            resolved = imageFallback // Update resolved so we use the correct URL
           }
         }
 
         if (resp.ok) {
-          // If it's a CORS-friendly response we can use the direct URL (embed will work)
-          if (!cancelled) setPdfSrc(resp.url || resolved)
+          const contentType = resp.headers.get('content-type')
+          if (contentType && contentType.includes('text/html')) {
+             throw new Error('Server returned an HTML page instead of a document.')
+          }
+
+          // Force download as blob to bypass any Content-Disposition attachment headers
+          // which can cause the browser to download instead of displaying the PDF
+          const rawBlob = await resp.blob()
+          const pdfBlob = new Blob([rawBlob], { type: 'application/pdf' })
+          objectUrl = URL.createObjectURL(pdfBlob)
+          if (!cancelled) setPdfSrc(objectUrl)
           setLoading(false)
           return
         }
@@ -82,10 +89,15 @@ const PDFViewer = ({ isOpen, url, fileName, onClose }) => {
         if (resp.status === 401 || resp.status === 403) {
           const token = localStorage.getItem('docease_token')
           if (token) {
-            const authResp = await fetch(resp.url || resolved, { method: 'GET', headers: { Authorization: `Bearer ${token}` } })
+            const authResp = await fetch(resolved, { method: 'GET', headers: { Authorization: `Bearer ${token}` } })
             if (authResp.ok) {
-              const blob = await authResp.blob()
-              objectUrl = URL.createObjectURL(blob)
+              const contentType = authResp.headers.get('content-type')
+              if (contentType && contentType.includes('text/html')) {
+                 throw new Error('Server returned an HTML page instead of a document.')
+              }
+              const rawBlob = await authResp.blob()
+              const pdfBlob = new Blob([rawBlob], { type: 'application/pdf' })
+              objectUrl = URL.createObjectURL(pdfBlob)
               if (!cancelled) setPdfSrc(objectUrl)
               setLoading(false)
               return
@@ -95,18 +107,13 @@ const PDFViewer = ({ isOpen, url, fileName, onClose }) => {
           throw new Error('Resource requires authentication')
         }
 
-        // Other non-ok responses - attempt to download as blob (works if CORS allows)
-        const blob = await resp.blob()
-        objectUrl = URL.createObjectURL(blob)
-        if (!cancelled) setPdfSrc(objectUrl)
-        setLoading(false)
+        throw new Error(`Failed to load document: HTTP ${resp.status}`)
       } catch (err) {
-        console.warn('[PDF Viewer] Prefetch failed, falling back to embeding remote URL', err)
-        // As final fallback, use the original resolved URL and let embed attempt to load it
-        // If it was a raw URL that we tried to fallback, we can also try the image fallback here
-        const finalUrl = resolved.includes('/raw/upload/') ? resolved.replace('/raw/upload/', '/image/upload/') : resolved
-        if (!cancelled) setPdfSrc(finalUrl)
-        setLoading(false)
+        console.error('[PDF Viewer] Load error:', err)
+        if (!cancelled) {
+          setError(err.message || 'Unable to load the document.')
+          setLoading(false)
+        }
       }
     }
 
