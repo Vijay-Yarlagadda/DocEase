@@ -127,15 +127,12 @@ export const uploadFileToCloudinary = ({ file, folder, onProgress }) => {
             const returnedType = response.resource_type
             const correctedResponse = { ...response }
 
-            if (resourceType === 'raw' && returnedType !== 'raw' && response.public_id && response.format) {
-              const fallbackUrl = `https://res.cloudinary.com/${CLOUDINARY_CLOUD_NAME}/raw/upload/${response.version ? `v${response.version}/` : ''}${response.public_id}.${response.format}`
-              console.warn('[Cloudinary Upload] PDF raw type mismatch detected. Correcting secure_url fallback.', {
+            if (resourceType === 'raw' && returnedType !== 'raw') {
+              console.warn('[Cloudinary Upload] PDF raw type mismatch detected. The preset might be forcing image type.', {
                 expectedResourceType: resourceType,
                 returnedResourceType: returnedType,
                 originalSecureUrl: secureUrl,
-                fallbackUrl,
               })
-              correctedResponse.secure_url = fallbackUrl
             }
 
             console.log('[Cloudinary Upload] Success', {

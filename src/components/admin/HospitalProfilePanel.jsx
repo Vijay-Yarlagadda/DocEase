@@ -279,7 +279,15 @@ const HospitalProfilePanel = () => {
       try {
         const token = localStorage.getItem('docease_token')
         const headers = token ? { Authorization: `Bearer ${token}` } : {}
-        const resp = await fetch(documentUrl, { method: 'GET', headers })
+        let resp = await fetch(documentUrl, { method: 'GET', headers })
+        
+        // Fallback for corrupted raw URLs
+        if (!resp.ok && documentUrl.includes('/raw/upload/')) {
+          const imageFallback = documentUrl.replace('/raw/upload/', '/image/upload/')
+          const fallbackResp = await fetch(imageFallback, { method: 'GET', headers })
+          if (fallbackResp.ok) resp = fallbackResp
+        }
+
         if (!resp.ok) throw new Error(`Fetch failed: ${resp.status}`)
         const blob = await resp.blob()
         const objectUrl = URL.createObjectURL(blob)

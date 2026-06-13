@@ -56,10 +56,24 @@ const PDFViewer = ({ isOpen, url, fileName, onClose }) => {
 
       try {
         // First try a simple fetch to verify accessibility
-        const resp = await fetch(resolved, { method: 'GET' })
+        let resp = await fetch(resolved, { method: 'GET' })
+
+        // If it failed and is a Cloudinary raw URL, try image fallback
+        if (!resp.ok && resolved.includes('/raw/upload/')) {
+          const imageFallback = resolved.replace('/raw/upload/', '/image/upload/')
+          console.warn('[PDF Viewer] Fetch failed for raw, trying image fallback:', imageFallback)
+          const fallbackResp = await fetch(imageFallback, { method: 'GET' })
+          if (fallbackResp.ok) {
+            resp = fallbackResp
+            if (!cancelled) setPdfSrc(imageFallback)
+            setLoading(false)
+            return
+          }
+        }
+
         if (resp.ok) {
           // If it's a CORS-friendly response we can use the direct URL (embed will work)
-          if (!cancelled) setPdfSrc(resolved)
+          if (!cancelled) setPdfSrc(resp.url || resolved)
           setLoading(false)
           return
         }
@@ -68,7 +82,7 @@ const PDFViewer = ({ isOpen, url, fileName, onClose }) => {
         if (resp.status === 401 || resp.status === 403) {
           const token = localStorage.getItem('docease_token')
           if (token) {
-            const authResp = await fetch(resolved, { method: 'GET', headers: { Authorization: `Bearer ${token}` } })
+            const authResp = await fetch(resp.url || resolved, { method: 'GET', headers: { Authorization: `Bearer ${token}` } })
             if (authResp.ok) {
               const blob = await authResp.blob()
               objectUrl = URL.createObjectURL(blob)
@@ -89,7 +103,9 @@ const PDFViewer = ({ isOpen, url, fileName, onClose }) => {
       } catch (err) {
         console.warn('[PDF Viewer] Prefetch failed, falling back to embeding remote URL', err)
         // As final fallback, use the original resolved URL and let embed attempt to load it
-        if (!cancelled) setPdfSrc(resolved)
+        // If it was a raw URL that we tried to fallback, we can also try the image fallback here
+        const finalUrl = resolved.includes('/raw/upload/') ? resolved.replace('/raw/upload/', '/image/upload/') : resolved
+        if (!cancelled) setPdfSrc(finalUrl)
         setLoading(false)
       }
     }

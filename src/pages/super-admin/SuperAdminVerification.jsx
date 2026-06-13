@@ -51,12 +51,19 @@ const HospitalDetailsModal = ({ hospital, onClose, onViewDocument }) => {
       // continue to auth fetch fallback
     }
 
-    try {
-      const token = localStorage.getItem('docease_token')
-      const headers = token ? { Authorization: `Bearer ${token}` } : {}
-      const resp = await fetch(resolved, { method: 'GET', headers })
-      if (!resp.ok) throw new Error(`Fetch failed: ${resp.status}`)
-      const blob = await resp.blob()
+      try {
+        const token = localStorage.getItem('docease_token')
+        const headers = token ? { Authorization: `Bearer ${token}` } : {}
+        let resp = await fetch(resolved, { method: 'GET', headers })
+        
+        if (!resp.ok && resolved.includes('/raw/upload/')) {
+          const imageFallback = resolved.replace('/raw/upload/', '/image/upload/')
+          const fallbackResp = await fetch(imageFallback, { method: 'GET', headers })
+          if (fallbackResp.ok) resp = fallbackResp
+        }
+
+        if (!resp.ok) throw new Error(`Fetch failed: ${resp.status}`)
+        const blob = await resp.blob()
       const objectUrl = URL.createObjectURL(blob)
       const win = openBlankTab()
       win.location.href = objectUrl
@@ -71,12 +78,19 @@ const HospitalDetailsModal = ({ hospital, onClose, onViewDocument }) => {
 
   const downloadResource = async (url, fileName) => {
     const resolved = normalizeCloudinaryUrl(url)
-    try {
-      const token = localStorage.getItem('docease_token')
-      const headers = token ? { Authorization: `Bearer ${token}` } : {}
-      const resp = await fetch(resolved, { method: 'GET', headers })
-      if (!resp.ok) throw new Error(`Fetch failed: ${resp.status}`)
-      const blob = await resp.blob()
+      try {
+        const token = localStorage.getItem('docease_token')
+        const headers = token ? { Authorization: `Bearer ${token}` } : {}
+        let resp = await fetch(resolved, { method: 'GET', headers })
+        
+        if (!resp.ok && resolved.includes('/raw/upload/')) {
+          const imageFallback = resolved.replace('/raw/upload/', '/image/upload/')
+          const fallbackResp = await fetch(imageFallback, { method: 'GET', headers })
+          if (fallbackResp.ok) resp = fallbackResp
+        }
+
+        if (!resp.ok) throw new Error(`Fetch failed: ${resp.status}`)
+        const blob = await resp.blob()
       const link = document.createElement('a')
       const objectUrl = URL.createObjectURL(blob)
       link.href = objectUrl
