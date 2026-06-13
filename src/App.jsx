@@ -20,6 +20,11 @@ import PatientDashboard from './pages/dashboards/PatientDashboard'
 import DoctorChangePassword from './pages/DoctorChangePassword'
 import PatientDocuments from './pages/patient/PatientDocuments'
 import DoctorRecords from './pages/doctor/DoctorRecords'
+import PatientHospitals from './pages/patient/PatientHospitals'
+import PatientAppointments from './pages/patient/PatientAppointments'
+import AppointmentDetails from './pages/patient/AppointmentDetails'
+import DoctorAppointments from './pages/doctor/DoctorAppointments'
+import DoctorAppointmentDetails from './pages/doctor/DoctorAppointmentDetails'
 import DashboardPlaceholder from './components/dashboard/DashboardPlaceholder'
 import SuperAdminDashboard from './pages/super-admin/SuperAdminDashboard'
 import SuperAdminVerification from './pages/super-admin/SuperAdminVerification'
@@ -96,15 +101,18 @@ function App() {
 
         <Route path="/doctor" element={<ProtectedRoute roles={['doctor']}><DashboardLayout darkMode={darkMode} toggleDarkMode={toggleDarkMode} /></ProtectedRoute>}>
           <Route path="dashboard" element={<DoctorDashboard />} />
-          <Route path="patients" element={<DashboardPlaceholder title="Patient List" />} />
-          <Route path="appointments" element={<DashboardPlaceholder title="Appointments" />} />
+          <Route path="patients" element={<DashboardPlaceholder title="My Patients" />} />
+          <Route path="appointments" element={<DoctorAppointments />} />
+          <Route path="appointments/:appointmentId" element={<DoctorAppointmentDetails />} />
           <Route path="records" element={<DoctorRecords />} />
           <Route path="settings" element={<DashboardPlaceholder title="Doctor Settings" />} />
         </Route>
 
         <Route path="/patient" element={<ProtectedRoute roles={['patient']}><DashboardLayout darkMode={darkMode} toggleDarkMode={toggleDarkMode} /></ProtectedRoute>}>
           <Route path="dashboard" element={<PatientDashboard />} />
-          <Route path="appointments" element={<DashboardPlaceholder title="My Appointments" />} />
+          <Route path="hospitals" element={<PatientHospitals />} />
+          <Route path="appointments" element={<PatientAppointments />} />
+          <Route path="appointments/:appointmentId" element={<AppointmentDetails />} />
           <Route path="documents" element={<PatientDocuments />} />
           <Route path="history" element={<DashboardPlaceholder title="Medical History" />} />
           <Route path="settings" element={<DashboardPlaceholder title="Patient Settings" />} />

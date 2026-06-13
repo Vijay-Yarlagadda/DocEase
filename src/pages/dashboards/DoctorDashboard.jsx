@@ -15,7 +15,7 @@ import { AuthContext } from '../../context/AuthContext'
 import DashboardPageHeader from '../../components/dashboard/DashboardPageHeader'
 import AnimatedStatCard from '../../components/admin/AnimatedStatCard'
 import { StatCardSkeleton } from '../../components/admin/SkeletonLoader'
-import { getDoctorUpcomingAppointments } from '../../services/doctorService'
+import { getDoctorAppointments } from '../../services/appointmentService'
 import { getDisplayName, getUserEmail } from '../../utils/userProfile'
 
 const DoctorDashboard = () => {
@@ -25,21 +25,32 @@ const DoctorDashboard = () => {
 
   useEffect(() => {
     if (!user?.uid) { setLoading(false); return }
-    getDoctorUpcomingAppointments(user.uid, getUserEmail(user))
-      .then(setAppointments)
-      .finally(() => setLoading(false))
+    const fetchAppointments = async () => {
+      try {
+        const data = await getDoctorAppointments(user.uid)
+        data.sort((a, b) => new Date(b.appointmentDate) - new Date(a.appointmentDate))
+        setAppointments(data)
+      } catch (err) {
+        console.error(err)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchAppointments()
   }, [user?.uid])
 
+  const pendingAppointments = appointments.filter(a => a.status === 'pending')
+  const upcomingAppointments = appointments.filter(a => new Date(a.appointmentDate) >= new Date(new Date().setHours(0,0,0,0)) && a.status !== 'cancelled')
+
   const stats = [
-    { icon: Calendar, label: "Today's Schedule", value: appointments.length, change: `${appointments.length} upcoming`, gradient: 'from-blue-600 to-blue-400' },
-    { icon: Users, label: 'Assigned Patients', value: new Set(appointments.map((a) => a.patientName)).size, change: 'From appointments', gradient: 'from-cyan-600 to-cyan-400' },
-    { icon: FileText, label: 'Patient Documents', value: '—', change: 'View records section', gradient: 'from-teal-600 to-teal-400' },
-    { icon: ClipboardList, label: 'Consultations', value: '—', change: 'Manage records', gradient: 'from-purple-600 to-purple-400' },
+    { icon: Calendar, label: "Today's Schedule", value: upcomingAppointments.length, change: `${upcomingAppointments.length} upcoming`, gradient: 'from-blue-600 to-blue-400' },
+    { icon: Users, label: 'Pending Approvals', value: pendingAppointments.length, change: 'Action required', gradient: 'from-amber-500 to-amber-400' },
+    { icon: FileText, label: 'Total Patients', value: new Set(appointments.map((a) => a.patientId)).size, change: 'Unique patients', gradient: 'from-teal-600 to-teal-400' },
   ]
 
   const sections = [
     { icon: User, label: 'View Profile', desc: 'Your qualifications & details', to: '/doctor/settings', color: 'hover:border-cyan-500/30' },
-    { icon: Calendar, label: 'Assigned Appointments', desc: `${appointments.length} upcoming`, to: '/doctor/appointments', color: 'hover:border-blue-500/30' },
+    { icon: Calendar, label: 'Assigned Appointments', desc: `${appointments.length} total`, to: '/doctor/appointments', color: 'hover:border-blue-500/30' },
     { icon: FileText, label: 'Patient Documents', desc: 'Medical files & reports', to: '/doctor/records', color: 'hover:border-teal-500/30' },
     { icon: ClipboardList, label: 'Consultation Records', desc: 'Notes & prescriptions', to: '/doctor/records', color: 'hover:border-purple-500/30' },
   ]
@@ -52,9 +63,9 @@ const DoctorDashboard = () => {
         subtitle="Manage appointments, patient documents, and consultation records"
       />
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-6 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-8">
         {loading
-          ? Array.from({ length: 4 }).map((_, i) => <StatCardSkeleton key={i} />)
+          ? Array.from({ length: 3 }).map((_, i) => <StatCardSkeleton key={i} />)
           : stats.map((stat, i) => <AnimatedStatCard key={stat.label} {...stat} delay={i * 0.08} loading={loading} />)}
       </div>
 
@@ -76,7 +87,7 @@ const DoctorDashboard = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="lg:col-span-2 dashboard-card">
           <div className="flex items-center justify-between mb-5">
-            <h2 className="text-lg font-bold text-slate-900 dark:text-white">Assigned Appointments</h2>
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white">Upcoming Appointments</h2>
             <Link to="/doctor/appointments" className="text-sm text-accent hover:text-cyan-300">View all</Link>
           </div>
           {loading ? (
@@ -85,20 +96,26 @@ const DoctorDashboard = () => {
                 <div key={i} className="h-16 rounded-xl bg-slate-700/30 animate-pulse" />
               ))}
             </div>
-          ) : appointments.length === 0 ? (
+          ) : upcomingAppointments.length === 0 ? (
             <p className="text-sm text-slate-500 text-center py-10">No upcoming appointments assigned yet.</p>
           ) : (
             <div className="space-y-3">
-              {appointments.slice(0, 5).map((a) => (
-                <motion.div key={a.id} whileHover={{ x: 4 }} className="flex items-center justify-between p-4 rounded-xl bg-white/95 dark:bg-slate-900/50 border border-slate-200/70 dark:border-slate-700/30 border-l-4 border-l-cyan-500">
-                  <div>
-                    <p className="font-medium text-slate-900 dark:text-white">{a.patientName || 'Patient'}</p>
-                    <p className="text-sm text-slate-500 dark:text-slate-400">{a.date} {a.time ? `at ${a.time}` : ''} &bull; {a.type || 'Consultation'}</p>
-                  </div>
-                  <span className="px-2.5 py-1 rounded-full text-[10px] font-medium bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 capitalize">
-                    {a.status || 'confirmed'}
-                  </span>
-                </motion.div>
+              {upcomingAppointments.slice(0, 5).map((a) => (
+                <Link to={`/doctor/appointments/${a.id}`} key={a.id}>
+                  <motion.div whileHover={{ x: 4 }} className="flex items-center justify-between p-4 rounded-xl bg-white/95 dark:bg-slate-900/50 border border-slate-200/70 dark:border-slate-700/30 border-l-4 border-l-cyan-500 hover:border-cyan-300 transition-colors mb-3">
+                    <div>
+                      <p className="font-medium text-slate-900 dark:text-white">{a.patientName || 'Patient'}</p>
+                      <p className="text-sm text-slate-500 dark:text-slate-400">{a.appointmentDate} {a.appointmentTime ? `at ${a.appointmentTime}` : ''} &bull; {a.status}</p>
+                    </div>
+                    <span className={`px-2.5 py-1 rounded-full text-[10px] font-medium border capitalize ${
+                      a.status === 'pending' ? 'bg-amber-500/15 text-amber-500 border-amber-500/20' :
+                      a.status === 'approved' ? 'bg-teal-500/15 text-teal-500 border-teal-500/20' :
+                      'bg-slate-500/15 text-slate-500 border-slate-500/20'
+                    }`}>
+                      {a.status}
+                    </span>
+                  </motion.div>
+                </Link>
               ))}
             </div>
           )}

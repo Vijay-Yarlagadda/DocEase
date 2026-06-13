@@ -52,6 +52,7 @@ const DashboardNavbar = ({ darkMode, toggleDarkMode }) => {
 
   const patientMenuItems = [
     { icon: LayoutDashboard, label: 'Overview', to: '/patient/dashboard' },
+    { icon: Building2, label: 'Hospitals', to: '/patient/hospitals' },
     { icon: Calendar, label: 'Appointments', to: '/patient/appointments' },
     { icon: ClipboardList, label: 'Documents', to: '/patient/documents' },
     { icon: Settings, label: 'Settings', to: '/patient/settings' },

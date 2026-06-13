@@ -3,15 +3,17 @@ import { collection, addDoc, query, where, getDocs, deleteDoc, doc, serverTimest
 
 const DOCUMENTS_COLLECTION = 'documents'
 
-export const createPatientDocument = async ({ patientUid, patientName, patientEmail, fileName, fileUrl, mimeType, sharedWith = [] }) => {
+export const createPatientDocument = async ({ appointmentId, patientUid, patientName, patientEmail, doctorId, hospitalId, fileName, fileUrl, mimeType }) => {
   const documentRef = await addDoc(collection(db, DOCUMENTS_COLLECTION), {
+    appointmentId,
     patientUid,
     patientName,
     patientEmail,
+    doctorId,
+    hospitalId,
     fileName,
     fileUrl,
     mimeType,
-    sharedWith,
     uploadedAt: serverTimestamp(),
   })
   return documentRef.id
@@ -23,14 +25,16 @@ export const getPatientDocuments = async (patientUid) => {
   return snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
 }
 
-export const getAllPatientDocuments = async () => {
-  const snap = await getDocs(collection(db, DOCUMENTS_COLLECTION))
+export const getDocumentsForAppointment = async (appointmentId) => {
+  if (!appointmentId) return []
+  const q = query(collection(db, DOCUMENTS_COLLECTION), where('appointmentId', '==', appointmentId))
+  const snap = await getDocs(q)
   return snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
 }
 
-export const getDocumentsForDoctor = async (doctorUid) => {
-  if (!doctorUid) return []
-  const q = query(collection(db, DOCUMENTS_COLLECTION), where('sharedWith', 'array-contains', doctorUid))
+export const getDocumentsForDoctor = async (doctorId) => {
+  if (!doctorId) return []
+  const q = query(collection(db, DOCUMENTS_COLLECTION), where('doctorId', '==', doctorId))
   const snap = await getDocs(q)
   return snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
 }
