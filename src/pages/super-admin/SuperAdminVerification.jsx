@@ -170,7 +170,7 @@ const HospitalDetailsModal = ({ hospital, onClose, onViewDocument }) => {
                               href={normalizeCloudinaryUrl(doc.url)}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="inline-flex items-center justify-center rounded-full border border-transparent bg-cyan-600 px-4 py-2 text-xs font-semibold text-white shadow-lg shadow-cyan-600/30 transition duration-300 ease-out hover:bg-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/40"
+                              className="inline-flex items-center justify-center rounded-full border border-transparent bg-fuchsia-600 px-4 py-2 text-xs font-semibold text-white shadow-lg shadow-fuchsia-600/30 transition duration-300 ease-out hover:bg-fuchsia-500 focus:outline-none focus:ring-2 focus:ring-fuchsia-500/40"
                             >
                               View Document
                             </a>
@@ -320,22 +320,30 @@ const SuperAdminVerification = () => {
                     <div>{hospital.phone || hospital.email || 'N/A'}</div>
                     <div>{(hospital.registrationCertificateUrl ? 1 : 0) + (hospital.hospitalLicenseUrl ? 1 : 0)}</div>
                     <div className="flex items-center justify-end gap-2">
-                      <button
-                        type="button"
-                        disabled={updatingId === hospital.id}
-                        onClick={() => handleStatusUpdate(hospital.id, 'verified')}
-                        className="rounded-2xl bg-emerald-500 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-400 disabled:opacity-50"
-                      >
-                        Approve
-                      </button>
-                      <button
-                        type="button"
-                        disabled={updatingId === hospital.id}
-                        onClick={() => handleStatusUpdate(hospital.id, 'rejected')}
-                        className="rounded-2xl bg-rose-500 px-3 py-2 text-xs font-semibold text-white hover:bg-rose-400 disabled:opacity-50"
-                      >
-                        Reject
-                      </button>
+                      {(!hospital.verificationStatus || hospital.verificationStatus === 'pending') ? (
+                        <>
+                          <button
+                            type="button"
+                            disabled={updatingId === hospital.id}
+                            onClick={() => handleStatusUpdate(hospital.id, 'verified')}
+                            className="rounded-2xl bg-emerald-500 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-400 disabled:opacity-50"
+                          >
+                            Approve
+                          </button>
+                          <button
+                            type="button"
+                            disabled={updatingId === hospital.id}
+                            onClick={() => handleStatusUpdate(hospital.id, 'rejected')}
+                            className="rounded-2xl bg-rose-500 px-3 py-2 text-xs font-semibold text-white hover:bg-rose-400 disabled:opacity-50"
+                          >
+                            Reject
+                          </button>
+                        </>
+                      ) : (
+                        <span className="text-xs font-medium text-slate-500 italic">
+                          Action completed
+                        </span>
+                      )}
                     </div>
                   </div>
                 ))
