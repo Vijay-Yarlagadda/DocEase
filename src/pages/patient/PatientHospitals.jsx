@@ -20,9 +20,7 @@ const PatientHospitals = () => {
   
   const [bookingDoctor, setBookingDoctor] = useState(null)
   const [date, setDate] = useState('')
-  const [hour, setHour] = useState('09')
-  const [minute, setMinute] = useState('00')
-  const [ampm, setAmpm] = useState('AM')
+  const [time, setTime] = useState('')
   const [booking, setBooking] = useState(false)
 
   useEffect(() => {
@@ -54,12 +52,10 @@ const PatientHospitals = () => {
 
   const handleBook = async (e) => {
     e.preventDefault()
-    if (!date) {
-      showError('Please select a date')
+    if (!date || !time) {
+      showError('Please select a date and time')
       return
     }
-    
-    const time = `${hour}:${minute} ${ampm}`
     
     setBooking(true)
     try {
@@ -255,43 +251,59 @@ const PatientHospitals = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5 flex items-center gap-2">
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
                       <Clock className="w-4 h-4 text-slate-400" />
-                      Time
+                      Select Time Slot
                     </label>
-                    <div className="grid grid-cols-3 gap-3">
-                      <select 
-                        required
-                        value={hour}
-                        onChange={e => setHour(e.target.value)}
-                        className="dashboard-input appearance-none text-center"
-                      >
-                        {Array.from({ length: 12 }, (_, i) => i + 1).map(h => (
-                          <option key={h} value={h.toString().padStart(2, '0')}>
-                            {h.toString().padStart(2, '0')}
-                          </option>
-                        ))}
-                      </select>
-                      <select 
-                        required
-                        value={minute}
-                        onChange={e => setMinute(e.target.value)}
-                        className="dashboard-input appearance-none text-center"
-                      >
-                        <option value="00">00</option>
-                        <option value="15">15</option>
-                        <option value="30">30</option>
-                        <option value="45">45</option>
-                      </select>
-                      <select 
-                        required
-                        value={ampm}
-                        onChange={e => setAmpm(e.target.value)}
-                        className="dashboard-input appearance-none text-center"
-                      >
-                        <option value="AM">AM</option>
-                        <option value="PM">PM</option>
-                      </select>
+                    
+                    <div className="space-y-4 max-h-[200px] overflow-y-auto pr-2 custom-scrollbar">
+                      <div>
+                        <p className="text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wider">Morning</p>
+                        <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                          {['09:00 AM', '09:30 AM', '10:00 AM', '10:30 AM', '11:00 AM', '11:30 AM'].map(t => (
+                            <button
+                              key={t}
+                              type="button"
+                              onClick={() => setTime(t)}
+                              className={`py-1.5 px-2 text-xs font-medium rounded-lg border transition-all ${time === t ? 'bg-cyan-500 border-cyan-500 text-white shadow-md shadow-cyan-500/30' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-cyan-400 dark:hover:border-cyan-600'}`}
+                            >
+                              {t}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <p className="text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wider">Afternoon</p>
+                        <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                          {['12:00 PM', '12:30 PM', '01:00 PM', '01:30 PM', '02:00 PM', '02:30 PM', '03:00 PM', '03:30 PM', '04:00 PM', '04:30 PM'].map(t => (
+                            <button
+                              key={t}
+                              type="button"
+                              onClick={() => setTime(t)}
+                              className={`py-1.5 px-2 text-xs font-medium rounded-lg border transition-all ${time === t ? 'bg-cyan-500 border-cyan-500 text-white shadow-md shadow-cyan-500/30' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-cyan-400 dark:hover:border-cyan-600'}`}
+                            >
+                              {t}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <p className="text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wider">Evening</p>
+                        <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                          {['05:00 PM', '05:30 PM', '06:00 PM', '06:30 PM', '07:00 PM', '07:30 PM', '08:00 PM'].map(t => (
+                            <button
+                              key={t}
+                              type="button"
+                              onClick={() => setTime(t)}
+                              className={`py-1.5 px-2 text-xs font-medium rounded-lg border transition-all ${time === t ? 'bg-cyan-500 border-cyan-500 text-white shadow-md shadow-cyan-500/30' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-cyan-400 dark:hover:border-cyan-600'}`}
+                            >
+                              {t}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
                     </div>
                   </div>
                   
