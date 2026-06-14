@@ -137,6 +137,11 @@
     @apply w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 placeholder-slate-500 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all duration-200 dark:border-slate-700/80 dark:bg-slate-900/80 dark:text-slate-100;
   }
 
+  .dark .dashboard-input[type="date"]::-webkit-calendar-picker-indicator,
+  .dark .dashboard-input[type="time"]::-webkit-calendar-picker-indicator {
+    filter: invert(1) brightness(0.8);
+  }
+
   select.dashboard-input option {
     @apply bg-white text-slate-900 dark:bg-slate-900 dark:text-slate-100;
   }
