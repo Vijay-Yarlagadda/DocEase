@@ -20,7 +20,9 @@ const PatientHospitals = () => {
   
   const [bookingDoctor, setBookingDoctor] = useState(null)
   const [date, setDate] = useState('')
-  const [time, setTime] = useState('')
+  const [hour, setHour] = useState('09')
+  const [minute, setMinute] = useState('00')
+  const [ampm, setAmpm] = useState('AM')
   const [booking, setBooking] = useState(false)
 
   useEffect(() => {
@@ -52,10 +54,12 @@ const PatientHospitals = () => {
 
   const handleBook = async (e) => {
     e.preventDefault()
-    if (!date || !time) {
-      showError('Please select a date and time')
+    if (!date) {
+      showError('Please select a date')
       return
     }
+    
+    const time = `${hour}:${minute} ${ampm}`
     
     setBooking(true)
     try {
@@ -255,37 +259,40 @@ const PatientHospitals = () => {
                       <Clock className="w-4 h-4 text-slate-400" />
                       Time
                     </label>
-                    <select 
-                      required
-                      value={time}
-                      onChange={e => setTime(e.target.value)}
-                      className="dashboard-input w-full appearance-none"
-                    >
-                      <option value="" disabled>Select a time</option>
-                      <option value="09:00 AM">09:00 AM</option>
-                      <option value="09:30 AM">09:30 AM</option>
-                      <option value="10:00 AM">10:00 AM</option>
-                      <option value="10:30 AM">10:30 AM</option>
-                      <option value="11:00 AM">11:00 AM</option>
-                      <option value="11:30 AM">11:30 AM</option>
-                      <option value="12:00 PM">12:00 PM</option>
-                      <option value="12:30 PM">12:30 PM</option>
-                      <option value="01:00 PM">01:00 PM</option>
-                      <option value="01:30 PM">01:30 PM</option>
-                      <option value="02:00 PM">02:00 PM</option>
-                      <option value="02:30 PM">02:30 PM</option>
-                      <option value="03:00 PM">03:00 PM</option>
-                      <option value="03:30 PM">03:30 PM</option>
-                      <option value="04:00 PM">04:00 PM</option>
-                      <option value="04:30 PM">04:30 PM</option>
-                      <option value="05:00 PM">05:00 PM</option>
-                      <option value="05:30 PM">05:30 PM</option>
-                      <option value="06:00 PM">06:00 PM</option>
-                      <option value="06:30 PM">06:30 PM</option>
-                      <option value="07:00 PM">07:00 PM</option>
-                      <option value="07:30 PM">07:30 PM</option>
-                      <option value="08:00 PM">08:00 PM</option>
-                    </select>
+                    <div className="grid grid-cols-3 gap-3">
+                      <select 
+                        required
+                        value={hour}
+                        onChange={e => setHour(e.target.value)}
+                        className="dashboard-input appearance-none text-center"
+                      >
+                        {Array.from({ length: 12 }, (_, i) => i + 1).map(h => (
+                          <option key={h} value={h.toString().padStart(2, '0')}>
+                            {h.toString().padStart(2, '0')}
+                          </option>
+                        ))}
+                      </select>
+                      <select 
+                        required
+                        value={minute}
+                        onChange={e => setMinute(e.target.value)}
+                        className="dashboard-input appearance-none text-center"
+                      >
+                        <option value="00">00</option>
+                        <option value="15">15</option>
+                        <option value="30">30</option>
+                        <option value="45">45</option>
+                      </select>
+                      <select 
+                        required
+                        value={ampm}
+                        onChange={e => setAmpm(e.target.value)}
+                        className="dashboard-input appearance-none text-center"
+                      >
+                        <option value="AM">AM</option>
+                        <option value="PM">PM</option>
+                      </select>
+                    </div>
                   </div>
                   
                   <div className="pt-4">
