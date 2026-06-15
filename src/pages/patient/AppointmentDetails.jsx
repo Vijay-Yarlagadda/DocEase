@@ -1,7 +1,7 @@
 import { useState, useEffect, useContext, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Calendar, Clock, MapPin, Stethoscope, UploadCloud, FileText, Trash2, Eye, AlertCircle, ArrowLeft } from 'lucide-react'
+import { Calendar, Clock, MapPin, Stethoscope, UploadCloud, FileText, Trash2, Eye, AlertCircle, ArrowLeft, Camera } from 'lucide-react'
 import { getAppointmentById, deleteAppointment } from '../../services/appointmentService'
 import { getDocumentsForAppointment, createPatientDocument, deletePatientDocument } from '../../services/documentService'
 import { uploadFileToCloudinary } from '../../services/cloudinaryService'
@@ -223,18 +223,37 @@ const AppointmentDetails = () => {
                 <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
                   Drag and drop files here, or click to browse. Max 10MB per file.
                 </p>
-                <input
-                  type="file"
-                  id="file-upload"
-                  className="hidden"
-                  onChange={handleFileChange}
-                />
-                <label
-                  htmlFor="file-upload"
-                  className="btn-primary inline-block cursor-pointer shadow-lg shadow-teal-500/25"
-                >
-                  Browse Files
-                </label>
+                <div className="flex items-center justify-center gap-4">
+                  <input
+                    type="file"
+                    id="camera-upload"
+                    className="hidden"
+                    accept="image/*"
+                    capture="environment"
+                    onChange={handleFileChange}
+                  />
+                  <label
+                    htmlFor="camera-upload"
+                    className="btn-primary inline-flex items-center gap-2 cursor-pointer shadow-lg shadow-teal-500/25"
+                  >
+                    <Camera className="w-5 h-5" />
+                    Take Photo
+                  </label>
+
+                  <input
+                    type="file"
+                    id="file-upload"
+                    className="hidden"
+                    accept="image/*,application/pdf"
+                    onChange={handleFileChange}
+                  />
+                  <label
+                    htmlFor="file-upload"
+                    className="px-4 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors inline-block cursor-pointer"
+                  >
+                    Browse Files
+                  </label>
+                </div>
               </>
             )}
           </div>

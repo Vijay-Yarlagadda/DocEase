@@ -1,13 +1,14 @@
 import { useState, useEffect, useContext } from 'react'
 import { motion } from 'framer-motion'
-import { Calendar as CalendarIcon, Clock, XCircle, CheckCircle, AlertCircle, Trash2 } from 'lucide-react'
+import { Calendar as CalendarIcon, Clock, XCircle, CheckCircle, AlertCircle, Trash2, Settings } from 'lucide-react'
 import DashboardPageHeader from '../../components/dashboard/DashboardPageHeader'
 import { getDoctorLeaves, addLeave, deleteLeave } from '../../services/leaveService'
+import { updateUserProfile } from '../../services/authService'
 import { AuthContext } from '../../context/AuthContext'
 import { useToast } from '../../components/Toast'
 
 const DoctorSchedule = () => {
-  const { user } = useContext(AuthContext)
+  const { user, refreshUserProfile } = useContext(AuthContext)
   const { showSuccess, showError } = useToast()
   
   const [leaves, setLeaves] = useState([])
@@ -16,6 +17,47 @@ const DoctorSchedule = () => {
   const [leaveDate, setLeaveDate] = useState('')
   const [reason, setReason] = useState('')
   const [submitting, setSubmitting] = useState(false)
+
+  // Settings State
+  const [slotDuration, setSlotDuration] = useState(user?.appointmentSettings?.slotDuration || 30)
+  const [startTime, setStartTime] = useState(user?.appointmentSettings?.startTime || '09:00')
+  const [endTime, setEndTime] = useState(user?.appointmentSettings?.endTime || '17:00')
+  const [workingDays, setWorkingDays] = useState(user?.appointmentSettings?.workingDays || [1, 2, 3, 4, 5])
+  const [breakStart, setBreakStart] = useState(user?.appointmentSettings?.breakStart || '13:00')
+  const [breakEnd, setBreakEnd] = useState(user?.appointmentSettings?.breakEnd || '14:00')
+  const [savingSettings, setSavingSettings] = useState(false)
+
+  const handleSaveSettings = async (e) => {
+    e.preventDefault()
+    setSavingSettings(true)
+    try {
+      const updates = {
+        appointmentSettings: {
+          slotDuration: parseInt(slotDuration),
+          startTime,
+          endTime,
+          workingDays,
+          breakStart,
+          breakEnd
+        }
+      }
+      await updateUserProfile(user, updates)
+      if (refreshUserProfile) await refreshUserProfile()
+      showSuccess('Appointment settings saved!')
+    } catch (err) {
+      showError('Failed to save settings')
+    } finally {
+      setSavingSettings(false)
+    }
+  }
+
+  const toggleWorkingDay = (dayIndex) => {
+    if (workingDays.includes(dayIndex)) {
+      setWorkingDays(workingDays.filter(d => d !== dayIndex))
+    } else {
+      setWorkingDays([...workingDays, dayIndex].sort())
+    }
+  }
 
   // Calculate minimum allowed leave date (3 days from now)
   const minDate = new Date()
@@ -146,6 +188,80 @@ const DoctorSchedule = () => {
         </div>
 
         <div className="lg:col-span-2 space-y-6">
+          <div className="dashboard-card">
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
+              <Settings className="w-5 h-5 text-teal-500" />
+              Appointment Settings
+            </h2>
+            <form onSubmit={handleSaveSettings} className="space-y-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+                    Slot Duration (Minutes)
+                  </label>
+                  <select 
+                    value={slotDuration} 
+                    onChange={e => setSlotDuration(e.target.value)}
+                    className="dashboard-input bg-white dark:bg-slate-800"
+                  >
+                    <option value="10">10 mins</option>
+                    <option value="15">15 mins</option>
+                    <option value="20">20 mins</option>
+                    <option value="30">30 mins</option>
+                    <option value="45">45 mins</option>
+                    <option value="60">60 mins</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+                    Working Days
+                  </label>
+                  <div className="flex gap-1">
+                    {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => toggleWorkingDay(idx)}
+                        className={`w-8 h-8 rounded-full text-xs font-semibold transition-colors ${workingDays.includes(idx) ? 'bg-teal-500 text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700'}`}
+                      >
+                        {day}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+                    Daily Start Time
+                  </label>
+                  <input type="time" value={startTime} onChange={e => setStartTime(e.target.value)} className="dashboard-input" required />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+                    Daily End Time
+                  </label>
+                  <input type="time" value={endTime} onChange={e => setEndTime(e.target.value)} className="dashboard-input" required />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+                    Break Start (Optional)
+                  </label>
+                  <input type="time" value={breakStart} onChange={e => setBreakStart(e.target.value)} className="dashboard-input" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+                    Break End (Optional)
+                  </label>
+                  <input type="time" value={breakEnd} onChange={e => setBreakEnd(e.target.value)} className="dashboard-input" />
+                </div>
+              </div>
+              <div className="flex justify-end">
+                <button type="submit" disabled={savingSettings} className="btn-primary">
+                  {savingSettings ? 'Saving...' : 'Save Settings'}
+                </button>
+              </div>
+            </form>
+          </div>
+
           <div className="dashboard-card">
             <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-6">Upcoming Leaves</h2>
             

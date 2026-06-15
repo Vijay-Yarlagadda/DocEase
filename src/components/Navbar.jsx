@@ -193,61 +193,68 @@ const Navbar = ({ darkMode, toggleDarkMode, user }) => {
         <AnimatePresence>
           {isOpen && (
             <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              className="lg:hidden pb-4 overflow-hidden"
+              initial={{ opacity: 0, y: -10, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -10, scale: 0.95 }}
+              transition={{ duration: 0.2 }}
+              className="lg:hidden absolute top-[72px] md:top-[88px] left-4 right-4 bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-700/50 rounded-2xl shadow-2xl overflow-hidden backdrop-blur-xl"
             >
-              <div className="flex flex-col space-y-2 pt-2">
+              <div className="flex flex-col p-4 space-y-1">
                 {/* Mobile Navigation Links */}
                 {navLinks.map((link) => (
                   <Link
                     key={link.path}
                     to={link.path}
                     onClick={() => setIsOpen(false)}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    className={`px-4 py-3 rounded-xl text-base font-semibold transition-all duration-200 ${
                       location.pathname === link.path
-                        ? 'bg-primary text-white'
-                        : 'text-slate-700 dark:text-gray-300 hover:bg-slate-100 dark:hover:bg-gray-700'
+                        ? 'bg-teal-50 dark:bg-teal-500/10 text-teal-600 dark:text-teal-400'
+                        : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
                     }`}
                   >
                     {link.label}
                   </Link>
                 ))}
                 
+                <div className="h-px bg-slate-100 dark:bg-slate-800 my-4" />
+                
                 {/* Mobile User Profile or Login */}
                 {user ? (
-                  <>
-                    <div className="flex items-center space-x-2 px-4 py-2 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-300 dark:border-gray-700">
-                      <User className="w-4 h-4 text-primary dark:text-accent" />
-                      <button
-                        onClick={() => {
-                          setIsOpen(false)
-                          navigate(getDashboardPath(getUserRole()))
-                        }}
-                        className="text-sm font-medium text-slate-700 dark:text-gray-300 text-left"
-                      >
-                        {userName}
-                      </button>
-                    </div>
+                  <div className="flex flex-col space-y-2">
+                    <button
+                      onClick={() => {
+                        setIsOpen(false)
+                        navigate(getDashboardPath(getUserRole()))
+                      }}
+                      className="flex items-center space-x-3 px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700/50 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                    >
+                      <div className="p-2 rounded-lg bg-teal-100 dark:bg-teal-900/50 text-teal-600 dark:text-teal-400">
+                        <User className="w-5 h-5" />
+                      </div>
+                      <div className="flex flex-col items-start">
+                        <span className="text-sm text-slate-500 dark:text-slate-400 font-medium">Logged in as</span>
+                        <span className="text-base font-bold text-slate-900 dark:text-white truncate max-w-[200px]">{userName}</span>
+                      </div>
+                    </button>
+                    
                     <button
                       onClick={() => {
                         handleLogout()
                         setIsOpen(false)
                       }}
-                      className="px-4 py-2 rounded-lg text-sm font-medium text-slate-700 dark:text-gray-300 hover:bg-slate-100 dark:hover:bg-gray-700 flex items-center space-x-2"
+                      className="flex items-center justify-center space-x-2 px-4 py-3 rounded-xl text-sm font-semibold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-500/10 hover:bg-rose-100 dark:hover:bg-rose-500/20 transition-colors"
                     >
                       <LogOut className="w-4 h-4" />
-                      <span>Logout</span>
+                      <span>Log Out</span>
                     </button>
-                  </>
+                  </div>
                 ) : (
                   <Link
                     to="/login"
                     onClick={() => setIsOpen(false)}
-                    className="px-4 py-2 rounded-lg text-sm font-medium text-white bg-gradient-to-r from-primary to-secondary text-center"
+                    className="px-4 py-3 rounded-xl text-base font-bold text-white bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 text-center shadow-lg shadow-teal-500/25 transition-all"
                   >
-                    Login
+                    Login / Sign up
                   </Link>
                 )}
               </div>

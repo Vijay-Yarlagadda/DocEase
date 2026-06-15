@@ -492,6 +492,9 @@ export const updateUserProfile = async (user, updates = {}) => {
     if (updates.place !== undefined) {
       payload.place = updates.place.trim()
     }
+    if (updates.appointmentSettings !== undefined) {
+      payload.appointmentSettings = updates.appointmentSettings
+    }
 
     await updateDoc(docRef, payload)
 

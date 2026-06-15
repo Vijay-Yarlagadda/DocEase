@@ -27,6 +27,61 @@ const PatientHospitals = () => {
   const [isDoctorOnLeave, setIsDoctorOnLeave] = useState(false)
   const [checkingSlots, setCheckingSlots] = useState(false)
 
+  const generateTimeSlots = (doctor, selectedDateStr) => {
+    const settings = doctor?.appointmentSettings || {}
+    const duration = settings.slotDuration || 30
+    const startStr = settings.startTime || '09:00'
+    const endStr = settings.endTime || '17:00'
+    const breakStart = settings.breakStart || ''
+    const breakEnd = settings.breakEnd || ''
+    const workingDays = settings.workingDays || [1, 2, 3, 4, 5]
+
+    if (selectedDateStr) {
+      const dayOfWeek = new Date(selectedDateStr).getDay()
+      if (!workingDays.includes(dayOfWeek)) {
+        return { notWorkingDay: true, morning: [], afternoon: [], evening: [] }
+      }
+    }
+
+    const parseTime = (tStr) => {
+      if (!tStr) return null
+      const [h, m] = tStr.split(':').map(Number)
+      return h * 60 + m
+    }
+
+    const formatTime = (totalMins) => {
+      const h = Math.floor(totalMins / 60)
+      const m = totalMins % 60
+      const ampm = h >= 12 ? 'PM' : 'AM'
+      const h12 = h % 12 || 12
+      const hh = String(h12).padStart(2, '0')
+      const mm = String(m).padStart(2, '0')
+      return `${hh}:${mm} ${ampm}`
+    }
+
+    const startMins = parseTime(startStr)
+    const endMins = parseTime(endStr)
+    const bStart = parseTime(breakStart)
+    const bEnd = parseTime(breakEnd)
+
+    const slots = { notWorkingDay: false, morning: [], afternoon: [], evening: [] }
+
+    for (let current = startMins; current + duration <= endMins; current += duration) {
+      if (bStart !== null && bEnd !== null) {
+        if (current >= bStart && current < bEnd) continue
+        if (current + duration > bStart && current < bEnd) continue
+      }
+      const h = Math.floor(current / 60)
+      const formatted = formatTime(current)
+      if (h < 12) slots.morning.push(formatted)
+      else if (h < 17) slots.afternoon.push(formatted)
+      else slots.evening.push(formatted)
+    }
+    return slots
+  }
+
+  const generatedSlots = bookingDoctor ? generateTimeSlots(bookingDoctor, date) : { notWorkingDay: false, morning: [], afternoon: [], evening: [] }
+
   // Get tomorrow's date for the min attribute
   const tomorrow = new Date()
   tomorrow.setDate(tomorrow.getDate() + 1)
@@ -307,58 +362,69 @@ const PatientHospitals = () => {
                         <X className="w-6 h-6 text-red-500" />
                         Doctor is not available on this date.
                       </div>
+                    ) : generatedSlots.notWorkingDay ? (
+                      <div className="text-sm text-amber-600 dark:text-amber-400 py-6 text-center bg-amber-50 dark:bg-amber-900/20 rounded-xl border border-amber-100 dark:border-amber-900/50 font-medium flex flex-col items-center gap-2">
+                        <X className="w-6 h-6 text-amber-500" />
+                        Doctor is not available on this day of the week.
+                      </div>
                     ) : (
                       <div className="space-y-4 max-h-[200px] overflow-y-auto pr-2 custom-scrollbar">
-                        <div>
-                          <p className="text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wider">Morning</p>
-                          <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-                            {['09:00 AM', '09:30 AM', '10:00 AM', '10:30 AM', '11:00 AM', '11:30 AM'].map(t => (
-                              <button
-                                key={t}
-                                type="button"
-                                disabled={bookedSlots.includes(t)}
-                                onClick={() => setTime(t)}
-                                className={`py-1.5 px-2 text-xs font-medium rounded-lg border transition-all ${bookedSlots.includes(t) ? 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed dark:bg-slate-800/50 dark:border-slate-800 dark:text-slate-600' : time === t ? 'bg-cyan-500 border-cyan-500 text-white shadow-md shadow-cyan-500/30' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-cyan-400 dark:hover:border-cyan-600'}`}
-                              >
-                                {t}
-                              </button>
-                            ))}
+                        {generatedSlots.morning.length > 0 && (
+                          <div>
+                            <p className="text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wider">Morning</p>
+                            <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                              {generatedSlots.morning.map(t => (
+                                <button
+                                  key={t}
+                                  type="button"
+                                  disabled={bookedSlots.includes(t)}
+                                  onClick={() => setTime(t)}
+                                  className={`py-1.5 px-2 text-xs font-medium rounded-lg border transition-all ${bookedSlots.includes(t) ? 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed dark:bg-slate-800/50 dark:border-slate-800 dark:text-slate-600' : time === t ? 'bg-cyan-500 border-cyan-500 text-white shadow-md shadow-cyan-500/30' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-cyan-400 dark:hover:border-cyan-600'}`}
+                                >
+                                  {t}
+                                </button>
+                              ))}
+                            </div>
                           </div>
-                        </div>
+                        )}
                         
-                        <div>
-                          <p className="text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wider">Afternoon</p>
-                          <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-                            {['12:00 PM', '12:30 PM', '01:00 PM', '01:30 PM', '02:00 PM', '02:30 PM', '03:00 PM', '03:30 PM', '04:00 PM', '04:30 PM'].map(t => (
-                              <button
-                                key={t}
-                                type="button"
-                                disabled={bookedSlots.includes(t)}
-                                onClick={() => setTime(t)}
-                                className={`py-1.5 px-2 text-xs font-medium rounded-lg border transition-all ${bookedSlots.includes(t) ? 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed dark:bg-slate-800/50 dark:border-slate-800 dark:text-slate-600' : time === t ? 'bg-cyan-500 border-cyan-500 text-white shadow-md shadow-cyan-500/30' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-cyan-400 dark:hover:border-cyan-600'}`}
-                              >
-                                {t}
-                              </button>
-                            ))}
+                        {generatedSlots.afternoon.length > 0 && (
+                          <div>
+                            <p className="text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wider">Afternoon</p>
+                            <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                              {generatedSlots.afternoon.map(t => (
+                                <button
+                                  key={t}
+                                  type="button"
+                                  disabled={bookedSlots.includes(t)}
+                                  onClick={() => setTime(t)}
+                                  className={`py-1.5 px-2 text-xs font-medium rounded-lg border transition-all ${bookedSlots.includes(t) ? 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed dark:bg-slate-800/50 dark:border-slate-800 dark:text-slate-600' : time === t ? 'bg-cyan-500 border-cyan-500 text-white shadow-md shadow-cyan-500/30' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-cyan-400 dark:hover:border-cyan-600'}`}
+                                >
+                                  {t}
+                                </button>
+                              ))}
+                            </div>
                           </div>
-                        </div>
+                        )}
                         
-                        <div>
-                          <p className="text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wider">Evening</p>
-                          <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-                            {['05:00 PM', '05:30 PM', '06:00 PM', '06:30 PM', '07:00 PM', '07:30 PM', '08:00 PM'].map(t => (
-                              <button
-                                key={t}
-                                type="button"
-                                disabled={bookedSlots.includes(t)}
-                                onClick={() => setTime(t)}
-                                className={`py-1.5 px-2 text-xs font-medium rounded-lg border transition-all ${bookedSlots.includes(t) ? 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed dark:bg-slate-800/50 dark:border-slate-800 dark:text-slate-600' : time === t ? 'bg-cyan-500 border-cyan-500 text-white shadow-md shadow-cyan-500/30' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-cyan-400 dark:hover:border-cyan-600'}`}
-                              >
-                                {t}
-                              </button>
-                            ))}
+                        {generatedSlots.evening.length > 0 && (
+                          <div>
+                            <p className="text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wider">Evening</p>
+                            <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                              {generatedSlots.evening.map(t => (
+                                <button
+                                  key={t}
+                                  type="button"
+                                  disabled={bookedSlots.includes(t)}
+                                  onClick={() => setTime(t)}
+                                  className={`py-1.5 px-2 text-xs font-medium rounded-lg border transition-all ${bookedSlots.includes(t) ? 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed dark:bg-slate-800/50 dark:border-slate-800 dark:text-slate-600' : time === t ? 'bg-cyan-500 border-cyan-500 text-white shadow-md shadow-cyan-500/30' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-cyan-400 dark:hover:border-cyan-600'}`}
+                                >
+                                  {t}
+                                </button>
+                              ))}
+                            </div>
                           </div>
-                        </div>
+                        )}
                       </div>
                     )}
                   </div>
