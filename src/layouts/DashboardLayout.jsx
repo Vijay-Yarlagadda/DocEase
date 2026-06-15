@@ -2,6 +2,7 @@ import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { useEffect, useContext } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import DashboardNavbar from '../components/dashboard/DashboardNavbar'
+import ProfileCompletionModal from '../components/dashboard/ProfileCompletionModal'
 import { AuthContext } from '../context/AuthContext'
 import { doctorMustChangePassword } from '../services/authService'
 
@@ -48,6 +49,8 @@ const DashboardLayout = ({ darkMode, toggleDarkMode }) => {
           </div>
         </div>
       </main>
+      
+      <ProfileCompletionModal />
     </div>
   )
 }

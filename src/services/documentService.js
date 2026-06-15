@@ -1,5 +1,6 @@
 import { db } from './firebase'
-import { collection, addDoc, query, where, getDocs, deleteDoc, doc, serverTimestamp } from 'firebase/firestore'
+import { collection, addDoc, query, where, getDocs, deleteDoc, doc, serverTimestamp, getDoc } from 'firebase/firestore'
+import api from './api'
 
 const DOCUMENTS_COLLECTION = 'documents'
 
@@ -16,6 +17,26 @@ export const createPatientDocument = async ({ appointmentId, patientUid, patient
     mimeType,
     uploadedAt: serverTimestamp(),
   })
+
+  try {
+    if (doctorId) {
+      const doctorDoc = await getDoc(doc(db, 'doctors', doctorId))
+      if (doctorDoc.exists()) {
+        const doctorData = doctorDoc.data()
+        await api.post('/emails/send', {
+          action: 'sendDocumentUploadNotification',
+          payload: {
+            doctorEmail: doctorData.email,
+            doctorName: doctorData.name,
+            patientName: patientName || 'A Patient'
+          }
+        })
+      }
+    }
+  } catch (err) {
+    console.error('Failed to send document upload email:', err)
+  }
+
   return documentRef.id
 }
 

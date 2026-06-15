@@ -56,15 +56,6 @@ export const AuthProvider = ({ children }) => {
 
       setLoading(false)
 
-      if (t) {
-        api
-          .get('/auth/dashboard')
-          .then((res) => {
-            const userData = res.data.user
-            if (userData) refreshUserProfile(userData)
-          })
-          .catch(() => {})
-      }
     }
 
     initSession()

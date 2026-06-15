@@ -54,6 +54,9 @@ exports.createDoctor = functions.https.onCall(async (data, context) => {
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
     })
 
+    // Send email with credentials
+    await emails.sendDoctorCredentials(email, name, tempPassword).catch(e => console.error('Email failed:', e))
+
     return { uid: userRecord.uid, email: userRecord.email, tempPassword }
   } catch (err) {
     console.error('createDoctor error', err)
@@ -117,3 +120,5 @@ exports.provisionSuperAdmin = functions.https.onCall(async (data, context) => {
     throw new functions.https.HttpsError('internal', err.message || 'Unable to provision Super Admin')
   }
 })
+
+

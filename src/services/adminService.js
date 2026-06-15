@@ -1,5 +1,6 @@
 import { db } from './firebase'
 import { generateTempPassword, getAllDoctors } from './authService'
+import api from './api'
 import {
   collection,
   doc,
@@ -82,6 +83,21 @@ export const updateHospitalProfile = async (hospitalId, data) => {
     { ...data, verificationStatus, updatedAt: serverTimestamp() },
     { merge: true }
   )
+  
+  if (verificationStatus === 'pending' && currentStatus !== 'pending') {
+    try {
+      await api.post('/emails/send', {
+        action: 'sendHospitalSubmittedToSuperAdmin',
+        payload: {
+          adminEmail: import.meta.env.VITE_SUPER_ADMIN_EMAIL || 'superadmin@docease.com',
+          hospitalName: data.name || 'New Hospital'
+        }
+      })
+    } catch (err) {
+      console.error('Failed to notify super admin:', err)
+    }
+  }
+
   return getHospitalProfile(hospitalId)
 }
 
@@ -91,6 +107,19 @@ export const approveHospital = async (hospitalId) => {
     verifiedAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   })
+  
+  try {
+    const snap = await getDoc(doc(db, HOSPITALS_COLLECTION, hospitalId))
+    if (snap.exists()) {
+      const data = snap.data()
+      await api.post('/emails/send', {
+        action: 'sendHospitalVerificationStatus',
+        payload: { hospitalEmail: data.email, hospitalName: data.name, status: 'approved' }
+      })
+    }
+  } catch (err) {
+    console.error('Failed to send hospital approval email', err)
+  }
 }
 
 export const rejectHospital = async (hospitalId) => {
@@ -99,6 +128,19 @@ export const rejectHospital = async (hospitalId) => {
     rejectedAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   })
+
+  try {
+    const snap = await getDoc(doc(db, HOSPITALS_COLLECTION, hospitalId))
+    if (snap.exists()) {
+      const data = snap.data()
+      await api.post('/emails/send', {
+        action: 'sendHospitalVerificationStatus',
+        payload: { hospitalEmail: data.email, hospitalName: data.name, status: 'rejected' }
+      })
+    }
+  } catch (err) {
+    console.error('Failed to send hospital rejection email', err)
+  }
 }
 
 export const getHospitalVerificationCounts = async () => {

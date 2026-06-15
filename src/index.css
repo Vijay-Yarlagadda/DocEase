@@ -10,11 +10,11 @@
 
 @layer components {
   .glass-effect {
-    @apply backdrop-blur-md bg-white/95 dark:bg-gray-900/70 border border-slate-200/60 dark:border-gray-700/20 shadow-sm;
+    @apply backdrop-blur-xl bg-white/80 dark:bg-[#0B0F19]/60 border border-white/20 dark:border-indigo-500/10 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)] dark:shadow-[0_8px_32px_0_rgba(0,0,0,0.3)];
   }
   
   .btn-primary {
-    @apply px-6 py-3 rounded-lg font-semibold text-white bg-gradient-to-r from-primary via-blue-600 to-secondary hover:from-primary-dark hover:via-blue-700 hover:to-secondary-dark transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5;
+    @apply px-6 py-3 rounded-lg font-semibold text-white bg-gradient-to-r from-primary via-accent to-secondary hover:from-primary-dark hover:via-accent-dark hover:to-secondary-dark transition-all duration-300 shadow-lg shadow-indigo-500/25 hover:shadow-xl hover:shadow-indigo-500/40 transform hover:-translate-y-1;
   }
   
   .btn-secondary {
@@ -26,11 +26,11 @@
   }
 
   .animated-border-ring {
-    @apply rounded-3xl p-[1px] bg-[length:300%_300%] bg-gradient-to-r from-sky-500 via-fuchsia-500 to-emerald-500;
+    @apply rounded-3xl p-[1px] bg-[length:300%_300%] bg-gradient-to-r from-teal-500 via-indigo-500 to-violet-500;
   }
 
   .animated-border-ring__content {
-    @apply rounded-3xl bg-slate-50 dark:bg-slate-900/80;
+    @apply rounded-3xl bg-slate-50 dark:bg-[#0B0F19]/90;
   }
 
   .animate-animated-border {
@@ -48,15 +48,15 @@
 
   .auth-page {
     @apply relative overflow-hidden;
-    background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 35%, #ecf7ff 100%);
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 50%, #f1f5f9 100%);
     background-attachment: fixed;
   }
   
   .dark .auth-page {
-    @apply bg-[#060b18];
+    @apply bg-[#0B0F19];
     background-image:
-      radial-gradient(ellipse 80% 50% at 50% -20%, rgba(59, 130, 246, 0.08), transparent),
-      radial-gradient(ellipse 60% 40% at 100% 100%, rgba(14, 165, 233, 0.06), transparent);
+      radial-gradient(ellipse 80% 50% at 50% -20%, rgba(79, 70, 229, 0.15), transparent),
+      radial-gradient(ellipse 60% 40% at 100% 100%, rgba(13, 148, 136, 0.15), transparent);
   }
 
   .auth-page-glow {
@@ -64,11 +64,11 @@
   }
 
   .auth-page-glow--left {
-    @apply w-72 h-72 -top-20 -left-20 bg-blue-600/20;
+    @apply w-72 h-72 -top-20 -left-20 bg-indigo-600/30;
   }
 
   .auth-page-glow--right {
-    @apply w-96 h-96 -bottom-32 -right-24 bg-cyan-500/15;
+    @apply w-96 h-96 -bottom-32 -right-24 bg-teal-500/20;
   }
 
   .auth-card {
@@ -87,26 +87,26 @@
   }
 
   .auth-btn {
-    @apply w-full py-3.5 rounded-xl font-semibold text-white bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 hover:from-blue-700 hover:via-blue-600 hover:to-cyan-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 flex items-center justify-center gap-2 shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 hover:-translate-y-0.5 active:translate-y-0;
+    @apply w-full py-3.5 rounded-xl font-semibold text-white bg-gradient-to-r from-primary via-accent to-secondary hover:from-primary-dark hover:via-accent-dark hover:to-secondary-dark disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 flex items-center justify-center gap-2 shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 hover:-translate-y-1 active:translate-y-0;
   }
 
   .dashboard-layout {
-    @apply relative h-screen overflow-hidden bg-gradient-to-br from-white via-slate-50 to-blue-50 dark:bg-[#060b18];
+    @apply relative h-screen overflow-hidden bg-gradient-to-br from-slate-50 via-white to-slate-50 dark:bg-[#0B0F19];
     background-image:
-      radial-gradient(ellipse 70% 50% at 10% -10%, rgba(30, 58, 138, 0.08), transparent),
-      radial-gradient(ellipse 50% 40% at 90% 100%, rgba(14, 165, 233, 0.06), transparent);
+      radial-gradient(ellipse 70% 50% at 10% -10%, rgba(79, 70, 229, 0.12), transparent),
+      radial-gradient(ellipse 50% 40% at 90% 100%, rgba(13, 148, 136, 0.1), transparent);
   }
 
   .dashboard-glow {
-    @apply absolute rounded-full blur-3xl pointer-events-none;
+    @apply absolute rounded-full blur-[100px] pointer-events-none;
   }
 
   .dashboard-glow--left {
-    @apply w-80 h-80 -top-24 -left-24 bg-primary/15;
+    @apply w-80 h-80 -top-24 -left-24 bg-primary/20;
   }
 
   .dashboard-glow--right {
-    @apply w-96 h-96 -bottom-32 -right-32 bg-secondary/10;
+    @apply w-96 h-96 -bottom-32 -right-32 bg-secondary/20;
   }
 
   .dashboard-topbar {

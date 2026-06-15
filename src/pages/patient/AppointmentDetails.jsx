@@ -1,8 +1,8 @@
 import { useState, useEffect, useContext, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Calendar, Clock, MapPin, Stethoscope, UploadCloud, FileText, Trash2, Download, AlertCircle, ArrowLeft } from 'lucide-react'
-import { getAppointmentById } from '../../services/appointmentService'
+import { Calendar, Clock, MapPin, Stethoscope, UploadCloud, FileText, Trash2, Eye, AlertCircle, ArrowLeft } from 'lucide-react'
+import { getAppointmentById, deleteAppointment } from '../../services/appointmentService'
 import { getDocumentsForAppointment, createPatientDocument, deletePatientDocument } from '../../services/documentService'
 import { uploadFileToCloudinary } from '../../services/cloudinaryService'
 import { AuthContext } from '../../context/AuthContext'
@@ -43,6 +43,18 @@ const AppointmentDetails = () => {
     }
     fetchData()
   }, [appointmentId, user.uid, navigate])
+
+  const handleCancelAppointment = async () => {
+    const confirmed = window.confirm('Are you sure you want to cancel this appointment? This action cannot be undone.')
+    if (!confirmed) return
+    try {
+      await deleteAppointment(appointmentId)
+      showSuccess('Appointment cancelled successfully')
+      navigate('/patient/appointments')
+    } catch (err) {
+      showError(err.message || 'Failed to cancel appointment')
+    }
+  }
 
   const handleFileSelected = async (file) => {
     if (!file) return
@@ -149,6 +161,14 @@ const AppointmentDetails = () => {
               </span>
             </p>
           </div>
+          {appointment.status === 'pending' && (
+            <button 
+              onClick={handleCancelAppointment}
+              className="px-4 py-2 text-sm font-semibold text-rose-600 bg-rose-50 hover:bg-rose-100 dark:text-rose-400 dark:bg-rose-900/20 dark:hover:bg-rose-900/40 rounded-lg transition-colors border border-rose-200 dark:border-rose-800"
+            >
+              Cancel Appointment
+            </button>
+          )}
         </div>
 
         <div className="grid sm:grid-cols-2 gap-6 bg-slate-50 dark:bg-slate-800/30 p-6 rounded-2xl border border-slate-100 dark:border-slate-700/50">
@@ -250,8 +270,8 @@ const AppointmentDetails = () => {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <a href={doc.fileUrl} target="_blank" rel="noreferrer" className="p-2 text-slate-400 hover:text-teal-600 bg-white dark:bg-slate-800 hover:bg-teal-50 dark:hover:bg-teal-900/30 rounded-lg border border-slate-200 dark:border-slate-700 transition-colors">
-                    <Download className="w-4 h-4" />
+                  <a href={doc.fileUrl} target="_blank" rel="noreferrer" title="View Document" className="p-2 text-slate-400 hover:text-teal-600 bg-white dark:bg-slate-800 hover:bg-teal-50 dark:hover:bg-teal-900/30 rounded-lg border border-slate-200 dark:border-slate-700 transition-colors">
+                    <Eye className="w-4 h-4" />
                   </a>
                   {canUpload && (
                     <button onClick={() => handleDelete(doc.id)} className="p-2 text-slate-400 hover:text-rose-600 bg-white dark:bg-slate-800 hover:bg-rose-50 dark:hover:bg-rose-900/30 rounded-lg border border-slate-200 dark:border-slate-700 transition-colors">

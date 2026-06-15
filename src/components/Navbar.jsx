@@ -85,18 +85,9 @@ const Navbar = ({ darkMode, toggleDarkMode, user }) => {
       transition={{ duration: 0.5 }}
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         scrolled
-          ? 'glass-effect shadow-lg border-b border-gray-200 dark:border-gray-700'
-          : 'bg-transparent'
+          ? 'bg-white/80 dark:bg-[#0B0F19]/80 backdrop-blur-xl border-b border-slate-200/50 dark:border-indigo-500/20 shadow-lg'
+          : 'bg-transparent border-b border-transparent'
       }`}
-      style={{
-        backdropFilter: scrolled ? 'saturate(180%) blur(16px)' : 'none',
-        WebkitBackdropFilter: scrolled ? 'saturate(180%) blur(16px)' : 'none',
-        background: scrolled
-          ? (darkMode
-              ? 'rgba(15,23,42,0.95)'
-              : 'rgba(255,255,255,0.85)')
-          : 'transparent',
-      }}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 md:h-20">

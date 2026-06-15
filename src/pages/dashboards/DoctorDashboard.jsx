@@ -49,10 +49,9 @@ const DoctorDashboard = () => {
   ]
 
   const sections = [
-    { icon: User, label: 'View Profile', desc: 'Your qualifications & details', to: '/doctor/settings', color: 'hover:border-cyan-500/30' },
+    { icon: Users, label: 'My Patients', desc: 'Patient directory', to: '/doctor/patients', color: 'hover:border-cyan-500/30' },
     { icon: Calendar, label: 'Assigned Appointments', desc: `${appointments.length} total`, to: '/doctor/appointments', color: 'hover:border-blue-500/30' },
-    { icon: FileText, label: 'Patient Documents', desc: 'Medical files & reports', to: '/doctor/records', color: 'hover:border-teal-500/30' },
-    { icon: ClipboardList, label: 'Consultation Records', desc: 'Notes & prescriptions', to: '/doctor/records', color: 'hover:border-purple-500/30' },
+    { icon: ClipboardList, label: 'Schedule & Leaves', desc: 'Manage your time off', to: '/doctor/schedule', color: 'hover:border-purple-500/30' },
   ]
 
   return (

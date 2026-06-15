@@ -1,6 +1,7 @@
 import { auth, secondaryAuth, db } from './firebase'
 import { functions } from './firebase'
-import { httpsCallable } from 'firebase/functions'
+import { getFunctions, httpsCallable } from 'firebase/functions'
+import api from './api'
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
@@ -485,6 +486,12 @@ export const updateUserProfile = async (user, updates = {}) => {
     if (updates.phone !== undefined) {
       payload.phone = updates.phone.trim()
     }
+    if (updates.age !== undefined) {
+      payload.age = updates.age
+    }
+    if (updates.place !== undefined) {
+      payload.place = updates.place.trim()
+    }
 
     await updateDoc(docRef, payload)
 
@@ -586,6 +593,16 @@ export const adminCreateDoctor = async (
           experience,
           hospitalId,
         })
+        
+        try {
+          await api.post('/emails/send', {
+            action: 'sendDoctorCredentials',
+            payload: { email, name, password: tempPassword }
+          })
+        } catch (emailErr) {
+          console.error('Failed to send doctor email via backend:', emailErr)
+        }
+        
         return res.data
       } catch (fnErr) {
         console.warn('createDoctor callable failed, falling back to client-side create:', fnErr)
@@ -623,6 +640,15 @@ export const adminCreateDoctor = async (
     } catch (writeErr) {
       try { await firebaseUser.delete() } catch (e) { console.error('Rollback delete failed', e) }
       throw handleAuthError(writeErr)
+    }
+
+    try {
+      await api.post('/emails/send', {
+        action: 'sendDoctorCredentials',
+        payload: { email: firebaseUser.email, name, password: tempPassword }
+      })
+    } catch (emailErr) {
+      console.error('Failed to send doctor email via backend:', emailErr)
     }
 
     return {

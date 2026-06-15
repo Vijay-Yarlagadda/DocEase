@@ -45,7 +45,7 @@ const Home = () => {
   ]
 
   return (
-    <div className="pt-20">
+    <div className="">
       <HeroSection />
 
       {/* Features Section */}

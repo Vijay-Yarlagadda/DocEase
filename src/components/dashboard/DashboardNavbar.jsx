@@ -46,8 +46,7 @@ const DashboardNavbar = ({ darkMode, toggleDarkMode }) => {
     { icon: LayoutDashboard, label: 'Overview', to: '/doctor/dashboard' },
     { icon: Users, label: 'Patients', to: '/doctor/patients' },
     { icon: Calendar, label: 'Appointments', to: '/doctor/appointments' },
-    { icon: ClipboardList, label: 'Records', to: '/doctor/records' },
-    { icon: Settings, label: 'Settings', to: '/doctor/settings' },
+    { icon: Calendar, label: 'Schedule', to: '/doctor/schedule' },
   ]
 
   const patientMenuItems = [
@@ -55,7 +54,6 @@ const DashboardNavbar = ({ darkMode, toggleDarkMode }) => {
     { icon: Building2, label: 'Hospitals', to: '/patient/hospitals' },
     { icon: Calendar, label: 'Appointments', to: '/patient/appointments' },
     { icon: ClipboardList, label: 'Documents', to: '/patient/documents' },
-    { icon: Settings, label: 'Settings', to: '/patient/settings' },
   ]
 
   const superAdminMenuItems = [

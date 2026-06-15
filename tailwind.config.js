@@ -8,22 +8,22 @@ export default {
   theme: {
     extend: {
       colors: {
-        primary: '#1E3A8A',
-        'primary-dark': '#1e40af',
-        secondary: '#0EA5E9',
-        'secondary-dark': '#0284c7',
-        accent: '#38BDF8',
-        'accent-dark': '#0ea5e9',
+        primary: '#4F46E5', // Indigo-600
+        'primary-dark': '#3730A3', // Indigo-800
+        secondary: '#0D9488', // Teal-600
+        'secondary-dark': '#0F766E', // Teal-700
+        accent: '#8B5CF6', // Violet-500
+        'accent-dark': '#7C3AED', // Violet-600
         'background-light': '#FFFFFF',
-        'background-dark': '#0F172A',
+        'background-dark': '#0B0F19', // Deeper, richer dark background
       },
       backgroundImage: {
-        'gradient-hero': 'linear-gradient(to right, #1e3a8a, #2563eb, #0ea5e9)',
-        'gradient-button': 'linear-gradient(to right, #1e3a8a, #2563eb, #0ea5e9, #38bdf8)',
+        'gradient-hero': 'linear-gradient(to right, #4f46e5, #8b5cf6, #0d9488)',
+        'gradient-button': 'linear-gradient(to right, #4f46e5, #8b5cf6, #0d9488, #06b6d4)',
       },
       boxShadow: {
-        'glass': '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
-        'glass-dark': '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
+        'glass': '0 8px 32px 0 rgba(79, 70, 229, 0.15)',
+        'glass-dark': '0 8px 32px 0 rgba(0, 0, 0, 0.5)',
       },
     },
   },

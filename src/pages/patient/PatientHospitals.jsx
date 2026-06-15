@@ -3,7 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Building2, MapPin, Phone, Mail, ChevronRight, Stethoscope, Calendar, Clock, X, Check } from 'lucide-react'
 import DashboardPageHeader from '../../components/dashboard/DashboardPageHeader'
 import { getVerifiedHospitals, getDoctorsByHospital } from '../../services/patientService'
-import { bookAppointment } from '../../services/appointmentService'
+import { bookAppointment, getDoctorAppointmentsByDate } from '../../services/appointmentService'
+import { checkDoctorLeaveOnDate } from '../../services/leaveService'
 import { AuthContext } from '../../context/AuthContext'
 import { useToast } from '../../components/Toast'
 
@@ -22,6 +23,14 @@ const PatientHospitals = () => {
   const [date, setDate] = useState('')
   const [time, setTime] = useState('')
   const [booking, setBooking] = useState(false)
+  const [bookedSlots, setBookedSlots] = useState([])
+  const [isDoctorOnLeave, setIsDoctorOnLeave] = useState(false)
+  const [checkingSlots, setCheckingSlots] = useState(false)
+
+  // Get tomorrow's date for the min attribute
+  const tomorrow = new Date()
+  tomorrow.setDate(tomorrow.getDate() + 1)
+  const minDateStr = tomorrow.toISOString().split('T')[0]
 
   useEffect(() => {
     const fetchHospitals = async () => {
@@ -36,6 +45,38 @@ const PatientHospitals = () => {
     }
     fetchHospitals()
   }, [])
+
+  useEffect(() => {
+    const fetchAvailability = async () => {
+      if (!date || !bookingDoctor) {
+        setBookedSlots([])
+        setIsDoctorOnLeave(false)
+        return
+      }
+      
+      setCheckingSlots(true)
+      const docId = bookingDoctor.uid || bookingDoctor.id
+      try {
+        const onLeave = await checkDoctorLeaveOnDate(docId, date)
+        setIsDoctorOnLeave(onLeave)
+        
+        if (!onLeave) {
+          const appointments = await getDoctorAppointmentsByDate(docId, date)
+          // Mark 'pending', 'approved', 'completed' as booked. 'rejected' slots are free.
+          const booked = appointments
+            .filter(app => app.status !== 'rejected')
+            .map(app => app.appointmentTime)
+          setBookedSlots(booked)
+        }
+      } catch (err) {
+        console.error("Failed to fetch availability", err)
+      } finally {
+        setCheckingSlots(false)
+      }
+    }
+    
+    fetchAvailability()
+  }, [date, bookingDoctor])
 
   const handleSelectHospital = async (hospital) => {
     setSelectedHospital(hospital)
@@ -244,7 +285,7 @@ const PatientHospitals = () => {
                     <input 
                       type="date" 
                       required
-                      min={new Date().toISOString().split('T')[0]}
+                      min={minDateStr}
                       value={date}
                       onChange={e => setDate(e.target.value)}
                       className="dashboard-input w-full"
@@ -256,55 +297,70 @@ const PatientHospitals = () => {
                       Select Time Slot
                     </label>
                     
-                    <div className="space-y-4 max-h-[200px] overflow-y-auto pr-2 custom-scrollbar">
-                      <div>
-                        <p className="text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wider">Morning</p>
-                        <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-                          {['09:00 AM', '09:30 AM', '10:00 AM', '10:30 AM', '11:00 AM', '11:30 AM'].map(t => (
-                            <button
-                              key={t}
-                              type="button"
-                              onClick={() => setTime(t)}
-                              className={`py-1.5 px-2 text-xs font-medium rounded-lg border transition-all ${time === t ? 'bg-cyan-500 border-cyan-500 text-white shadow-md shadow-cyan-500/30' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-cyan-400 dark:hover:border-cyan-600'}`}
-                            >
-                              {t}
-                            </button>
-                          ))}
+                    {checkingSlots ? (
+                      <div className="text-sm text-slate-500 py-8 text-center flex flex-col items-center gap-2">
+                        <div className="w-5 h-5 border-2 border-slate-300 border-t-cyan-500 rounded-full animate-spin"></div>
+                        Checking availability...
+                      </div>
+                    ) : isDoctorOnLeave ? (
+                      <div className="text-sm text-red-600 dark:text-red-400 py-6 text-center bg-red-50 dark:bg-red-900/20 rounded-xl border border-red-100 dark:border-red-900/50 font-medium flex flex-col items-center gap-2">
+                        <X className="w-6 h-6 text-red-500" />
+                        Doctor is not available on this date.
+                      </div>
+                    ) : (
+                      <div className="space-y-4 max-h-[200px] overflow-y-auto pr-2 custom-scrollbar">
+                        <div>
+                          <p className="text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wider">Morning</p>
+                          <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                            {['09:00 AM', '09:30 AM', '10:00 AM', '10:30 AM', '11:00 AM', '11:30 AM'].map(t => (
+                              <button
+                                key={t}
+                                type="button"
+                                disabled={bookedSlots.includes(t)}
+                                onClick={() => setTime(t)}
+                                className={`py-1.5 px-2 text-xs font-medium rounded-lg border transition-all ${bookedSlots.includes(t) ? 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed dark:bg-slate-800/50 dark:border-slate-800 dark:text-slate-600' : time === t ? 'bg-cyan-500 border-cyan-500 text-white shadow-md shadow-cyan-500/30' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-cyan-400 dark:hover:border-cyan-600'}`}
+                              >
+                                {t}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <p className="text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wider">Afternoon</p>
+                          <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                            {['12:00 PM', '12:30 PM', '01:00 PM', '01:30 PM', '02:00 PM', '02:30 PM', '03:00 PM', '03:30 PM', '04:00 PM', '04:30 PM'].map(t => (
+                              <button
+                                key={t}
+                                type="button"
+                                disabled={bookedSlots.includes(t)}
+                                onClick={() => setTime(t)}
+                                className={`py-1.5 px-2 text-xs font-medium rounded-lg border transition-all ${bookedSlots.includes(t) ? 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed dark:bg-slate-800/50 dark:border-slate-800 dark:text-slate-600' : time === t ? 'bg-cyan-500 border-cyan-500 text-white shadow-md shadow-cyan-500/30' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-cyan-400 dark:hover:border-cyan-600'}`}
+                              >
+                                {t}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <p className="text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wider">Evening</p>
+                          <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                            {['05:00 PM', '05:30 PM', '06:00 PM', '06:30 PM', '07:00 PM', '07:30 PM', '08:00 PM'].map(t => (
+                              <button
+                                key={t}
+                                type="button"
+                                disabled={bookedSlots.includes(t)}
+                                onClick={() => setTime(t)}
+                                className={`py-1.5 px-2 text-xs font-medium rounded-lg border transition-all ${bookedSlots.includes(t) ? 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed dark:bg-slate-800/50 dark:border-slate-800 dark:text-slate-600' : time === t ? 'bg-cyan-500 border-cyan-500 text-white shadow-md shadow-cyan-500/30' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-cyan-400 dark:hover:border-cyan-600'}`}
+                              >
+                                {t}
+                              </button>
+                            ))}
+                          </div>
                         </div>
                       </div>
-                      
-                      <div>
-                        <p className="text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wider">Afternoon</p>
-                        <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-                          {['12:00 PM', '12:30 PM', '01:00 PM', '01:30 PM', '02:00 PM', '02:30 PM', '03:00 PM', '03:30 PM', '04:00 PM', '04:30 PM'].map(t => (
-                            <button
-                              key={t}
-                              type="button"
-                              onClick={() => setTime(t)}
-                              className={`py-1.5 px-2 text-xs font-medium rounded-lg border transition-all ${time === t ? 'bg-cyan-500 border-cyan-500 text-white shadow-md shadow-cyan-500/30' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-cyan-400 dark:hover:border-cyan-600'}`}
-                            >
-                              {t}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                      
-                      <div>
-                        <p className="text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wider">Evening</p>
-                        <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-                          {['05:00 PM', '05:30 PM', '06:00 PM', '06:30 PM', '07:00 PM', '07:30 PM', '08:00 PM'].map(t => (
-                            <button
-                              key={t}
-                              type="button"
-                              onClick={() => setTime(t)}
-                              className={`py-1.5 px-2 text-xs font-medium rounded-lg border transition-all ${time === t ? 'bg-cyan-500 border-cyan-500 text-white shadow-md shadow-cyan-500/30' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-cyan-400 dark:hover:border-cyan-600'}`}
-                            >
-                              {t}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
+                    )}
                   </div>
                   
                   <div className="pt-4">
