@@ -1,7 +1,7 @@
 import { useState, useEffect, useContext } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Calendar, Clock, MapPin, User, FileText, Download, Eye, ArrowLeft, CheckCircle, XCircle } from 'lucide-react'
+import { Calendar, Clock, MapPin, User, FileText, Download, Eye, ArrowLeft, CheckCircle, XCircle, Stethoscope } from 'lucide-react'
 import { getAppointmentById, updateAppointmentStatus } from '../../services/appointmentService'
 import { getDocumentsForAppointment, createPatientDocument } from '../../services/documentService'
 import { uploadFileToCloudinary } from '../../services/cloudinaryService'
