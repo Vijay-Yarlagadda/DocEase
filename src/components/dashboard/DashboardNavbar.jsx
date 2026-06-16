@@ -20,6 +20,7 @@ import {
 import { AuthContext } from '../../context/AuthContext'
 import DocEaseLogo from '../DocEaseLogo'
 import ProfileDropdown from '../ProfileDropdown'
+import NotificationDropdown from './NotificationDropdown'
 
 const rolePortal = {
   admin: { label: 'Admin', gradient: 'from-blue-900 to-blue-600' },
@@ -131,13 +132,9 @@ const DashboardNavbar = ({ darkMode, toggleDarkMode }) => {
           {darkMode ? <Sun className="w-4 h-4 text-yellow-400" /> : <Moon className="w-4 h-4" />}
         </button>
 
-        <button
-          className="hidden sm:flex p-2 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 transition-colors relative"
-          aria-label="Notifications"
-        >
-          <Bell className="w-4 h-4" />
-          <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-cyan-400" />
-        </button>
+        <div className="hidden sm:block">
+          <NotificationDropdown />
+        </div>
 
         <div className="hidden lg:block w-px h-6 bg-slate-700/60" />
 

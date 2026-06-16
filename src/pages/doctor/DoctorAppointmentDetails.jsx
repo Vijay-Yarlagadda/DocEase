@@ -7,6 +7,8 @@ import { getDocumentsForAppointment } from '../../services/documentService'
 import { AuthContext } from '../../context/AuthContext'
 import FilePreviewModal from '../../components/FilePreviewModal'
 import { useToast } from '../../components/Toast'
+import { generateReport, getReportForAppointment } from '../../services/reportService'
+import { sendNotification } from '../../services/notificationService'
 
 const DoctorAppointmentDetails = () => {
   const { appointmentId } = useParams()
@@ -18,6 +20,14 @@ const DoctorAppointmentDetails = () => {
   const [documents, setDocuments] = useState([])
   const [loading, setLoading] = useState(true)
   const [previewDocument, setPreviewDocument] = useState(null)
+  
+  const [report, setReport] = useState(null)
+  const [generatingReport, setGeneratingReport] = useState(false)
+  const [reportForm, setReportForm] = useState({
+    diagnosis: '',
+    prescription: '',
+    recommendations: ''
+  })
 
   useEffect(() => {
     const fetchData = async () => {
@@ -33,6 +43,9 @@ const DoctorAppointmentDetails = () => {
 
         const docs = await getDocumentsForAppointment(appointmentId)
         setDocuments(docs)
+
+        const existingReport = await getReportForAppointment(appointmentId)
+        setReport(existingReport)
       } catch (err) {
         showError('Failed to load appointment details')
       } finally {
@@ -47,8 +60,54 @@ const DoctorAppointmentDetails = () => {
       await updateAppointmentStatus(appointmentId, newStatus)
       setAppointment(prev => ({ ...prev, status: newStatus }))
       showSuccess(`Appointment marked as ${newStatus}`)
+
+      // Send notification to patient
+      await sendNotification({
+        recipientId: appointment.patientId,
+        title: `Appointment ${newStatus}`,
+        message: `Your appointment with Dr. ${user.name || user.firstName} has been marked as ${newStatus}.`,
+        type: 'appointment',
+        link: `/patient/appointments/${appointmentId}`
+      })
     } catch (err) {
       showError(`Failed to mark appointment as ${newStatus}`)
+    }
+  }
+
+  const handleGenerateReport = async (e) => {
+    e.preventDefault()
+    if (!reportForm.diagnosis || !reportForm.prescription) {
+      showError('Diagnosis and Prescription are required')
+      return
+    }
+
+    setGeneratingReport(true)
+    try {
+      const reportData = {
+        appointmentId,
+        doctorId: user.uid || user.id,
+        patientId: appointment.patientId,
+        diagnosis: reportForm.diagnosis,
+        prescription: reportForm.prescription,
+        recommendations: reportForm.recommendations,
+      }
+      
+      const newReportId = await generateReport(reportData)
+      setReport({ id: newReportId, ...reportData })
+      showSuccess('Medical report generated successfully')
+
+      // Notify patient
+      await sendNotification({
+        recipientId: appointment.patientId,
+        title: 'New Medical Report',
+        message: `Dr. ${user.name || user.firstName} has generated a medical report for your recent appointment.`,
+        type: 'report',
+        link: `/patient/appointments/${appointmentId}`
+      })
+    } catch (err) {
+      showError('Failed to generate report')
+    } finally {
+      setGeneratingReport(false)
     }
   }
 
@@ -154,6 +213,94 @@ const DoctorAppointmentDetails = () => {
           )}
         </div>
       </div>
+
+      {appointment.status === 'completed' && (
+        <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 md:p-8 shadow-sm border border-slate-200 dark:border-slate-800">
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6">Medical Report</h2>
+          
+          {report ? (
+            <div className="space-y-6">
+              <div className="bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 p-4 rounded-xl text-sm mb-6 border border-emerald-100 dark:border-emerald-800/50 flex items-center gap-2">
+                <CheckCircle className="w-5 h-5" />
+                Medical report generated successfully.
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-300 mb-2">Diagnosis</h3>
+                <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl text-slate-700 dark:text-slate-300 text-sm border border-slate-200 dark:border-slate-700">
+                  {report.diagnosis}
+                </div>
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-300 mb-2">Prescription</h3>
+                <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl text-slate-700 dark:text-slate-300 text-sm border border-slate-200 dark:border-slate-700 whitespace-pre-line">
+                  {report.prescription}
+                </div>
+              </div>
+              {report.recommendations && (
+                <div>
+                  <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-300 mb-2">Recommendations</h3>
+                  <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl text-slate-700 dark:text-slate-300 text-sm border border-slate-200 dark:border-slate-700">
+                    {report.recommendations}
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <form onSubmit={handleGenerateReport} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Diagnosis <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={reportForm.diagnosis}
+                  onChange={(e) => setReportForm({ ...reportForm, diagnosis: e.target.value })}
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+                  placeholder="E.g., Viral Pharyngitis"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Prescription Notes <span className="text-rose-500">*</span>
+                </label>
+                <textarea
+                  required
+                  rows="4"
+                  value={reportForm.prescription}
+                  onChange={(e) => setReportForm({ ...reportForm, prescription: e.target.value })}
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all resize-none"
+                  placeholder="List medications, dosage, and duration..."
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Follow-up Recommendations
+                </label>
+                <textarea
+                  rows="2"
+                  value={reportForm.recommendations}
+                  onChange={(e) => setReportForm({ ...reportForm, recommendations: e.target.value })}
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all resize-none"
+                  placeholder="E.g., Return in 7 days if symptoms persist."
+                />
+              </div>
+
+              <div className="pt-4 flex justify-end">
+                <button
+                  type="submit"
+                  disabled={generatingReport}
+                  className="btn-primary"
+                >
+                  {generatingReport ? 'Generating...' : 'Generate Medical Report'}
+                </button>
+              </div>
+            </form>
+          )}
+        </div>
+      )}
 
       <FilePreviewModal document={previewDocument} onClose={() => setPreviewDocument(null)} />
     </div>

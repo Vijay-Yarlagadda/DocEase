@@ -19,6 +19,19 @@ export const bookAppointment = async ({ patientId, patientName, doctorId, doctor
   })
 
   try {
+    const { sendNotification } = await import('./notificationService')
+    await sendNotification({
+      recipientId: doctorId,
+      title: 'New Appointment Request',
+      message: `${patientName} has requested an appointment on ${appointmentDate} at ${appointmentTime}.`,
+      type: 'appointment',
+      link: `/doctor/appointments/${appointmentRef.id}`
+    })
+  } catch (err) {
+    console.error('Failed to send notification:', err)
+  }
+
+  try {
     const doctorDoc = await getDoc(doc(db, 'doctors', doctorId))
     if (doctorDoc.exists()) {
       const doctorData = doctorDoc.data()

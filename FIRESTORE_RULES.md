@@ -1,57 +1,105 @@
 Paste these rules into Firebase Console → Firestore → Rules and Publish:
 
+rules_version = '2';
 service cloud.firestore {
-match /databases/{database}/documents {
-// Users: each user may manage their own profile document
-match /users/{userId} {
-allow create: if request.auth != null && request.auth.uid == userId;
-allow read, update, delete: if request.auth != null && request.auth.uid == userId;
-}
-
-    // Doctors: admin-only write, authenticated read
-    match /doctors/{docId} {
-      allow create, update, delete: if request.auth != null && request.auth.token.admin == true;
-      allow read: if request.auth != null;
+  match /databases/{database}/documents {
+    
+    // Helper Functions for Role-Based Auth
+    function getUserRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+    
+    function isAdmin() {
+      return request.auth != null && getUserRole() == 'admin';
+    }
+    
+    function isSuperAdmin() {
+      return request.auth != null && getUserRole() == 'superadmin';
     }
 
-    // Hospitals: only admins can write; only admins or superadmins can read documents
-    match /hospitals/{hId} {
-      allow create, update, delete: if request.auth != null && request.auth.token.admin == true;
-      allow read: if request.auth != null && (
-        request.auth.token.admin == true ||
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'superadmin'
+    // Users Collection
+    // - Users manage their own profile.
+    // - Admins/Superadmins can read and update all profiles.
+    match /users/{userId} {
+      allow create: if request.auth != null && request.auth.uid == userId;
+      allow read, update, delete: if request.auth != null && (
+        request.auth.uid == userId || isAdmin() || isSuperAdmin()
       );
     }
 
-    // Documents uploaded by patients. Each document must include `patientUid` and may include `sharedWith` (array of doctor UIDs).
-    match /documents/{docId} {
-      // Patients can create documents for themselves
-      allow create: if request.auth != null && request.auth.uid == request.resource.data.patientUid;
+    // Doctors Collection
+    // - Requirement 1: Patients (and anyone authenticated) must be able to read doctors.
+    // - Write restricted to Admins.
+    match /doctors/{docId} {
+      allow read: if request.auth != null;
+      allow create, update, delete: if isAdmin() || isSuperAdmin();
+    }
 
-      // Reading allowed for the owning patient, any doctor explicitly shared with, admins, or superadmins
-      allow get, list: if request.auth != null && (
+    // Hospitals Collection
+    // - Requirement 1: Patients must be able to read hospitals.
+    // - Requirement 4: Super Admin can review hospitals.
+    match /hospitals/{hId} {
+      allow read: if request.auth != null;
+      allow create, update, delete: if isAdmin() || isSuperAdmin();
+    }
+
+    // Appointments Collection
+    // - Requirement: Only the patient associated with the appointment can create it.
+    // - Admins need to see all appointments.
+    // - Doctors/Patients see their own.
+    match /appointments/{appId} {
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.patientId;
+      allow read, update, delete: if request.auth != null && (
+        request.auth.uid == resource.data.patientId ||
+        request.auth.uid == resource.data.doctorId ||
+        isAdmin() || isSuperAdmin()
+      );
+    }
+
+    // Documents (Patient Medical Records)
+    // - Requirement 2: Admins must NOT be able to read.
+    // - Requirement 3: Doctors only access documents linked to them.
+    // - Requirement 4: Super Admin cannot access records.
+    match /documents/{docId} {
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.patientUid;
+      allow read: if request.auth != null && (
         request.auth.uid == resource.data.patientUid ||
-        request.auth.token.admin == true ||
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'superadmin' ||
+        request.auth.uid == resource.data.doctorId ||
         (resource.data.sharedWith != null && request.auth.uid in resource.data.sharedWith)
       );
-
-      // Only the patient who uploaded may update or delete
-      allow update, delete: if request.auth != null && request.auth.uid == resource.data.patientUid;
+      allow update, delete: if request.auth != null && request.auth.uid == request.resource.data.patientUid;
     }
 
-    // Deny everything else by default
+    // Reports (Doctor generated medical reports)
+    // - Same privacy as documents: only Patient and assigned Doctor. No Admins/Superadmins.
+    match /reports/{reportId} {
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.doctorId;
+      allow read: if request.auth != null && (
+        request.auth.uid == resource.data.patientId ||
+        request.auth.uid == resource.data.doctorId
+      );
+      allow update, delete: if request.auth != null && request.auth.uid == resource.data.doctorId;
+    }
+
+    // Notifications
+    match /notifications/{notifId} {
+      allow create: if request.auth != null;
+      allow read, update, delete: if request.auth != null && request.auth.uid == resource.data.recipientId;
+    }
+    
+    // Leaves (Doctor leave requests)
+    match /leaves/{leaveId} {
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.doctorId;
+      allow read: if request.auth != null && (
+        request.auth.uid == resource.data.doctorId || isAdmin() || isSuperAdmin()
+      );
+      allow update, delete: if request.auth != null && (
+        request.auth.uid == resource.data.doctorId || isAdmin()
+      );
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }
-
+  }
 }
-}
-
-Notes:
-
-- These rules allow normal signups to write their own `/users/{uid}` document.
-- Only users with the `admin` custom claim can create or modify `/doctors` and `/hospitals` documents.
-- Hospital verification documents are readable by admins and users whose Firestore `users/{uid}` document has `role: "superadmin"`.
-- Patient-uploaded documents must include `patientUid` and may include `sharedWith` (array of doctor UIDs). Only the patient, explicitly shared doctors, admins, and superadmins can read them.
-- To set the `admin` custom claim, use the Admin SDK from a trusted environment (see README in `functions/`).

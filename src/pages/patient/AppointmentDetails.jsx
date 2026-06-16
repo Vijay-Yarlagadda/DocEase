@@ -5,6 +5,7 @@ import { Calendar, Clock, MapPin, Stethoscope, UploadCloud, FileText, Trash2, Ey
 import { getAppointmentById, deleteAppointment } from '../../services/appointmentService'
 import { getDocumentsForAppointment, createPatientDocument, deletePatientDocument } from '../../services/documentService'
 import { uploadFileToCloudinary } from '../../services/cloudinaryService'
+import { getReportForAppointment } from '../../services/reportService'
 import { AuthContext } from '../../context/AuthContext'
 import { useToast } from '../../components/Toast'
 
@@ -16,6 +17,7 @@ const AppointmentDetails = () => {
 
   const [appointment, setAppointment] = useState(null)
   const [documents, setDocuments] = useState([])
+  const [report, setReport] = useState(null)
   const [loading, setLoading] = useState(true)
   
   const [dragActive, setDragActive] = useState(false)
@@ -35,6 +37,9 @@ const AppointmentDetails = () => {
 
         const docs = await getDocumentsForAppointment(appointmentId)
         setDocuments(docs)
+
+        const existingReport = await getReportForAppointment(appointmentId)
+        setReport(existingReport)
       } catch (err) {
         showError('Failed to load appointment details')
       } finally {
@@ -303,6 +308,34 @@ const AppointmentDetails = () => {
           )}
         </div>
       </div>
+
+      {report && (
+        <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 md:p-8 shadow-sm border border-slate-200 dark:border-slate-800">
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6">Medical Report</h2>
+          <div className="space-y-6">
+            <div>
+              <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-300 mb-2">Diagnosis</h3>
+              <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl text-slate-700 dark:text-slate-300 text-sm border border-slate-200 dark:border-slate-700">
+                {report.diagnosis}
+              </div>
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-300 mb-2">Prescription</h3>
+              <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl text-slate-700 dark:text-slate-300 text-sm border border-slate-200 dark:border-slate-700 whitespace-pre-line">
+                {report.prescription}
+              </div>
+            </div>
+            {report.recommendations && (
+              <div>
+                <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-300 mb-2">Recommendations</h3>
+                <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl text-slate-700 dark:text-slate-300 text-sm border border-slate-200 dark:border-slate-700">
+                  {report.recommendations}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
