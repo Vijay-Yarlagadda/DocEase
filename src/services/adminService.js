@@ -157,6 +157,12 @@ export const getHospitalVerificationCounts = async () => {
 }
 
 export const deleteHospital = async (hospitalId) => {
+  const docsQ = query(collection(db, DOCTORS_COLLECTION), where('hospitalId', '==', hospitalId))
+  const docsSnap = await getDocs(docsQ)
+  for (const docSnap of docsSnap.docs) {
+    await deleteDoctor(docSnap.id)
+  }
+
   await deleteDoc(doc(db, HOSPITALS_COLLECTION, hospitalId))
 }
 
@@ -167,6 +173,21 @@ export const updateDoctor = async (doctorId, updates) => {
 }
 
 export const deleteDoctor = async (doctorId) => {
+  const apptsQ = query(collection(db, APPOINTMENTS_COLLECTION), where('doctorId', '==', doctorId))
+  const apptsSnap = await getDocs(apptsQ)
+  for (const docSnap of apptsSnap.docs) {
+    const data = docSnap.data()
+    if (data.status === 'pending' || data.status === 'approved') {
+      await deleteDoc(docSnap.ref)
+    }
+  }
+
+  const leavesQ = query(collection(db, 'leaves'), where('doctorId', '==', doctorId))
+  const leavesSnap = await getDocs(leavesQ)
+  for (const docSnap of leavesSnap.docs) {
+    await deleteDoc(docSnap.ref)
+  }
+
   await deleteDoc(doc(db, DOCTORS_COLLECTION, doctorId))
 }
 
