@@ -7,6 +7,9 @@ export default {
   darkMode: 'class',
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['Inter', 'sans-serif'],
+      },
       colors: {
         primary: '#4F46E5', // Indigo-600
         'primary-dark': '#3730A3', // Indigo-800
