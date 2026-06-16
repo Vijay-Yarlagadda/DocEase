@@ -97,11 +97,17 @@ const PatientAppointments = () => {
         ) : filteredAppointments.length === 0 ? (
           <div className="text-center p-12 bg-slate-50 dark:bg-slate-900/20 rounded-3xl border border-dashed border-slate-200 dark:border-slate-800">
             <CalendarIcon className="w-12 h-12 mx-auto text-slate-300 dark:text-slate-600 mb-4" />
-            <h3 className="text-lg font-medium text-slate-900 dark:text-white mb-2">No Appointments Yet</h3>
-            <p className="text-slate-500 mb-6">You haven't booked any appointments yet.</p>
-            <Link to="/patient/hospitals" className="btn-primary inline-flex items-center">
-              Book Your First Appointment
-            </Link>
+            <h3 className="text-lg font-medium text-slate-900 dark:text-white mb-2">
+              {activeTab === 'upcoming' ? 'No Upcoming Appointments' : `No ${activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Appointments`}
+            </h3>
+            <p className="text-slate-500 mb-6">
+              {activeTab === 'upcoming' ? "You don't have any pending or approved appointments right now." : `You don't have any ${activeTab} appointments.`}
+            </p>
+            {activeTab === 'upcoming' && (
+              <Link to="/patient/hospitals" className="btn-primary inline-flex items-center">
+                Book New Appointment
+              </Link>
+            )}
           </div>
         ) : (
           <div className="grid gap-4">
