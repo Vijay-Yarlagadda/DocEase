@@ -4,7 +4,7 @@ import api from './api'
 
 const DOCUMENTS_COLLECTION = 'documents'
 
-export const createPatientDocument = async ({ appointmentId, patientUid, patientName, patientEmail, doctorId, hospitalId, fileName, fileUrl, mimeType }) => {
+export const createPatientDocument = async ({ appointmentId, patientUid, patientName, patientEmail, doctorId, hospitalId, fileName, fileUrl, mimeType, uploadedByRole = 'patient' }) => {
   const documentRef = await addDoc(collection(db, DOCUMENTS_COLLECTION), {
     appointmentId,
     patientUid,
@@ -15,6 +15,7 @@ export const createPatientDocument = async ({ appointmentId, patientUid, patient
     fileName,
     fileUrl,
     mimeType,
+    uploadedByRole,
     uploadedAt: serverTimestamp(),
   })
 

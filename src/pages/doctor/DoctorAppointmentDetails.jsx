@@ -108,6 +108,7 @@ const DoctorAppointmentDetails = () => {
         fileName: file.name,
         fileUrl: uploadResult.secure_url,
         mimeType: file.type,
+        uploadedByRole: 'doctor'
       })
       
       showSuccess('Prescription document uploaded successfully')
@@ -242,7 +243,7 @@ const DoctorAppointmentDetails = () => {
 
       <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl shadow-xl shadow-slate-200/50 dark:shadow-black/20 rounded-3xl p-6 md:p-8 shadow-sm border border-slate-200 dark:border-slate-800">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold text-slate-900 dark:text-white">Patient Medical Records</h2>
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white">Documents & Prescriptions</h2>
           {(appointment.status === 'approved' || appointment.status === 'completed') && (
             <div>
               <input
@@ -257,41 +258,84 @@ const DoctorAppointmentDetails = () => {
                 htmlFor="doc-upload"
                 className={`btn-primary px-4 py-2 text-sm cursor-pointer inline-flex items-center gap-2 ${uploading ? 'opacity-50 pointer-events-none' : ''}`}
               >
-                {uploading ? 'Uploading...' : 'Upload Prescription / Document'}
+                {uploading ? 'Uploading...' : 'Upload Prescription'}
               </label>
             </div>
           )}
         </div>
 
-        <div className="space-y-3">
-          {documents.length === 0 ? (
-            <div className="text-center p-8 bg-slate-50 dark:bg-slate-800/30 rounded-2xl border border-slate-100 dark:border-slate-700/50">
-              <p className="text-slate-500 text-sm">The patient hasn't uploaded any documents for this appointment yet.</p>
-              {appointment.status === 'pending' && <p className="text-slate-400 text-xs mt-2">Patients can only upload documents after you approve the appointment.</p>}
+        <div className="space-y-8">
+          {/* Doctor Prescriptions */}
+          <div>
+            <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-300 mb-3 flex items-center gap-2">
+              <Stethoscope className="w-4 h-4 text-cyan-600" /> Uploaded Prescriptions
+            </h3>
+            <div className="space-y-3">
+              {documents.filter(doc => doc.uploadedByRole === 'doctor').length === 0 ? (
+                <div className="text-center p-6 bg-slate-50 dark:bg-slate-800/30 rounded-2xl border border-slate-100 dark:border-slate-700/50">
+                  <p className="text-slate-500 text-sm">You haven't uploaded any prescriptions for this appointment.</p>
+                </div>
+              ) : (
+                documents.filter(doc => doc.uploadedByRole === 'doctor').map((doc) => (
+                  <div key={doc.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-cyan-50/50 dark:bg-cyan-900/10 border border-cyan-100 dark:border-cyan-800/50 rounded-xl hover:border-cyan-300 dark:hover:border-cyan-700 transition-colors gap-4">
+                    <div className="flex items-center gap-4">
+                      <div className="p-2 rounded-lg bg-white dark:bg-slate-800 text-cyan-600 dark:text-cyan-400 shadow-sm border border-cyan-200 dark:border-cyan-700">
+                        <FileText className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-slate-900 dark:text-white">{doc.fileName}</p>
+                        <p className="text-xs text-slate-500 mt-0.5">Uploaded {new Date(doc.uploadedAt?.toDate()).toLocaleDateString()}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button onClick={() => setPreviewDocument(doc)} className="btn-secondary px-3 py-1.5 text-xs inline-flex items-center gap-1.5">
+                        <Eye className="w-3.5 h-3.5" /> Preview
+                      </button>
+                      <a href={doc.fileUrl} target="_blank" rel="noreferrer" className="btn-primary px-3 py-1.5 text-xs inline-flex items-center gap-1.5">
+                        <Download className="w-3.5 h-3.5" /> Download
+                      </a>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
-          ) : (
-            documents.map((doc) => (
-              <div key={doc.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl hover:border-cyan-300 dark:hover:border-cyan-700 transition-colors gap-4">
-                <div className="flex items-center gap-4">
-                  <div className="p-2 rounded-lg bg-white dark:bg-slate-700 text-cyan-600 dark:text-cyan-400 shadow-sm border border-slate-200 dark:border-slate-600">
-                    <FileText className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <p className="font-medium text-slate-900 dark:text-white">{doc.fileName}</p>
-                    <p className="text-xs text-slate-500 mt-0.5">Uploaded {new Date(doc.uploadedAt?.toDate()).toLocaleDateString()}</p>
-                  </div>
+          </div>
+
+          {/* Patient Documents */}
+          <div>
+            <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-300 mb-3 flex items-center gap-2">
+              <User className="w-4 h-4 text-teal-600" /> Patient Medical Records
+            </h3>
+            <div className="space-y-3">
+              {documents.filter(doc => doc.uploadedByRole !== 'doctor').length === 0 ? (
+                <div className="text-center p-6 bg-slate-50 dark:bg-slate-800/30 rounded-2xl border border-slate-100 dark:border-slate-700/50">
+                  <p className="text-slate-500 text-sm">The patient hasn't uploaded any documents yet.</p>
                 </div>
-                <div className="flex items-center gap-2">
-                  <button onClick={() => setPreviewDocument(doc)} className="btn-secondary px-3 py-1.5 text-xs inline-flex items-center gap-1.5">
-                    <Eye className="w-3.5 h-3.5" /> Preview
-                  </button>
-                  <a href={doc.fileUrl} target="_blank" rel="noreferrer" className="btn-primary px-3 py-1.5 text-xs inline-flex items-center gap-1.5">
-                    <Download className="w-3.5 h-3.5" /> Download
-                  </a>
-                </div>
-              </div>
-            ))
-          )}
+              ) : (
+                documents.filter(doc => doc.uploadedByRole !== 'doctor').map((doc) => (
+                  <div key={doc.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl hover:border-teal-300 dark:hover:border-teal-700 transition-colors gap-4">
+                    <div className="flex items-center gap-4">
+                      <div className="p-2 rounded-lg bg-white dark:bg-slate-700 text-teal-600 dark:text-teal-400 shadow-sm border border-slate-200 dark:border-slate-600">
+                        <FileText className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-slate-900 dark:text-white">{doc.fileName}</p>
+                        <p className="text-xs text-slate-500 mt-0.5">Uploaded {new Date(doc.uploadedAt?.toDate()).toLocaleDateString()}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button onClick={() => setPreviewDocument(doc)} className="btn-secondary px-3 py-1.5 text-xs inline-flex items-center gap-1.5">
+                        <Eye className="w-3.5 h-3.5" /> Preview
+                      </button>
+                      <a href={doc.fileUrl} target="_blank" rel="noreferrer" className="btn-primary px-3 py-1.5 text-xs inline-flex items-center gap-1.5">
+                        <Download className="w-3.5 h-3.5" /> Download
+                      </a>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
         </div>
       </div>
 

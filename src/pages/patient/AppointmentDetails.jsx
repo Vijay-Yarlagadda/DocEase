@@ -82,14 +82,15 @@ const AppointmentDetails = () => {
 
       const newDocId = await createPatientDocument({
         appointmentId,
-        patientUid: user.uid,
-        patientName: user.name || '',
-        patientEmail: user.email || '',
+        patientUid: user.uid || user.id,
+        patientName: user.name || user.firstName,
+        patientEmail: user.email,
         doctorId: appointment.doctorId,
         hospitalId: appointment.hospitalId,
         fileName: file.name,
         fileUrl: uploadResult.secure_url,
         mimeType: file.type,
+        uploadedByRole: 'patient'
       })
       
       showSuccess('Document uploaded successfully')
@@ -141,8 +142,6 @@ const AppointmentDetails = () => {
   }
 
   if (!appointment) return null
-
-  const canUpload = appointment.status === 'approved' || appointment.status === 'completed'
 
   return (
     <div className="max-w-4xl mx-auto py-8 space-y-6">
@@ -197,115 +196,101 @@ const AppointmentDetails = () => {
       </div>
 
       <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl shadow-xl shadow-slate-200/50 dark:shadow-black/20 rounded-3xl p-6 md:p-8 shadow-sm border border-slate-200 dark:border-slate-800">
-        <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6">Medical Records</h2>
-
-        {/* Upload Area */}
-        {canUpload ? (
-          <div
-            onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); setDragActive(true); }}
-            onDragLeave={(e) => { e.preventDefault(); e.stopPropagation(); setDragActive(false); }}
-            onDrop={handleDrop}
-            className={`mb-8 border-2 border-dashed rounded-2xl p-8 text-center transition-all ${
-              dragActive 
-                ? 'border-teal-500 bg-teal-50 dark:bg-teal-900/20' 
-                : 'border-slate-300 dark:border-slate-700 hover:border-teal-400 dark:hover:border-teal-600 hover:bg-slate-50 dark:hover:bg-slate-800/50'
-            }`}
-          >
-            {uploading ? (
-              <div className="max-w-xs mx-auto">
-                <div className="flex justify-between text-sm mb-2 text-slate-600 dark:text-slate-300">
-                  <span>Uploading...</span>
-                  <span>{progress}%</span>
-                </div>
-                <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2">
-                  <div className="bg-teal-500 h-2 rounded-full transition-all duration-300" style={{ width: `${progress}%` }} />
-                </div>
-              </div>
-            ) : (
-              <>
-                <UploadCloud className="w-12 h-12 mx-auto text-teal-500 mb-4" />
-                <h3 className="text-lg font-medium text-slate-900 dark:text-white mb-2">Upload Documents for Doctor</h3>
-                <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
-                  Drag and drop files here, or click to browse. Max 10MB per file.
-                </p>
-                <div className="flex items-center justify-center gap-4">
-                  <input
-                    type="file"
-                    id="camera-upload"
-                    className="hidden"
-                    accept="image/*"
-                    capture="environment"
-                    onChange={handleFileChange}
-                  />
-                  <label
-                    htmlFor="camera-upload"
-                    className="btn-primary inline-flex items-center gap-2 cursor-pointer shadow-lg shadow-teal-500/25"
-                  >
-                    <Camera className="w-5 h-5" />
-                    Take Photo
-                  </label>
-
-                  <input
-                    type="file"
-                    id="file-upload"
-                    className="hidden"
-                    accept="image/*,application/pdf"
-                    onChange={handleFileChange}
-                  />
-                  <label
-                    htmlFor="file-upload"
-                    className="px-4 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors inline-block cursor-pointer"
-                  >
-                    Browse Files
-                  </label>
-                </div>
-              </>
-            )}
-          </div>
-        ) : (
-          <div className="mb-8 p-6 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-2xl flex items-start gap-4">
-            <AlertCircle className="w-6 h-6 text-amber-500 shrink-0" />
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white">Documents & Prescriptions</h2>
+          {(appointment.status === 'approved' || appointment.status === 'completed') && (
             <div>
-              <h3 className="font-semibold text-amber-900 dark:text-amber-400">Waiting for Doctor Approval</h3>
-              <p className="text-sm text-amber-700 dark:text-amber-500 mt-1">
-                You cannot upload medical documents until the doctor confirms and approves this appointment. Please check back later.
-              </p>
+              <input
+                type="file"
+                id="doc-upload"
+                className="hidden"
+                accept=".pdf,image/*"
+                onChange={handleFileChange}
+                disabled={uploading}
+              />
+              <label 
+                htmlFor="doc-upload"
+                className={`btn-primary px-4 py-2 text-sm cursor-pointer inline-flex items-center gap-2 ${uploading ? 'opacity-50 pointer-events-none' : ''}`}
+              >
+                {uploading ? 'Uploading...' : 'Upload Document'}
+              </label>
+            </div>
+          )}
+        </div>
+
+        <div className="space-y-8">
+          {/* Doctor Prescriptions */}
+          <div>
+            <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-300 mb-3 flex items-center gap-2">
+              <Stethoscope className="w-4 h-4 text-cyan-600" /> Doctor's Prescriptions
+            </h3>
+            <div className="space-y-3">
+              {documents.filter(doc => doc.uploadedByRole === 'doctor').length === 0 ? (
+                <div className="text-center p-6 bg-slate-50 dark:bg-slate-800/30 rounded-2xl border border-slate-100 dark:border-slate-700/50">
+                  <p className="text-slate-500 text-sm">Your doctor hasn't uploaded any prescriptions yet.</p>
+                </div>
+              ) : (
+                documents.filter(doc => doc.uploadedByRole === 'doctor').map((doc) => (
+                  <div key={doc.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-cyan-50/50 dark:bg-cyan-900/10 border border-cyan-100 dark:border-cyan-800/50 rounded-xl hover:border-cyan-300 dark:hover:border-cyan-700 transition-colors gap-4">
+                    <div className="flex items-center gap-4">
+                      <div className="p-2 rounded-lg bg-white dark:bg-slate-800 text-cyan-600 dark:text-cyan-400 shadow-sm border border-cyan-200 dark:border-cyan-700">
+                        <FileText className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-slate-900 dark:text-white">{doc.fileName}</p>
+                        <p className="text-xs text-slate-500 mt-0.5">Uploaded {new Date(doc.uploadedAt?.toDate()).toLocaleDateString()}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <a href={doc.fileUrl} target="_blank" rel="noreferrer" className="btn-primary px-3 py-1.5 text-xs inline-flex items-center gap-1.5">
+                        <Eye className="w-3.5 h-3.5" /> View
+                      </a>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
-        )}
 
-        {/* Document List */}
-        <div className="space-y-3">
-          <h3 className="font-semibold text-slate-900 dark:text-white mb-4">Uploaded Files ({documents.length})</h3>
-          {documents.length === 0 ? (
-            <div className="text-center p-8 bg-slate-50 dark:bg-slate-800/30 rounded-2xl border border-slate-100 dark:border-slate-700/50">
-              <p className="text-slate-500 text-sm">No documents uploaded for this appointment yet.</p>
+          {/* Patient Documents */}
+          <div>
+            <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-300 mb-3 flex items-center gap-2">
+              <User className="w-4 h-4 text-teal-600" /> My Uploaded Documents
+            </h3>
+            <div className="space-y-3">
+              {documents.filter(doc => doc.uploadedByRole !== 'doctor').length === 0 ? (
+                <div className="text-center p-6 bg-slate-50 dark:bg-slate-800/30 rounded-2xl border border-slate-100 dark:border-slate-700/50">
+                  <p className="text-slate-500 text-sm">You haven't uploaded any medical records yet.</p>
+                </div>
+              ) : (
+                documents.filter(doc => doc.uploadedByRole !== 'doctor').map((doc) => (
+                  <div key={doc.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl hover:border-teal-300 dark:hover:border-teal-700 transition-colors gap-4">
+                    <div className="flex items-center gap-4">
+                      <div className="p-2 rounded-lg bg-white dark:bg-slate-700 text-teal-600 dark:text-teal-400 shadow-sm border border-slate-200 dark:border-slate-600">
+                        <FileText className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-slate-900 dark:text-white">{doc.fileName}</p>
+                        <p className="text-xs text-slate-500 mt-0.5">Uploaded {new Date(doc.uploadedAt?.toDate()).toLocaleDateString()}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <a href={doc.fileUrl} target="_blank" rel="noreferrer" className="btn-secondary px-3 py-1.5 text-xs inline-flex items-center gap-1.5">
+                        <Eye className="w-3.5 h-3.5" /> View
+                      </a>
+                      <button 
+                        onClick={() => handleDelete(doc.id)} 
+                        className="p-1.5 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-lg transition-colors ml-1"
+                        title="Delete Document"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
-          ) : (
-            documents.map((doc) => (
-              <div key={doc.id} className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl hover:border-slate-300 dark:hover:border-slate-600 transition-colors">
-                <div className="flex items-center gap-4">
-                  <div className="p-2 rounded-lg bg-white dark:bg-slate-700 text-slate-500 dark:text-slate-300 shadow-sm border border-slate-200 dark:border-slate-600">
-                    <FileText className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <p className="font-medium text-slate-900 dark:text-white">{doc.fileName}</p>
-                    <p className="text-xs text-slate-500 mt-0.5">Uploaded {new Date(doc.uploadedAt?.toDate()).toLocaleDateString()}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <a href={doc.fileUrl} target="_blank" rel="noreferrer" title="View Document" className="p-2 text-slate-400 hover:text-teal-600 bg-white dark:bg-slate-800 hover:bg-teal-50 dark:hover:bg-teal-900/30 rounded-lg border border-slate-200 dark:border-slate-700 transition-colors">
-                    <Eye className="w-4 h-4" />
-                  </a>
-                  {canUpload && (
-                    <button onClick={() => handleDelete(doc.id)} className="p-2 text-slate-400 hover:text-rose-600 bg-white dark:bg-slate-800 hover:bg-rose-50 dark:hover:bg-rose-900/30 rounded-lg border border-slate-200 dark:border-slate-700 transition-colors">
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  )}
-                </div>
-              </div>
-            ))
-          )}
+          </div>
         </div>
       </div>
 
