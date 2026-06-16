@@ -29,6 +29,7 @@ const DoctorAppointments = () => {
   const { showError, showSuccess } = useToast()
   const [appointments, setAppointments] = useState([])
   const [loading, setLoading] = useState(true)
+  const [activeTab, setActiveTab] = useState('upcoming')
 
   const fetchAppointments = async () => {
     setLoading(true)
@@ -60,6 +61,14 @@ const DoctorAppointments = () => {
     }
   }
 
+  const filteredAppointments = appointments.filter(appt => {
+    if (activeTab === 'upcoming') return ['pending', 'approved'].includes(appt.status)
+    if (activeTab === 'completed') return appt.status === 'completed'
+    if (activeTab === 'missed') return appt.status === 'missed'
+    if (activeTab === 'cancelled') return appt.status === 'cancelled'
+    return true
+  })
+
   return (
     <div>
       <DashboardPageHeader
@@ -68,16 +77,33 @@ const DoctorAppointments = () => {
         subtitle="Manage patient appointments and approvals"
       />
 
+      <div className="flex items-center gap-2 mb-6 overflow-x-auto pb-2 scrollbar-hide">
+        {['upcoming', 'completed', 'missed', 'cancelled'].map(tab => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={`px-4 py-2 rounded-xl text-sm font-semibold whitespace-nowrap transition-all border ${
+              activeTab === tab 
+                ? 'bg-cyan-600 border-cyan-600 text-white shadow-md shadow-cyan-500/20 dark:border-cyan-500' 
+                : 'bg-white/80 dark:bg-slate-900/80 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
+            }`}
+          >
+            {tab.charAt(0).toUpperCase() + tab.slice(1)}
+          </button>
+        ))}
+      </div>
+
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
         className="dashboard-card"
       >
         {loading ? (
           <div className="space-y-4">
             {[1, 2, 3].map(i => <div key={i} className="h-24 animate-pulse bg-slate-100 dark:bg-slate-800 rounded-2xl" />)}
           </div>
-        ) : appointments.length === 0 ? (
+        ) : filteredAppointments.length === 0 ? (
           <div className="text-center p-12 bg-slate-50 dark:bg-slate-900/20 rounded-3xl border border-dashed border-slate-200 dark:border-slate-800">
             <CalendarIcon className="w-12 h-12 mx-auto text-slate-300 dark:text-slate-600 mb-4" />
             <h3 className="text-lg font-medium text-slate-900 dark:text-white mb-2">No Appointments</h3>
@@ -85,7 +111,7 @@ const DoctorAppointments = () => {
           </div>
         ) : (
           <div className="grid gap-4">
-            {appointments.map(appt => (
+            {filteredAppointments.map(appt => (
               <div 
                 key={appt.id} 
                 className="p-5 rounded-2xl bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl shadow-xl shadow-slate-200/50 dark:shadow-black/20 border border-slate-200 dark:border-slate-800 hover:border-cyan-300 dark:hover:border-cyan-700 hover:shadow-md transition-all flex flex-col md:flex-row md:items-center justify-between gap-4"

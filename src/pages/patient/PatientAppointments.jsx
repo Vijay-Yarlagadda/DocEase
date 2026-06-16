@@ -29,6 +29,7 @@ const PatientAppointments = () => {
   const { showError } = useToast()
   const [appointments, setAppointments] = useState([])
   const [loading, setLoading] = useState(true)
+  const [activeTab, setActiveTab] = useState('upcoming')
 
   useEffect(() => {
     const fetchAppointments = async () => {
@@ -46,6 +47,14 @@ const PatientAppointments = () => {
     fetchAppointments()
   }, [user.uid])
 
+  const filteredAppointments = appointments.filter(appt => {
+    if (activeTab === 'upcoming') return ['pending', 'approved'].includes(appt.status)
+    if (activeTab === 'completed') return appt.status === 'completed'
+    if (activeTab === 'missed') return appt.status === 'missed'
+    if (activeTab === 'cancelled') return appt.status === 'cancelled'
+    return true
+  })
+
   return (
     <div>
       <DashboardPageHeader
@@ -60,6 +69,22 @@ const PatientAppointments = () => {
         }
       />
 
+      <div className="flex items-center gap-2 mb-6 overflow-x-auto pb-2 scrollbar-hide">
+        {['upcoming', 'completed', 'missed', 'cancelled'].map(tab => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={`px-4 py-2 rounded-xl text-sm font-semibold whitespace-nowrap transition-all border ${
+              activeTab === tab 
+                ? 'bg-teal-600 border-teal-600 text-white shadow-md shadow-teal-500/20 dark:border-teal-500' 
+                : 'bg-white/80 dark:bg-slate-900/80 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
+            }`}
+          >
+            {tab.charAt(0).toUpperCase() + tab.slice(1)}
+          </button>
+        ))}
+      </div>
+
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -69,7 +94,7 @@ const PatientAppointments = () => {
           <div className="space-y-4">
             {[1, 2, 3].map(i => <div key={i} className="h-24 animate-pulse bg-slate-100 dark:bg-slate-800 rounded-2xl" />)}
           </div>
-        ) : appointments.length === 0 ? (
+        ) : filteredAppointments.length === 0 ? (
           <div className="text-center p-12 bg-slate-50 dark:bg-slate-900/20 rounded-3xl border border-dashed border-slate-200 dark:border-slate-800">
             <CalendarIcon className="w-12 h-12 mx-auto text-slate-300 dark:text-slate-600 mb-4" />
             <h3 className="text-lg font-medium text-slate-900 dark:text-white mb-2">No Appointments Yet</h3>
@@ -80,7 +105,7 @@ const PatientAppointments = () => {
           </div>
         ) : (
           <div className="grid gap-4">
-            {appointments.map(appt => (
+            {filteredAppointments.map(appt => (
               <Link 
                 key={appt.id} 
                 to={`/patient/appointments/${appt.id}`}
