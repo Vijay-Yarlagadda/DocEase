@@ -277,7 +277,7 @@ const DoctorSchedule = () => {
             ) : (
               <div className="grid gap-3">
                 {upcomingLeaves.map(leave => (
-                  <div key={leave.id} className="flex items-center justify-between p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl">
+                  <div key={leave.id} className="flex items-center justify-between p-4 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl shadow-xl shadow-slate-200/50 dark:shadow-black/20 border border-slate-200 dark:border-slate-700 rounded-xl">
                     <div className="flex items-center gap-4">
                       <div className="p-3 bg-rose-50 dark:bg-rose-900/20 text-rose-500 rounded-lg">
                         <CalendarIcon className="w-5 h-5" />

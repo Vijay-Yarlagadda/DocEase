@@ -3,7 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Calendar, Clock, MapPin, User, FileText, Download, Eye, ArrowLeft, CheckCircle, XCircle } from 'lucide-react'
 import { getAppointmentById, updateAppointmentStatus } from '../../services/appointmentService'
-import { getDocumentsForAppointment } from '../../services/documentService'
+import { getDocumentsForAppointment, createPatientDocument } from '../../services/documentService'
+import { uploadFileToCloudinary } from '../../services/cloudinaryService'
 import { AuthContext } from '../../context/AuthContext'
 import FilePreviewModal from '../../components/FilePreviewModal'
 import { useToast } from '../../components/Toast'
@@ -28,6 +29,10 @@ const DoctorAppointmentDetails = () => {
     prescription: '',
     recommendations: ''
   })
+  
+  const [dragActive, setDragActive] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const [progress, setProgress] = useState(0)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -41,13 +46,14 @@ const DoctorAppointmentDetails = () => {
         }
         setAppointment(appt)
 
-        const docs = await getDocumentsForAppointment(appointmentId)
+        const docs = await getDocumentsForAppointment(appointmentId, user)
         setDocuments(docs)
 
-        const existingReport = await getReportForAppointment(appointmentId)
+        const existingReport = await getReportForAppointment(appointmentId, user)
         setReport(existingReport)
       } catch (err) {
-        showError('Failed to load appointment details')
+        console.error('FETCH DATA ERROR:', err)
+        showError('Failed to load appointment details: ' + (err.message || 'Unknown error'))
       } finally {
         setLoading(false)
       }
@@ -72,6 +78,54 @@ const DoctorAppointmentDetails = () => {
     } catch (err) {
       showError(`Failed to mark appointment as ${newStatus}`)
     }
+  }
+
+  const handleFileSelected = async (file) => {
+    if (!file) return
+
+    if (file.size > 10 * 1024 * 1024) {
+      showError('File is too large. Maximum size is 10MB')
+      return
+    }
+
+    setUploading(true)
+    setProgress(0)
+
+    try {
+      const uploadResult = await uploadFileToCloudinary({
+        file,
+        folder: `patient-documents/${appointment.patientId}/appointments/${appointmentId}`,
+        onProgress: (value) => setProgress(value),
+      })
+
+      await createPatientDocument({
+        appointmentId,
+        patientUid: appointment.patientId,
+        patientName: appointment.patientName,
+        patientEmail: '', 
+        doctorId: user.uid || user.id,
+        hospitalId: appointment.hospitalId,
+        fileName: file.name,
+        fileUrl: uploadResult.secure_url,
+        mimeType: file.type,
+      })
+      
+      showSuccess('Prescription document uploaded successfully')
+      
+      const docs = await getDocumentsForAppointment(appointmentId, user)
+      setDocuments(docs)
+      setProgress(0)
+    } catch (err) {
+      showError(err.message || 'Upload failed')
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  const handleFileChange = async (event) => {
+    const file = event.target.files?.[0]
+    await handleFileSelected(file)
+    event.target.value = ''
   }
 
   const handleGenerateReport = async (e) => {
@@ -131,7 +185,7 @@ const DoctorAppointmentDetails = () => {
         <ArrowLeft className="w-4 h-4" /> Back to Appointments
       </button>
 
-      <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 md:p-8 shadow-sm border border-slate-200 dark:border-slate-800">
+      <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl shadow-xl shadow-slate-200/50 dark:shadow-black/20 rounded-3xl p-6 md:p-8 shadow-sm border border-slate-200 dark:border-slate-800">
         <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-6">
           <div>
             <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">Appointment Details</h1>
@@ -139,7 +193,9 @@ const DoctorAppointmentDetails = () => {
               <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider ${
                 appointment.status === 'pending' ? 'bg-amber-100 text-amber-700' : 
                 appointment.status === 'approved' ? 'bg-teal-100 text-teal-700' : 
-                appointment.status === 'completed' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-700'
+                appointment.status === 'completed' ? 'bg-blue-100 text-blue-700' : 
+                appointment.status === 'missed' ? 'bg-gray-200 text-gray-700' : 
+                'bg-slate-100 text-slate-700'
               }`}>
                 {appointment.status}
               </span>
@@ -151,9 +207,14 @@ const DoctorAppointmentDetails = () => {
                 </div>
               )}
               {appointment.status === 'approved' && (
-                <button onClick={() => handleStatusChange('completed')} className="text-xs font-medium bg-blue-50 text-blue-600 px-2 py-1 rounded hover:bg-blue-100 transition-colors flex items-center gap-1">
-                  <CheckCircle className="w-3 h-3" /> Mark Completed
-                </button>
+                <div className="flex items-center gap-2">
+                  <button onClick={() => handleStatusChange('completed')} className="text-xs font-medium bg-blue-50 text-blue-600 px-2 py-1 rounded hover:bg-blue-100 transition-colors flex items-center gap-1">
+                    <CheckCircle className="w-3 h-3" /> Mark Completed
+                  </button>
+                  <button onClick={() => handleStatusChange('missed')} className="text-xs font-medium bg-gray-100 text-gray-600 px-2 py-1 rounded hover:bg-gray-200 transition-colors flex items-center gap-1">
+                    <XCircle className="w-3 h-3" /> Mark Missed
+                  </button>
+                </div>
               )}
             </div>
           </div>
@@ -179,8 +240,28 @@ const DoctorAppointmentDetails = () => {
         </div>
       </div>
 
-      <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 md:p-8 shadow-sm border border-slate-200 dark:border-slate-800">
-        <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6">Patient Medical Records</h2>
+      <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl shadow-xl shadow-slate-200/50 dark:shadow-black/20 rounded-3xl p-6 md:p-8 shadow-sm border border-slate-200 dark:border-slate-800">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white">Patient Medical Records</h2>
+          {(appointment.status === 'approved' || appointment.status === 'completed') && (
+            <div>
+              <input
+                type="file"
+                id="doc-upload"
+                className="hidden"
+                accept=".pdf,image/*"
+                onChange={handleFileChange}
+                disabled={uploading}
+              />
+              <label 
+                htmlFor="doc-upload"
+                className={`btn-primary px-4 py-2 text-sm cursor-pointer inline-flex items-center gap-2 ${uploading ? 'opacity-50 pointer-events-none' : ''}`}
+              >
+                {uploading ? 'Uploading...' : 'Upload Prescription / Document'}
+              </label>
+            </div>
+          )}
+        </div>
 
         <div className="space-y-3">
           {documents.length === 0 ? (
@@ -215,7 +296,7 @@ const DoctorAppointmentDetails = () => {
       </div>
 
       {appointment.status === 'completed' && (
-        <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 md:p-8 shadow-sm border border-slate-200 dark:border-slate-800">
+        <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl shadow-xl shadow-slate-200/50 dark:shadow-black/20 rounded-3xl p-6 md:p-8 shadow-sm border border-slate-200 dark:border-slate-800">
           <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6">Medical Report</h2>
           
           {report ? (
@@ -256,7 +337,7 @@ const DoctorAppointmentDetails = () => {
                   required
                   value={reportForm.diagnosis}
                   onChange={(e) => setReportForm({ ...reportForm, diagnosis: e.target.value })}
-                  className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl shadow-xl shadow-slate-200/50 dark:shadow-black/20 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
                   placeholder="E.g., Viral Pharyngitis"
                 />
               </div>
@@ -270,7 +351,7 @@ const DoctorAppointmentDetails = () => {
                   rows="4"
                   value={reportForm.prescription}
                   onChange={(e) => setReportForm({ ...reportForm, prescription: e.target.value })}
-                  className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all resize-none"
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl shadow-xl shadow-slate-200/50 dark:shadow-black/20 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all resize-none"
                   placeholder="List medications, dosage, and duration..."
                 />
               </div>
@@ -283,7 +364,7 @@ const DoctorAppointmentDetails = () => {
                   rows="2"
                   value={reportForm.recommendations}
                   onChange={(e) => setReportForm({ ...reportForm, recommendations: e.target.value })}
-                  className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all resize-none"
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl shadow-xl shadow-slate-200/50 dark:shadow-black/20 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all resize-none"
                   placeholder="E.g., Return in 7 days if symptoms persist."
                 />
               </div>

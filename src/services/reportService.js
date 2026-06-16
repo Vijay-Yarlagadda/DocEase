@@ -15,11 +15,19 @@ export const generateReport = async (reportData) => {
   }
 }
 
-export const getReportForAppointment = async (appointmentId) => {
+export const getReportForAppointment = async (appointmentId, user = null) => {
   try {
+    const constraints = [where('appointmentId', '==', appointmentId)]
+    if (user) {
+      if (user.role === 'patient') {
+        constraints.push(where('patientId', '==', user.uid || user.id))
+      } else if (user.role === 'doctor') {
+        constraints.push(where('doctorId', '==', user.uid || user.id))
+      }
+    }
     const q = query(
       collection(db, 'reports'),
-      where('appointmentId', '==', appointmentId)
+      ...constraints
     )
     const snapshot = await getDocs(q)
     if (snapshot.empty) return null

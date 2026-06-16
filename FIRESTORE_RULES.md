@@ -61,7 +61,10 @@ service cloud.firestore {
     // - Requirement 3: Doctors only access documents linked to them.
     // - Requirement 4: Super Admin cannot access records.
     match /documents/{docId} {
-      allow create: if request.auth != null && request.auth.uid == request.resource.data.patientUid;
+      allow create: if request.auth != null && (
+        request.auth.uid == request.resource.data.patientUid ||
+        request.auth.uid == request.resource.data.doctorId
+      );
       allow read: if request.auth != null && (
         request.auth.uid == resource.data.patientUid ||
         request.auth.uid == resource.data.doctorId ||

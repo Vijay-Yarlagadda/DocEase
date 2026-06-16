@@ -13,6 +13,7 @@ const StatusBadge = ({ status }) => {
     approved: 'bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400',
     completed: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
     cancelled: 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400',
+    missed: 'bg-gray-200 text-gray-700 dark:bg-gray-800/50 dark:text-gray-400',
   }
   const defaultStyle = 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400'
   
@@ -83,7 +84,7 @@ const PatientAppointments = () => {
               <Link 
                 key={appt.id} 
                 to={`/patient/appointments/${appt.id}`}
-                className="group p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-teal-300 dark:hover:border-teal-700 hover:shadow-md transition-all flex flex-col md:flex-row md:items-center justify-between gap-4"
+                className="group p-5 rounded-2xl bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl shadow-xl shadow-slate-200/50 dark:shadow-black/20 border border-slate-200 dark:border-slate-800 hover:border-teal-300 dark:hover:border-teal-700 hover:shadow-md transition-all flex flex-col md:flex-row md:items-center justify-between gap-4"
               >
                 <div className="flex items-center gap-4">
                   <div className="p-3 rounded-xl bg-teal-50 dark:bg-teal-900/20 text-teal-600 dark:text-teal-400">

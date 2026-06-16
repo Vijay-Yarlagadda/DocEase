@@ -10,7 +10,7 @@
 
 @layer components {
   .glass-effect {
-    @apply backdrop-blur-xl bg-white/80 dark:bg-[#0B0F19]/60 border border-white/20 dark:border-indigo-500/10 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)] dark:shadow-[0_8px_32px_0_rgba(0,0,0,0.3)];
+    @apply backdrop-blur-xl bg-white/80 dark:bg-[#0B0F19]/60 border border-white/60 dark:border-indigo-500/10 shadow-xl shadow-slate-200/50 dark:shadow-[0_8px_32px_0_rgba(0,0,0,0.3)];
   }
   
   .btn-primary {
@@ -22,7 +22,7 @@
   }
   
   .card {
-    @apply bg-white dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl transition-all duration-300 p-6 border border-slate-200 dark:border-gray-700;
+    @apply bg-white/90 dark:bg-gray-800 backdrop-blur-md rounded-2xl shadow-xl shadow-slate-200/50 hover:shadow-2xl hover:shadow-indigo-500/10 dark:shadow-black/20 transition-all duration-300 p-6 border border-white/60 dark:border-gray-700 transform hover:-translate-y-1;
   }
 
   .animated-border-ring {
@@ -72,7 +72,7 @@
   }
 
   .auth-card {
-    @apply bg-white/95 dark:bg-slate-900/80 backdrop-blur-xl border border-slate-300 dark:border-slate-700/50 shadow-xl dark:shadow-2xl dark:shadow-black/40 rounded-2xl;
+    @apply bg-white/90 dark:bg-slate-900/80 backdrop-blur-xl border border-white/60 dark:border-slate-700/50 shadow-2xl shadow-slate-300/60 dark:shadow-black/40 rounded-3xl;
   }
 
   .auth-input {
@@ -110,7 +110,7 @@
   }
 
   .dashboard-topbar {
-    @apply fixed top-0 left-0 right-0 h-16 z-50 flex items-center justify-between px-4 md:px-6 lg:px-8 border-b bg-white/95 dark:bg-slate-900/80 backdrop-blur-xl border-slate-300 dark:border-slate-700/40 shadow-sm;
+    @apply fixed top-0 left-0 right-0 h-16 z-50 flex items-center justify-between px-4 md:px-6 lg:px-8 border-b bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-slate-200/50 dark:border-slate-700/40 shadow-sm;
   }
 
   .dashboard-main {
@@ -122,7 +122,7 @@
   }
 
   .dashboard-card {
-    @apply bg-white dark:bg-slate-900/80 backdrop-blur-sm rounded-xl p-5 sm:p-6 border border-slate-300 dark:border-slate-700/50 shadow-md dark:shadow-black/20 hover:shadow-lg dark:hover:border-slate-600/60 transition-all duration-300;
+    @apply bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-2xl p-4 sm:p-6 lg:p-8 border border-white/60 dark:border-slate-700/50 shadow-xl shadow-slate-200/50 dark:shadow-black/20 hover:shadow-2xl hover:shadow-indigo-500/10 dark:hover:border-slate-600/60 transition-all duration-300 transform hover:-translate-y-1;
   }
 
   .dashboard-nav-link {

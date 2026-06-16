@@ -35,10 +35,10 @@ const AppointmentDetails = () => {
         }
         setAppointment(appt)
 
-        const docs = await getDocumentsForAppointment(appointmentId)
+        const docs = await getDocumentsForAppointment(appointmentId, user)
         setDocuments(docs)
 
-        const existingReport = await getReportForAppointment(appointmentId)
+        const existingReport = await getReportForAppointment(appointmentId, user)
         setReport(existingReport)
       } catch (err) {
         showError('Failed to load appointment details')
@@ -95,7 +95,7 @@ const AppointmentDetails = () => {
       showSuccess('Document uploaded successfully')
       
       // Refresh documents
-      const docs = await getDocumentsForAppointment(appointmentId)
+      const docs = await getDocumentsForAppointment(appointmentId, user)
       setDocuments(docs)
       setProgress(0)
     } catch (err) {
@@ -153,7 +153,7 @@ const AppointmentDetails = () => {
         <ArrowLeft className="w-4 h-4" /> Back to Appointments
       </button>
 
-      <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 md:p-8 shadow-sm border border-slate-200 dark:border-slate-800">
+      <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl shadow-xl shadow-slate-200/50 dark:shadow-black/20 rounded-3xl p-6 md:p-8 shadow-sm border border-slate-200 dark:border-slate-800">
         <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-6">
           <div>
             <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">Appointment Details</h1>
@@ -196,7 +196,7 @@ const AppointmentDetails = () => {
         </div>
       </div>
 
-      <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 md:p-8 shadow-sm border border-slate-200 dark:border-slate-800">
+      <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl shadow-xl shadow-slate-200/50 dark:shadow-black/20 rounded-3xl p-6 md:p-8 shadow-sm border border-slate-200 dark:border-slate-800">
         <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6">Medical Records</h2>
 
         {/* Upload Area */}
@@ -310,7 +310,7 @@ const AppointmentDetails = () => {
       </div>
 
       {report && (
-        <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 md:p-8 shadow-sm border border-slate-200 dark:border-slate-800">
+        <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl shadow-xl shadow-slate-200/50 dark:shadow-black/20 rounded-3xl p-6 md:p-8 shadow-sm border border-slate-200 dark:border-slate-800">
           <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6">Medical Report</h2>
           <div className="space-y-6">
             <div>

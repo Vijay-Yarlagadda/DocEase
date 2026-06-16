@@ -46,9 +46,20 @@ export const getPatientDocuments = async (patientUid) => {
   return snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
 }
 
-export const getDocumentsForAppointment = async (appointmentId) => {
+export const getDocumentsForAppointment = async (appointmentId, user = null) => {
   if (!appointmentId) return []
-  const q = query(collection(db, DOCUMENTS_COLLECTION), where('appointmentId', '==', appointmentId))
+  
+  let constraints = [where('appointmentId', '==', appointmentId)]
+  
+  if (user) {
+    if (user.role === 'patient') {
+      constraints.push(where('patientUid', '==', user.uid || user.id))
+    } else if (user.role === 'doctor') {
+      constraints.push(where('doctorId', '==', user.uid || user.id))
+    }
+  }
+
+  const q = query(collection(db, DOCUMENTS_COLLECTION), ...constraints)
   const snap = await getDocs(q)
   return snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
 }

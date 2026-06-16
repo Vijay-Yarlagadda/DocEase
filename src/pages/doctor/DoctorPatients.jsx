@@ -104,7 +104,7 @@ const DoctorPatients = () => {
           ))}
         </div>
       ) : filteredPatients.length === 0 ? (
-        <div className="text-center p-12 bg-white dark:bg-slate-900 rounded-3xl border border-dashed border-slate-200 dark:border-slate-800 shadow-sm">
+        <div className="text-center p-12 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl shadow-xl shadow-slate-200/50 dark:shadow-black/20 rounded-3xl border border-dashed border-slate-200 dark:border-slate-800 shadow-sm">
           <User className="w-12 h-12 mx-auto text-slate-300 dark:text-slate-600 mb-4" />
           <h3 className="text-lg font-medium text-slate-900 dark:text-white mb-2">No Patients Found</h3>
           <p className="text-slate-500">
@@ -119,7 +119,7 @@ const DoctorPatients = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.05 }}
-              className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm hover:border-teal-300 dark:hover:border-teal-700 hover:shadow-md transition-all group"
+              className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl shadow-xl shadow-slate-200/50 dark:shadow-black/20 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm hover:border-teal-300 dark:hover:border-teal-700 hover:shadow-md transition-all group"
             >
               <div className="flex items-start gap-4 mb-5">
                 <div className="w-14 h-14 rounded-full bg-gradient-to-br from-teal-500 to-cyan-500 flex items-center justify-center text-white text-xl font-bold shadow-lg shadow-teal-500/30 group-hover:scale-105 transition-transform">

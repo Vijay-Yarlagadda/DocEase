@@ -199,7 +199,7 @@ const PatientHospitals = () => {
               ))}
             </div>
           ) : hospitals.length === 0 ? (
-            <div className="p-6 text-center text-slate-500 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800">
+            <div className="p-6 text-center text-slate-500 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl shadow-xl shadow-slate-200/50 dark:shadow-black/20 rounded-2xl border border-slate-200 dark:border-slate-800">
               No verified hospitals available yet.
             </div>
           ) : (
@@ -243,7 +243,7 @@ const PatientHospitals = () => {
             <motion.div 
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
-              className="bg-white dark:bg-slate-900/50 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm min-h-[400px]"
+              className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl shadow-xl shadow-slate-200/50 dark:shadow-black/20/50 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm min-h-[400px]"
             >
               <div className="border-b border-slate-100 dark:border-slate-800 pb-4 mb-6">
                 <h2 className="text-xl font-bold text-slate-900 dark:text-white">{selectedHospital.name}</h2>
@@ -290,7 +290,7 @@ const PatientHospitals = () => {
                       </div>
                       <button 
                         onClick={() => setBookingDoctor(doc)}
-                        className="w-full py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-teal-50 hover:text-teal-700 hover:border-teal-200 dark:hover:bg-teal-900/30 dark:hover:text-teal-300 dark:hover:border-teal-800 transition-all shadow-sm group-hover:shadow-md"
+                        className="w-full py-2 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl shadow-xl shadow-slate-200/50 dark:shadow-black/20 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-teal-50 hover:text-teal-700 hover:border-teal-200 dark:hover:bg-teal-900/30 dark:hover:text-teal-300 dark:hover:border-teal-800 transition-all shadow-sm group-hover:shadow-md"
                       >
                         Book Appointment
                       </button>
@@ -316,7 +316,7 @@ const PatientHospitals = () => {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl w-full max-w-md overflow-hidden border border-slate-200 dark:border-slate-800"
+              className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl shadow-xl shadow-slate-200/50 dark:shadow-black/20 rounded-3xl shadow-2xl w-full max-w-md overflow-hidden border border-slate-200 dark:border-slate-800"
             >
               <div className="flex items-center justify-between p-5 border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900">
                 <h3 className="font-bold text-slate-900 dark:text-white">Book Appointment</h3>
