@@ -1,7 +1,7 @@
 import { db } from './firebase'
 import { collection, addDoc, query, where, getDocs, deleteDoc, doc } from 'firebase/firestore'
 
-const LEAVES_COLLECTION = 'doctor_leaves'
+const LEAVES_COLLECTION = 'leaves'
 
 export const addLeave = async (doctorId, date, reason) => {
   const leaveRef = await addDoc(collection(db, LEAVES_COLLECTION), {
