@@ -7,6 +7,7 @@ import FilePreviewModal from '../../components/FilePreviewModal'
 import { useToast } from '../../components/Toast'
 import { db } from '../../services/firebase'
 import { doc, getDoc } from 'firebase/firestore'
+import { getDisplayName } from '../../utils/userProfile'
 
 const PatientDocuments = () => {
   const { user } = useContext(AuthContext)
@@ -20,20 +21,20 @@ const PatientDocuments = () => {
     try {
       const docs = await getPatientDocuments(user?.uid)
       
-      const doctorIds = [...new Set(docs.map(d => d.doctorId).filter(Boolean))]
-      const doctorMap = {}
-      for (const id of doctorIds) {
+      const appointmentIds = [...new Set(docs.map(d => d.appointmentId).filter(Boolean))]
+      const appointmentMap = {}
+      for (const id of appointmentIds) {
         try {
-          const doctorDoc = await getDoc(doc(db, 'doctors', id))
-          if (doctorDoc.exists()) {
-             doctorMap[id] = doctorDoc.data().name
+          const apptDoc = await getDoc(doc(db, 'appointments', id))
+          if (apptDoc.exists()) {
+             appointmentMap[id] = apptDoc.data().doctorName
           }
         } catch (e) { console.error(e) }
       }
       
       const docsWithDoctor = docs.map(d => ({
         ...d,
-        doctorName: d.doctorName || doctorMap[d.doctorId] || 'Unknown Doctor'
+        doctorName: d.doctorName || appointmentMap[d.appointmentId] || 'Unknown Doctor'
       }))
       
       setDocuments(docsWithDoctor)
