@@ -1,7 +1,7 @@
 import { useState, useEffect, useContext } from 'react'
 import { motion } from 'framer-motion'
 import { Calendar as CalendarIcon, Clock, MapPin, Stethoscope, ChevronRight } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import DashboardPageHeader from '../../components/dashboard/DashboardPageHeader'
 import { getPatientAppointments } from '../../services/appointmentService'
 import { AuthContext } from '../../context/AuthContext'
@@ -27,9 +27,11 @@ const StatusBadge = ({ status }) => {
 const PatientAppointments = () => {
   const { user } = useContext(AuthContext)
   const { showError } = useToast()
+  const [searchParams] = useSearchParams()
   const [appointments, setAppointments] = useState([])
   const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState('upcoming')
+  const initialTab = searchParams.get('tab') || 'upcoming'
+  const [activeTab, setActiveTab] = useState(initialTab)
 
   useEffect(() => {
     const fetchAppointments = async () => {

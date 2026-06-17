@@ -35,9 +35,18 @@ const PatientDashboard = () => {
 
   const navigate = useNavigate()
 
+  const handlePastAppointmentsClick = () => {
+    if (pastAppts.length === 1) {
+      navigate(`/patient/appointments/${pastAppts[0].id}`)
+    } else {
+      const hasCompleted = pastAppts.some(a => a.status === 'completed')
+      navigate(`/patient/appointments?tab=${hasCompleted ? 'completed' : 'missed'}`)
+    }
+  }
+
   const stats = [
     { icon: Calendar, label: 'Upcoming Appointments', value: upcomingAppts.length.toString(), change: 'Scheduled', gradient: 'from-blue-600 to-blue-400', onClick: () => navigate('/patient/appointments') },
-    { icon: Clock, label: 'Past Appointments', value: pastAppts.length.toString(), change: 'History', gradient: 'from-purple-600 to-purple-400', onClick: () => navigate('/patient/appointments') },
+    { icon: Clock, label: 'Past Appointments', value: pastAppts.length.toString(), change: 'History', gradient: 'from-purple-600 to-purple-400', onClick: handlePastAppointmentsClick },
     { icon: FileText, label: 'Medical Files', value: 'Vault', change: 'View All', gradient: 'from-teal-600 to-teal-400', onClick: () => navigate('/patient/documents') },
   ]
 
