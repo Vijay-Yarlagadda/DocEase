@@ -71,12 +71,15 @@ export const getHospitalProfile = async (hospitalId = 'default') => {
 export const updateHospitalProfile = async (hospitalId, data) => {
   const hospitalRef = doc(db, HOSPITALS_COLLECTION, hospitalId)
   const existingSnap = await getDoc(hospitalRef)
-  const currentStatus = existingSnap.exists() ? existingSnap.data()?.verificationStatus : null
+  const oldData = existingSnap.exists() ? existingSnap.data() : {}
+  const currentStatus = oldData.verificationStatus
 
   let verificationStatus = currentStatus || 'pending'
   if (currentStatus === 'rejected' && (data.registrationCertificateUrl || data.hospitalLicenseUrl)) {
     verificationStatus = 'pending'
   }
+
+  const newData = { ...oldData, ...data, verificationStatus }
 
   await setDoc(
     hospitalRef,
@@ -84,13 +87,19 @@ export const updateHospitalProfile = async (hospitalId, data) => {
     { merge: true }
   )
   
-  if (verificationStatus === 'pending' && currentStatus !== 'pending') {
+  const previouslyHadBoth = !!(oldData.registrationCertificateUrl && oldData.hospitalLicenseUrl)
+  const nowHasBoth = !!(newData.registrationCertificateUrl && newData.hospitalLicenseUrl)
+  
+  const justCompletedUploads = nowHasBoth && !previouslyHadBoth
+  const justReapplied = currentStatus === 'rejected' && verificationStatus === 'pending' && nowHasBoth
+
+  if (justCompletedUploads || justReapplied) {
     try {
       await api.post('/emails/send', {
         action: 'sendHospitalSubmittedToSuperAdmin',
         payload: {
           adminEmail: import.meta.env.VITE_SUPER_ADMIN_EMAIL || 'superadmin@docease.com',
-          hospitalName: data.name || 'New Hospital'
+          hospitalName: newData.name || 'New Hospital'
         }
       })
     } catch (err) {
