@@ -399,7 +399,13 @@ export const getHospitalPerformanceMetrics = async () => {
 export const getAllAppointments = async () => {
   const snap = await getDocs(collection(db, APPOINTMENTS_COLLECTION))
   const list = snap.docs.map((d) => ({ id: d.id, ...d.data() }))
-  return list.sort((a, b) => {
+  
+  const doctors = await getAllDoctors()
+  const doctorIds = new Set(doctors.map((d) => d.id))
+  
+  const validList = list.filter((a) => doctorIds.has(a.doctorId) || doctorIds.has(a.doctorUid))
+  
+  return validList.sort((a, b) => {
     const da = parseAppointmentDate(a) || ''
     const db_ = parseAppointmentDate(b) || ''
     return db_.localeCompare(da)

@@ -239,10 +239,10 @@ const HospitalProfilePanel = () => {
   const isNewHospital = !form.name && !form.email && !form.address && !form.registrationCertificateUrl && !form.hospitalLicenseUrl
 
   const fields = [
-    { name: 'name', label: 'Hospital Name', icon: Building2, type: 'text', placeholder: 'e.g. Saint Mary’s Medical Center' },
-    { name: 'address', label: 'Address', icon: MapPin, type: 'text', placeholder: 'e.g. 124 Wellness Drive, Austin, TX' },
-    { name: 'phone', label: 'Contact Phone', icon: Phone, type: 'tel', placeholder: '+1 (555) 123-4567' },
-    { name: 'email', label: 'Contact Email', icon: Mail, type: 'email', placeholder: 'contact@hospital.com' },
+    { name: 'name', label: 'Hospital Name', icon: Building2, type: 'text', placeholder: 'e.g. Apollo City Hospital' },
+    { name: 'address', label: 'Address', icon: MapPin, type: 'text', placeholder: 'e.g. Jubilee Hills, Hyderabad, TS' },
+    { name: 'phone', label: 'Contact Phone', icon: Phone, type: 'tel', placeholder: '+91 98765 43210' },
+    { name: 'email', label: 'Contact Email', icon: Mail, type: 'email', placeholder: 'contact@apollo-city.in' },
     { name: 'website', label: 'Website', icon: Globe, type: 'text', placeholder: 'www.hospital-example.com' },
   ]
 

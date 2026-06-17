@@ -52,11 +52,17 @@ export const bookAppointment = async ({ patientId, patientName, doctorId, doctor
   return appointmentRef.id
 }
 
-export const getPatientAppointments = async (patientId) => {
-  if (!patientId) return []
-  const q = query(collection(db, APPOINTMENTS_COLLECTION), where('patientId', '==', patientId))
+export const getPatientAppointments = async (patientUid) => {
+  if (!patientUid) return []
+  const q = query(collection(db, APPOINTMENTS_COLLECTION), where('patientId', '==', patientUid))
   const snap = await getDocs(q)
-  return snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
+  const list = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
+  
+  // Filter out appointments where the doctor has been deleted
+  const doctorsSnap = await getDocs(collection(db, 'doctors'))
+  const doctorIds = new Set(doctorsSnap.docs.map(d => d.id))
+  
+  return list.filter(a => doctorIds.has(a.doctorId) || doctorIds.has(a.doctorUid))
 }
 
 export const getAppointmentById = async (appointmentId) => {
