@@ -1,12 +1,13 @@
 import { motion } from 'framer-motion'
 
-const StatCard = ({ icon: Icon, label, value, change, gradient, delay = 0 }) => {
+const StatCard = ({ icon: Icon, label, value, change, gradient, delay = 0, onClick }) => {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay }}
-      className="dashboard-card group"
+      className={`dashboard-card group ${onClick ? 'cursor-pointer hover:shadow-md transition-shadow' : ''}`}
+      onClick={onClick}
     >
       <div className="flex items-center justify-between">
         <div>

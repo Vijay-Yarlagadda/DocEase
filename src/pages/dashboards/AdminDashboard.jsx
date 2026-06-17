@@ -1,6 +1,6 @@
 import { useEffect, useState, useContext } from 'react'
 import { motion } from 'framer-motion'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { UserCheck, Users, Calendar, CalendarDays, ArrowRight, Building2, Stethoscope } from 'lucide-react'
 import DashboardPageHeader from '../../components/dashboard/DashboardPageHeader'
 import AnimatedStatCard from '../../components/admin/AnimatedStatCard'
@@ -47,12 +47,14 @@ const AdminDashboard = () => {
       .finally(() => setLoading(false))
   }, [user])
 
+  const navigate = useNavigate()
+
   const statCards = stats
     ? [
-        { icon: UserCheck, label: 'Total Doctors', value: stats.totalDoctors, change: 'Registered physicians', gradient: 'from-cyan-600 to-cyan-400' },
-        { icon: Users, label: 'Total Patients', value: stats.totalPatients, change: 'Active patient accounts', gradient: 'from-teal-600 to-teal-400' },
-        { icon: Calendar, label: "Today's Appointments", value: stats.todayAppointments, change: 'Scheduled for today', gradient: 'from-blue-600 to-blue-400' },
-        { icon: CalendarDays, label: 'Total Appointments', value: stats.totalAppointments, change: 'All time bookings', gradient: 'from-purple-600 to-purple-400' },
+        { icon: UserCheck, label: 'Total Doctors', value: stats.totalDoctors, change: 'Registered physicians', gradient: 'from-cyan-600 to-cyan-400', onClick: () => navigate('/admin/doctors') },
+        { icon: Users, label: 'Total Patients', value: stats.totalPatients, change: 'Active patient accounts', gradient: 'from-teal-600 to-teal-400', onClick: () => navigate('/admin/users') },
+        { icon: Calendar, label: "Today's Appointments", value: stats.todayAppointments, change: 'Scheduled for today', gradient: 'from-blue-600 to-blue-400', onClick: () => navigate('/admin/appointments') },
+        { icon: CalendarDays, label: 'Total Appointments', value: stats.totalAppointments, change: 'All time bookings', gradient: 'from-purple-600 to-purple-400', onClick: () => navigate('/admin/appointments') },
       ]
     : []
 

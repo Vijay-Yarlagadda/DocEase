@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 
-const AnimatedStatCard = ({ icon: Icon, label, value, change, gradient, delay = 0, loading = false }) => {
+const AnimatedStatCard = ({ icon: Icon, label, value, change, gradient, delay = 0, loading = false, onClick }) => {
   const [displayValue, setDisplayValue] = useState(0)
   const numericValue = typeof value === 'number' ? value : parseInt(value, 10) || 0
 
@@ -28,7 +28,8 @@ const AnimatedStatCard = ({ icon: Icon, label, value, change, gradient, delay = 
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay }}
       whileHover={{ y: -4, transition: { duration: 0.2 } }}
-      className="dashboard-card group relative overflow-hidden"
+      className={`dashboard-card group relative overflow-hidden ${onClick && !loading ? 'cursor-pointer' : ''}`}
+      onClick={!loading ? onClick : undefined}
     >
       <div className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-0 group-hover:opacity-5 transition-opacity duration-300`} />
       <div className="relative flex items-center justify-between">

@@ -1,6 +1,6 @@
 import { useEffect, useState, useContext } from 'react'
 import { motion } from 'framer-motion'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import {
   Calendar,
   Users,
@@ -42,10 +42,12 @@ const DoctorDashboard = () => {
   const pendingAppointments = appointments.filter(a => a.status === 'pending')
   const upcomingAppointments = appointments.filter(a => new Date(a.appointmentDate) >= new Date(new Date().setHours(0,0,0,0)) && a.status !== 'cancelled')
 
+  const navigate = useNavigate()
+
   const stats = [
-    { icon: Calendar, label: "Today's Schedule", value: upcomingAppointments.length, change: `${upcomingAppointments.length} upcoming`, gradient: 'from-blue-600 to-blue-400' },
-    { icon: Users, label: 'Pending Approvals', value: pendingAppointments.length, change: 'Action required', gradient: 'from-amber-500 to-amber-400' },
-    { icon: FileText, label: 'Total Patients', value: new Set(appointments.map((a) => a.patientId)).size, change: 'Unique patients', gradient: 'from-teal-600 to-teal-400' },
+    { icon: Calendar, label: "Today's Schedule", value: upcomingAppointments.length, change: `${upcomingAppointments.length} upcoming`, gradient: 'from-blue-600 to-blue-400', onClick: () => navigate('/doctor/appointments') },
+    { icon: Users, label: 'Pending Approvals', value: pendingAppointments.length, change: 'Action required', gradient: 'from-amber-500 to-amber-400', onClick: () => navigate('/doctor/appointments') },
+    { icon: FileText, label: 'Total Patients', value: new Set(appointments.map((a) => a.patientId)).size, change: 'Unique patients', gradient: 'from-teal-600 to-teal-400', onClick: () => navigate('/doctor/patients') },
   ]
 
   const sections = [

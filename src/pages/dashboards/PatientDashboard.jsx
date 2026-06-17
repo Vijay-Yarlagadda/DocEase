@@ -1,7 +1,7 @@
 import { useState, useEffect, useContext } from 'react'
 import { motion } from 'framer-motion'
 import { Users, Calendar, FileText, Upload, Clock, Plus, Download, ChevronRight } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import DashboardPageHeader from '../../components/dashboard/DashboardPageHeader'
 import StatCard from '../../components/dashboard/StatCard'
 import { getPatientAppointments } from '../../services/appointmentService'
@@ -33,10 +33,12 @@ const PatientDashboard = () => {
   const upcomingAppts = appointments.filter(a => new Date(a.appointmentDate) >= new Date(new Date().setHours(0,0,0,0)) && a.status !== 'cancelled')
   const pastAppts = appointments.filter(a => new Date(a.appointmentDate) < new Date(new Date().setHours(0,0,0,0)) || a.status === 'completed')
 
+  const navigate = useNavigate()
+
   const stats = [
-    { icon: Calendar, label: 'Upcoming Appointments', value: upcomingAppts.length.toString(), change: 'Scheduled', gradient: 'from-blue-600 to-blue-400' },
-    { icon: Clock, label: 'Past Appointments', value: pastAppts.length.toString(), change: 'History', gradient: 'from-purple-600 to-purple-400' },
-    { icon: FileText, label: 'Medical Files', value: 'Vault', change: 'View All', gradient: 'from-teal-600 to-teal-400' },
+    { icon: Calendar, label: 'Upcoming Appointments', value: upcomingAppts.length.toString(), change: 'Scheduled', gradient: 'from-blue-600 to-blue-400', onClick: () => navigate('/patient/appointments') },
+    { icon: Clock, label: 'Past Appointments', value: pastAppts.length.toString(), change: 'History', gradient: 'from-purple-600 to-purple-400', onClick: () => navigate('/patient/appointments') },
+    { icon: FileText, label: 'Medical Files', value: 'Vault', change: 'View All', gradient: 'from-teal-600 to-teal-400', onClick: () => navigate('/patient/documents') },
   ]
 
   const quickActions = [
