@@ -1,6 +1,6 @@
 import { useEffect, useState, useContext, useMemo } from 'react'
 import { motion } from 'framer-motion'
-import { FileText, Download, Archive, User } from 'lucide-react'
+import { FileText, Download, Archive, User, ChevronDown, ChevronUp, Eye } from 'lucide-react'
 import { AuthContext } from '../../context/AuthContext'
 import { getPatientDocuments } from '../../services/documentService'
 import { getPatientAppointments } from '../../services/appointmentService'
@@ -15,7 +15,15 @@ const PatientDocuments = () => {
   const [documents, setDocuments] = useState([])
   const [loading, setLoading] = useState(true)
   const [previewDocument, setPreviewDocument] = useState(null)
+  const [expandedGroups, setExpandedGroups] = useState({})
   const { showError } = useToast()
+
+  const toggleGroup = (doctorName) => {
+    setExpandedGroups(prev => ({
+      ...prev,
+      [doctorName]: !prev[doctorName]
+    }))
+  }
 
   const fetchDocuments = async () => {
     setLoading(true)
@@ -108,41 +116,69 @@ const PatientDocuments = () => {
           </div>
         ) : (
           <div className="space-y-8">
-            {Object.entries(groupedDocuments).map(([doctorName, docs]) => (
-              <div key={doctorName} className="space-y-4">
-                <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-200 flex items-center gap-2 border-b border-slate-200 dark:border-slate-700 pb-2">
-                  <User className="w-5 h-5 text-teal-600 dark:text-teal-400" />
-                  {doctorName.startsWith('Dr.') ? doctorName : `Dr. ${doctorName}`}
-                </h3>
-                <div className="grid gap-4">
-                  {docs.map((doc) => (
-                    <motion.div key={doc.id} whileHover={{ y: -2 }} className="rounded-3xl border border-slate-200/70 bg-white/95 p-5 shadow-sm dark:border-slate-700/60 dark:bg-slate-900/70">
-                      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                        <div className="flex items-center gap-4">
-                          <div className="flex h-14 w-14 items-center justify-center rounded-3xl bg-teal-50 text-teal-600 dark:bg-teal-900/30 dark:text-teal-400">
-                            <FileText className="h-6 w-6" />
+            {Object.entries(groupedDocuments).map(([doctorName, docs]) => {
+              const isExpanded = expandedGroups[doctorName]
+              return (
+                <div key={doctorName} className="space-y-4">
+                  <button 
+                    onClick={() => toggleGroup(doctorName)}
+                    className="w-full text-left text-lg font-semibold text-slate-900 dark:text-slate-200 flex items-center justify-between border-b border-slate-200 dark:border-slate-700 pb-2 hover:opacity-80 transition-opacity"
+                  >
+                    <div className="flex items-center gap-2">
+                      <User className="w-5 h-5 text-teal-600 dark:text-teal-400" />
+                      {doctorName.startsWith('Dr.') ? doctorName : `Dr. ${doctorName}`}
+                      <span className="text-xs font-medium text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full ml-1">
+                        {docs.length} {docs.length === 1 ? 'file' : 'files'}
+                      </span>
+                    </div>
+                    {isExpanded ? <ChevronUp className="w-5 h-5 text-slate-400" /> : <ChevronDown className="w-5 h-5 text-slate-400" />}
+                  </button>
+                  
+                  {isExpanded && (
+                    <motion.div 
+                      initial={{ opacity: 0, height: 0 }} 
+                      animate={{ opacity: 1, height: 'auto' }} 
+                      exit={{ opacity: 0, height: 0 }}
+                      className="grid gap-4 overflow-hidden pt-2"
+                    >
+                      {docs.map((doc) => (
+                        <motion.div key={doc.id} whileHover={{ y: -2 }} className="rounded-3xl border border-slate-200/70 bg-white/95 p-5 shadow-sm dark:border-slate-700/60 dark:bg-slate-900/70">
+                          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                            <div className="flex items-center gap-4">
+                              <div className="flex h-14 w-14 items-center justify-center rounded-3xl bg-teal-50 text-teal-600 dark:bg-teal-900/30 dark:text-teal-400">
+                                <FileText className="h-6 w-6" />
+                              </div>
+                              <div>
+                                <p className="text-base font-semibold text-slate-900 dark:text-white">{doc.fileName}</p>
+                                <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">Uploaded {new Date(doc.uploadedAt?.toDate ? doc.uploadedAt.toDate() : doc.uploadedAt).toLocaleDateString()}</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <button 
+                                onClick={() => setPreviewDocument(doc)} 
+                                className="btn-secondary p-3 rounded-full flex items-center justify-center"
+                                title="Preview Document"
+                              >
+                                <Eye className="w-4 h-4" />
+                              </button>
+                              <a 
+                                href={doc.fileUrl} 
+                                target="_blank" 
+                                rel="noreferrer" 
+                                className="btn-primary p-3 rounded-full flex items-center justify-center"
+                                title="Download Document"
+                              >
+                                <Download className="w-4 h-4" />
+                              </a>
+                            </div>
                           </div>
-                          <div>
-                            <p className="text-base font-semibold text-slate-900 dark:text-white">{doc.fileName}</p>
-                            <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">Uploaded {new Date(doc.uploadedAt?.toDate ? doc.uploadedAt.toDate() : doc.uploadedAt).toLocaleDateString()}</p>
-                          </div>
-                        </div>
-                        <div className="flex flex-wrap gap-2">
-                          <button onClick={() => setPreviewDocument(doc)} className="btn-secondary inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm">
-                            <FileText className="w-4 h-4" />
-                            Preview
-                          </button>
-                          <a href={doc.fileUrl} target="_blank" rel="noreferrer" className="btn-primary inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm">
-                            <Download className="w-4 h-4" />
-                            Download
-                          </a>
-                        </div>
-                      </div>
+                        </motion.div>
+                      ))}
                     </motion.div>
-                  ))}
+                  )}
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         )}
       </motion.div>
