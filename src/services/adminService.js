@@ -176,10 +176,7 @@ export const deleteDoctor = async (doctorId) => {
   const apptsQ = query(collection(db, APPOINTMENTS_COLLECTION), where('doctorId', '==', doctorId))
   const apptsSnap = await getDocs(apptsQ)
   for (const docSnap of apptsSnap.docs) {
-    const data = docSnap.data()
-    if (data.status === 'pending' || data.status === 'approved') {
-      await deleteDoc(docSnap.ref)
-    }
+    await deleteDoc(docSnap.ref)
   }
 
   const leavesQ = query(collection(db, 'leaves'), where('doctorId', '==', doctorId))

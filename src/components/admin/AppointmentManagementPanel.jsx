@@ -127,7 +127,7 @@ const AppointmentManagementPanel = ({ compact = false }) => {
               <div className="flex-1 min-w-0">
                 <p className="font-medium text-slate-900 dark:text-white truncate">{a.patientName || 'Patient'}</p>
                 <p className="text-sm text-slate-500 truncate">
-                  Dr. {a.doctorName || '—'} &bull; {a.date} {a.time ? `at ${a.time}` : ''}
+                  {a.doctorName ? (a.doctorName.startsWith('Dr.') ? a.doctorName : `Dr. ${a.doctorName}`) : '—'} &bull; {a.date} {a.time ? `at ${a.time}` : ''}
                 </p>
               </div>
               <span className={`self-start sm:self-center px-2.5 py-1 rounded-full text-[10px] font-semibold capitalize border ${statusStyle[a.status] || statusStyle.pending}`}>
