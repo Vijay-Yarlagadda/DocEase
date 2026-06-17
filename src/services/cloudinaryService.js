@@ -2,7 +2,7 @@ const CLOUDINARY_CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME
 const CLOUDINARY_UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET
 const CLOUDINARY_UPLOAD_PRESET_RAW = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET_RAW
 
-const HOSPITAL_DOCUMENT_TYPES = ['application/pdf']
+const HOSPITAL_DOCUMENT_TYPES = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png']
 const PATIENT_DOCUMENT_TYPES = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png']
 
 const MAX_HOSPITAL_FILE_SIZE = 10 * 1024 * 1024

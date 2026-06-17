@@ -319,7 +319,7 @@ const HospitalProfilePanel = () => {
         <input
           id={field}
           type="file"
-          accept=".pdf"
+          accept=".pdf,.jpg,.jpeg,.png"
           className="hidden"
           onChange={(e) => uploadVerificationDocument(e, field, label)}
         />
@@ -419,7 +419,7 @@ const HospitalProfilePanel = () => {
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <p className="text-sm font-semibold text-slate-900 dark:text-white">Hospital Verification Documents</p>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Upload PDFs for registration certificate and hospital license. These documents are reviewed by Super Admin before verification.</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Upload PDFs or images for registration certificate and hospital license. These documents are reviewed by Super Admin before verification.</p>
               </div>
               <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${form.verificationStatus === 'verified' ? 'bg-emerald-100 text-emerald-700' : form.verificationStatus === 'rejected' ? 'bg-rose-100 text-rose-700' : 'bg-orange-100 text-orange-700'}`}>
                 {form.verificationStatus || 'pending'}
@@ -428,8 +428,8 @@ const HospitalProfilePanel = () => {
 
             <div className="mt-5 grid gap-4 lg:grid-cols-2">
               {[
-                { field: 'registrationCertificateUrl', label: 'Registration Certificate', hint: 'PDF only, max 10MB' },
-                { field: 'hospitalLicenseUrl', label: 'Hospital License', hint: 'PDF only, max 10MB' },
+                { field: 'registrationCertificateUrl', label: 'Registration Certificate', hint: 'PDF or Image, max 10MB' },
+                { field: 'hospitalLicenseUrl', label: 'Hospital License', hint: 'PDF or Image, max 10MB' },
               ].map(renderVerificationDocumentField)}
             </div>
           </div>
