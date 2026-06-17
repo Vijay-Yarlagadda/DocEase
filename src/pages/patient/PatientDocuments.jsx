@@ -3,6 +3,7 @@ import { motion } from 'framer-motion'
 import { FileText, Download, Archive, User } from 'lucide-react'
 import { AuthContext } from '../../context/AuthContext'
 import { getPatientDocuments } from '../../services/documentService'
+import { getPatientAppointments } from '../../services/appointmentService'
 import FilePreviewModal from '../../components/FilePreviewModal'
 import { useToast } from '../../components/Toast'
 import { db } from '../../services/firebase'
@@ -31,10 +32,25 @@ const PatientDocuments = () => {
           }
         } catch (e) { console.error(e) }
       }
+
+      const doctorIds = [...new Set(docs.map(d => d.doctorId).filter(Boolean))]
+      const doctorMap = {}
+      for (const id of doctorIds) {
+        try {
+          const doctorDoc = await getDoc(doc(db, 'doctors', id))
+          if (doctorDoc.exists()) {
+             doctorMap[id] = getDisplayName(doctorDoc.data())
+          }
+        } catch (e) { console.error(e) }
+      }
+      
+      const appts = await getPatientAppointments(user?.uid)
+      const latestAppt = appts.sort((a, b) => new Date(b.appointmentDate) - new Date(a.appointmentDate))[0]
+      const defaultDoctorName = latestAppt ? latestAppt.doctorName : 'Unknown Doctor'
       
       const docsWithDoctor = docs.map(d => ({
         ...d,
-        doctorName: d.doctorName || appointmentMap[d.appointmentId] || 'Unknown Doctor'
+        doctorName: d.doctorName || appointmentMap[d.appointmentId] || doctorMap[d.doctorId] || defaultDoctorName
       }))
       
       setDocuments(docsWithDoctor)
