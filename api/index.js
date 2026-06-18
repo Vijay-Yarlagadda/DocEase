@@ -53,6 +53,4 @@ app.post('/api/emails/send', async (req, res) => {
   }
 })
 
-app.listen(PORT, () => {
-  console.log(`Email Notification Server running on port ${PORT}`)
-})
+module.exports = app

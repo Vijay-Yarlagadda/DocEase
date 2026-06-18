@@ -41,8 +41,7 @@ const PDFViewer = ({ isOpen, url, fileName, onClose }) => {
     setError('Could not load PDF in viewer. Try downloading instead.')
   }
 
-  // Resolve URL and attempt an authenticated fetch fallback when necessary.
-  const resolved = normalizeCloudinaryUrl(url)
+  let resolved = normalizeCloudinaryUrl(url)
 
   useEffect(() => {
     if (!isOpen || !resolved) return
