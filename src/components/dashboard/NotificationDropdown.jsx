@@ -1,6 +1,6 @@
 import { useState, useEffect, useContext, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Bell, Check, Trash2, Calendar, FileText, Info, ArrowRight } from 'lucide-react'
+import { Bell, Check, Trash2, Calendar, FileText, Info, ArrowRight, Building2 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { AuthContext } from '../../context/AuthContext'
 import { subscribeToNotifications, markNotificationAsRead } from '../../services/notificationService'
@@ -47,6 +47,7 @@ const NotificationDropdown = () => {
     switch (type) {
       case 'appointment': return <Calendar className="w-4 h-4 text-primary" />
       case 'report': return <FileText className="w-4 h-4 text-teal-500" />
+      case 'hospital': return <Building2 className="w-4 h-4 text-fuchsia-500" />
       default: return <Info className="w-4 h-4 text-slate-500" />
     }
   }

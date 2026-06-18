@@ -103,7 +103,27 @@ export const updateHospitalProfile = async (hospitalId, data) => {
         }
       })
     } catch (err) {
-      console.error('Failed to notify super admin:', err)
+      console.error('Failed to notify super admin via email:', err)
+    }
+
+    try {
+      // Send in-app notification
+      const { sendNotification } = await import('./notificationService')
+      const adminEmail = import.meta.env.VITE_SUPER_ADMIN_EMAIL || 'superadmin@docease.com'
+      const adminQ = query(collection(db, USERS_COLLECTION), where('email', '==', adminEmail))
+      const adminSnap = await getDocs(adminQ)
+      if (!adminSnap.empty) {
+        const adminUid = adminSnap.docs[0].id
+        await sendNotification({
+          recipientId: adminUid,
+          type: 'hospital',
+          title: 'New Hospital Verification',
+          message: `${newData.name || 'A hospital'} submitted documents and is pending verification.`,
+          link: '/super-admin/verification'
+        })
+      }
+    } catch (err) {
+      console.error('Failed to create in-app notification:', err)
     }
   }
 
