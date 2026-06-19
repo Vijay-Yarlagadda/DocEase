@@ -32,6 +32,7 @@ const HospitalProfilePanel = () => {
 
   const hospitalId = user?.uid || 'default'
   const isOwnHospital = (hospital) => hospital.id === hospitalId
+  const isNewHospital = !hospitals.some((h) => h.id === hospitalId)
 
   const normalizeCloudinaryUrl = (value) => {
     if (!value) return ''
@@ -82,6 +83,17 @@ const HospitalProfilePanel = () => {
   const saveUploadedDocument = async (field, url, docs) => {
     const previousUrl = form[field]
     console.log('[Hospital Document] Saving uploaded document', { field, previousUrl, newUrl: url })
+
+    // If it's a new hospital, just save the document URL in local state.
+    // It will be sent to Firestore when they click "Create Hospital".
+    if (isNewHospital) {
+      setForm((prev) => ({
+        ...prev,
+        [field]: url,
+        hospitalDocuments: docs,
+      }))
+      return { [field]: url, hospitalDocuments: docs }
+    }
 
     try {
       const updatedProfile = await updateHospitalProfile(hospitalId, {
@@ -232,8 +244,6 @@ const HospitalProfilePanel = () => {
   }
 
   if (loading) return <PanelSkeleton rows={6} />
-
-  const isNewHospital = !hospitals.some((h) => h.id === hospitalId)
 
   const fields = [
     { name: 'name', label: 'Hospital Name', icon: Building2, type: 'text', placeholder: 'e.g. Apollo City Hospital' },
@@ -408,7 +418,7 @@ const HospitalProfilePanel = () => {
           </div>
         </div>
 
-        {form.verificationStatus !== 'verified' && !isNewHospital && (
+        {form.verificationStatus !== 'verified' && (
           <div className="mt-6 rounded-3xl border border-slate-200/70 bg-slate-50 p-5 dark:border-slate-700/60 dark:bg-slate-900/50">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
