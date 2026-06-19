@@ -107,7 +107,7 @@ const Login = () => {
             )}
           </>
         ) : (
-          <p className="text-xs text-emerald-300/90 mt-3 bg-emerald-500/10 border border-emerald-500/20 rounded-lg px-3 py-2">
+          <p className="text-xs text-emerald-700 mt-3 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">
             Hidden Super Admin login detected. You may continue without selecting a role.
           </p>
         )}
@@ -131,8 +131,8 @@ const Login = () => {
         </button>
       </form>
       {showSuperAdminSetup && (
-        <div className="mt-4 rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 text-sm text-amber-100">
-          <p className="font-semibold text-amber-200 mb-2">Super Admin setup mode</p>
+        <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+          <p className="font-semibold text-amber-800 mb-2">Super Admin setup mode</p>
           <p className="mb-3">Your hidden Super Admin account can be provisioned or reset here. If this account does not yet exist, it will be created automatically.</p>
           <button
             type="button"

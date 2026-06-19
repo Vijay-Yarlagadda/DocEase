@@ -414,7 +414,7 @@ const HospitalProfilePanel = () => {
           </div>
         </div>
 
-        {form.verificationStatus !== 'verified' && (
+        {form.verificationStatus !== 'verified' && !isNewHospital && (
           <div className="mt-6 rounded-3xl border border-slate-200/70 bg-slate-50 p-5 dark:border-slate-700/60 dark:bg-slate-900/50">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
