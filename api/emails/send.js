@@ -1,7 +1,6 @@
-require('dotenv').config()
-const emailService = require('../../api/services/emailService')
+import * as emailService from '../services/emailService.js'
 
-module.exports = async (req, res) => {
+export default async function handler(req, res) {
   // Add CORS headers so the frontend can hit it
   res.setHeader('Access-Control-Allow-Credentials', true)
   res.setHeader('Access-Control-Allow-Origin', '*')

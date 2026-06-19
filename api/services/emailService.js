@@ -1,5 +1,6 @@
-const nodemailer = require('nodemailer')
-require('dotenv').config()
+import nodemailer from 'nodemailer'
+import dotenv from 'dotenv'
+dotenv.config()
 
 const transporter = nodemailer.createTransport({
   service: 'gmail', // Standard configuration for Gmail
@@ -69,7 +70,7 @@ const getLayout = (title, body) => `
 </html>
 `
 
-exports.sendDoctorCredentials = async (email, name, password) => {
+export const sendDoctorCredentials = async (email, name, password) => {
   const html = getLayout(
     'Welcome to DocEase',
     `
@@ -85,7 +86,7 @@ exports.sendDoctorCredentials = async (email, name, password) => {
   return sendEmail({ to: email, subject: 'Your DocEase Account Credentials', html })
 }
 
-exports.sendAppointmentBookedToDoctor = async (doctorEmail, patientName, date, time) => {
+export const sendAppointmentBookedToDoctor = async (doctorEmail, patientName, date, time) => {
   const html = getLayout(
     'New Appointment Request',
     `
@@ -101,7 +102,7 @@ exports.sendAppointmentBookedToDoctor = async (doctorEmail, patientName, date, t
   return sendEmail({ to: doctorEmail, subject: 'New Appointment Request - DocEase', html })
 }
 
-exports.sendAppointmentStatusToPatient = async (patientEmail, patientName, doctorName, date, time, status) => {
+export const sendAppointmentStatusToPatient = async (patientEmail, patientName, doctorName, date, time, status) => {
   const isApproved = status === 'approved'
   const html = getLayout(
     `Appointment ${isApproved ? 'Approved' : 'Rejected'}`,
@@ -118,7 +119,7 @@ exports.sendAppointmentStatusToPatient = async (patientEmail, patientName, docto
   return sendEmail({ to: patientEmail, subject: `Appointment ${isApproved ? 'Approved' : 'Rejected'} - DocEase`, html })
 }
 
-exports.sendAppointmentCancelled = async (email, oppositeName, date, time) => {
+export const sendAppointmentCancelled = async (email, oppositeName, date, time) => {
   const html = getLayout(
     'Appointment Cancelled',
     `
@@ -134,7 +135,7 @@ exports.sendAppointmentCancelled = async (email, oppositeName, date, time) => {
   return sendEmail({ to: email, subject: 'Appointment Cancelled - DocEase', html })
 }
 
-exports.sendHospitalSubmittedToSuperAdmin = async (adminEmail, hospitalName) => {
+export const sendHospitalSubmittedToSuperAdmin = async (adminEmail, hospitalName) => {
   const html = getLayout(
     'New Hospital Registration',
     `
@@ -146,7 +147,7 @@ exports.sendHospitalSubmittedToSuperAdmin = async (adminEmail, hospitalName) => 
   return sendEmail({ to: adminEmail, subject: 'Action Required: New Hospital Registration', html })
 }
 
-exports.sendHospitalVerificationStatus = async (hospitalEmail, hospitalName, status) => {
+export const sendHospitalVerificationStatus = async (hospitalEmail, hospitalName, status) => {
   const isApproved = status === 'approved'
   const html = getLayout(
     `Hospital Verification ${isApproved ? 'Approved' : 'Rejected'}`,
@@ -159,7 +160,7 @@ exports.sendHospitalVerificationStatus = async (hospitalEmail, hospitalName, sta
   return sendEmail({ to: hospitalEmail, subject: `DocEase Registration ${isApproved ? 'Approved' : 'Rejected'}`, html })
 }
 
-exports.sendDocumentUploadNotification = async (doctorEmail, doctorName, patientName) => {
+export const sendDocumentUploadNotification = async (doctorEmail, doctorName, patientName) => {
   const html = getLayout(
     'New Medical Documents Uploaded',
     `
