@@ -204,7 +204,7 @@ const HospitalProfilePanel = () => {
         }
         return [...prev, { id: hospitalId, ...form, doctorCount: 0, appointmentCount: 0 }]
       })
-      showSuccess('Hospital profile updated successfully')
+      showSuccess(`Hospital profile ${isNewHospital ? 'created' : 'updated'} successfully`)
     } catch (err) {
       showError(err.message || 'Failed to update hospital profile')
     } finally {

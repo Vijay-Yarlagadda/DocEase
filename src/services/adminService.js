@@ -95,34 +95,36 @@ export const updateHospitalProfile = async (hospitalId, data) => {
 
   if (justCompletedUploads || justReapplied) {
     try {
-      await api.post('/emails/send', {
-        action: 'sendHospitalSubmittedToSuperAdmin',
-        payload: {
-          adminEmail: import.meta.env.VITE_SUPER_ADMIN_EMAIL || 'superadmin@docease.com',
-          hospitalName: newData.name || 'New Hospital'
-        }
-      })
-    } catch (err) {
-      console.error('Failed to notify super admin via email:', err)
-    }
-
-    try {
-      // Send in-app notification
-      const { sendNotification } = await import('./notificationService')
+      // Fetch Super Admin from Firestore
       const adminQ = query(collection(db, USERS_COLLECTION), where('role', '==', 'superadmin'))
       const adminSnap = await getDocs(adminQ)
+      let actualAdminEmail = import.meta.env.VITE_SUPER_ADMIN_EMAIL || 'superadmin@docease.com'
+      
       if (!adminSnap.empty) {
-        const adminUid = adminSnap.docs[0].id
+        const adminData = adminSnap.docs[0].data()
+        actualAdminEmail = adminData.email || actualAdminEmail
+        
+        // Send in-app notification
+        const { sendNotification } = await import('./notificationService')
         await sendNotification({
-          recipientId: adminUid,
+          recipientId: adminSnap.docs[0].id,
           type: 'hospital',
           title: 'New Hospital Verification',
           message: `${newData.name || 'A hospital'} submitted documents and is pending verification.`,
           link: '/super-admin/verification'
         })
       }
+
+      // Send Email using Nodemailer
+      await api.post('/emails/send', {
+        action: 'sendHospitalSubmittedToSuperAdmin',
+        payload: {
+          adminEmail: actualAdminEmail,
+          hospitalName: newData.name || 'New Hospital'
+        }
+      })
     } catch (err) {
-      console.error('Failed to create in-app notification:', err)
+      console.error('Failed to notify super admin:', err)
     }
   }
 
