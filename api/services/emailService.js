@@ -1,21 +1,28 @@
-const { Resend } = require('resend')
+const nodemailer = require('nodemailer')
 require('dotenv').config()
 
-const resend = new Resend(process.env.RESEND_API_KEY)
-const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev'
+const transporter = nodemailer.createTransport({
+  service: 'gmail', // Standard configuration for Gmail
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS, // Needs an App Password from Gmail
+  },
+})
+
+const FROM_EMAIL = process.env.SMTP_USER || 'docease@gmail.com'
 
 const sendEmail = async ({ to, subject, html }) => {
   try {
-    const data = await resend.emails.send({
-      from: `DocEase <${FROM_EMAIL}>`,
+    const info = await transporter.sendMail({
+      from: `"DocEase" <${FROM_EMAIL}>`,
       to,
       subject,
       html,
     })
-    console.log(`Email sent to ${to}:`, data.id)
-    return { success: true, id: data.id }
+    console.log(`Email sent to ${to}:`, info.messageId)
+    return { success: true, id: info.messageId }
   } catch (error) {
-    console.error('Error sending email:', error)
+    console.error('Error sending email via Nodemailer:', error)
     return { success: false, error: error.message }
   }
 }
