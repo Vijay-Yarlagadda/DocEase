@@ -180,24 +180,18 @@ const HospitalProfilePanel = () => {
   const handleSubmit = async (e) => {
     e.preventDefault()
     setSaving(true)
-    if (!form.registrationCertificateUrl) {
-      showError('Registration certificate is required for hospital verification.')
-      setSaving(false)
-      return
-    }
-    if (!form.hospitalLicenseUrl) {
-      showError('Hospital license is required for hospital verification.')
-      setSaving(false)
-      return
-    }
 
     try {
       await updateHospitalProfile(hospitalId, form)
-      setHospitals((prev) =>
-        prev.map((hospital) =>
-          hospital.id === hospitalId ? { ...hospital, ...form, doctorCount: hospital.doctorCount, appointmentCount: hospital.appointmentCount } : hospital
-        )
-      )
+      setHospitals((prev) => {
+        const exists = prev.some((h) => h.id === hospitalId)
+        if (exists) {
+          return prev.map((hospital) =>
+            hospital.id === hospitalId ? { ...hospital, ...form, doctorCount: hospital.doctorCount, appointmentCount: hospital.appointmentCount } : hospital
+          )
+        }
+        return [...prev, { id: hospitalId, ...form, doctorCount: 0, appointmentCount: 0 }]
+      })
       showSuccess('Hospital profile updated successfully')
     } catch (err) {
       showError(err.message || 'Failed to update hospital profile')
@@ -239,7 +233,7 @@ const HospitalProfilePanel = () => {
 
   if (loading) return <PanelSkeleton rows={6} />
 
-  const isNewHospital = !form.name && !form.email && !form.address && !form.registrationCertificateUrl && !form.hospitalLicenseUrl
+  const isNewHospital = !hospitals.some((h) => h.id === hospitalId)
 
   const fields = [
     { name: 'name', label: 'Hospital Name', icon: Building2, type: 'text', placeholder: 'e.g. Apollo City Hospital' },

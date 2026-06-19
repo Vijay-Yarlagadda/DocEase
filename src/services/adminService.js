@@ -109,8 +109,7 @@ export const updateHospitalProfile = async (hospitalId, data) => {
     try {
       // Send in-app notification
       const { sendNotification } = await import('./notificationService')
-      const adminEmail = import.meta.env.VITE_SUPER_ADMIN_EMAIL || 'superadmin@docease.com'
-      const adminQ = query(collection(db, USERS_COLLECTION), where('email', '==', adminEmail))
+      const adminQ = query(collection(db, USERS_COLLECTION), where('role', '==', 'superadmin'))
       const adminSnap = await getDocs(adminQ)
       if (!adminSnap.empty) {
         const adminUid = adminSnap.docs[0].id
