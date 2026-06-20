@@ -34,9 +34,8 @@ const NotificationDropdown = () => {
   const unreadCount = notifications.filter(n => !n.read).length
 
   const handleNotificationClick = async (notification) => {
-    if (!notification.read) {
-      await markNotificationAsRead(notification.id)
-    }
+    const { deleteNotification } = await import('../../services/notificationService')
+    await deleteNotification(notification.id)
     setIsOpen(false)
     if (notification.link) {
       navigate(notification.link)

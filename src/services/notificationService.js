@@ -25,6 +25,35 @@ export const markNotificationAsRead = async (notificationId) => {
   }
 }
 
+export const deleteNotification = async (notificationId) => {
+  try {
+    const { deleteDoc } = await import('firebase/firestore')
+    const notifRef = doc(db, 'notifications', notificationId)
+    await deleteDoc(notifRef)
+  } catch (error) {
+    console.error('Error deleting notification:', error)
+    throw error
+  }
+}
+
+export const clearHospitalNotifications = async (hospitalName) => {
+  try {
+    const { deleteDoc } = await import('firebase/firestore')
+    const q = query(collection(db, 'notifications'), where('type', '==', 'hospital'))
+    const snapshot = await getDocs(q)
+    const deletes = []
+    snapshot.docs.forEach(d => {
+      const data = d.data()
+      if (hospitalName && (data.message.includes(hospitalName) || data.title.includes(hospitalName))) {
+        deletes.push(deleteDoc(d.ref))
+      }
+    })
+    await Promise.all(deletes)
+  } catch (error) {
+    console.error('Error clearing hospital notifications:', error)
+  }
+}
+
 export const subscribeToNotifications = (userId, callback) => {
   if (!userId) return () => {}
   const q = query(

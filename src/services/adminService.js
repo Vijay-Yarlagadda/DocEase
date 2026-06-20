@@ -146,6 +146,8 @@ export const approveHospital = async (hospitalId) => {
         action: 'sendHospitalVerificationStatus',
         payload: { hospitalEmail: data.email, hospitalName: data.name, status: 'approved' }
       })
+      const { clearHospitalNotifications } = await import('./notificationService')
+      await clearHospitalNotifications(data.name)
     }
   } catch (err) {
     console.error('Failed to send hospital approval email', err)
@@ -167,6 +169,8 @@ export const rejectHospital = async (hospitalId) => {
         action: 'sendHospitalVerificationStatus',
         payload: { hospitalEmail: data.email, hospitalName: data.name, status: 'rejected' }
       })
+      const { clearHospitalNotifications } = await import('./notificationService')
+      await clearHospitalNotifications(data.name)
     }
   } catch (err) {
     console.error('Failed to send hospital rejection email', err)
