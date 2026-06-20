@@ -1,5 +1,6 @@
 import { db } from './firebase'
-import { collection, addDoc, query, where, getDocs, deleteDoc, doc } from 'firebase/firestore'
+import { collection, addDoc, query, where, getDocs, deleteDoc, doc, getDoc } from 'firebase/firestore'
+import api from './api'
 
 const LEAVES_COLLECTION = 'leaves'
 
@@ -10,6 +11,44 @@ export const addLeave = async (doctorId, date, reason) => {
     reason,
     createdAt: new Date().toISOString()
   })
+
+  try {
+    // Fetch doctor to get name and hospitalId
+    const doctorDoc = await getDoc(doc(db, 'doctors', doctorId))
+    if (doctorDoc.exists()) {
+      const doctorData = doctorDoc.data()
+      const hospitalId = doctorData.hospitalId
+      const doctorName = doctorData.name || doctorData.firstName
+
+      if (hospitalId) {
+        // Fetch the admin for this hospital
+        const q = query(
+          collection(db, 'users'), 
+          where('role', '==', 'admin'),
+          where('hospitalId', '==', hospitalId)
+        )
+        const adminSnap = await getDocs(q)
+        if (!adminSnap.empty) {
+          const adminData = adminSnap.docs[0].data()
+          if (adminData.email) {
+            await api.post('/emails/send', {
+              action: 'sendDoctorLeaveToAdmin',
+              payload: {
+                adminEmail: adminData.email,
+                adminName: adminData.name || adminData.firstName || 'Hospital Admin',
+                doctorName,
+                leaveDate: date,
+                reason: reason || 'Personal Leave'
+              }
+            })
+          }
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Failed to send leave notification email:', error)
+  }
+
   return leaveRef.id
 }
 

@@ -48,6 +48,12 @@ export default async function handler(req, res) {
       case 'sendDocumentUploadNotification':
         result = await emailService.sendDocumentUploadNotification(payload.doctorEmail, payload.doctorName, payload.patientName)
         break
+      case 'sendPrescriptionUploadedToPatient':
+        result = await emailService.sendPrescriptionUploadedToPatient(payload.patientEmail, payload.patientName, payload.doctorName)
+        break
+      case 'sendDoctorLeaveToAdmin':
+        result = await emailService.sendDoctorLeaveToAdmin(payload.adminEmail, payload.adminName, payload.doctorName, payload.leaveDate, payload.reason)
+        break
       default:
         return res.status(400).json({ success: false, error: 'Invalid action type' })
     }

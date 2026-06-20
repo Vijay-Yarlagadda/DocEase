@@ -171,3 +171,31 @@ export const sendDocumentUploadNotification = async (doctorEmail, doctorName, pa
   )
   return sendEmail({ to: doctorEmail, subject: 'New Patient Documents Uploaded - DocEase', html })
 }
+
+export const sendPrescriptionUploadedToPatient = async (patientEmail, patientName, doctorName) => {
+  const html = getLayout(
+    'New Prescription & Notes Available',
+    `
+    <h2>Hello ${patientName},</h2>
+    <p><strong>Dr. ${doctorName}</strong> has updated your appointment record with a new prescription and consultation notes.</p>
+    <p>Please log in to your patient portal to review your prescription, download any attached documents, and view your doctor's instructions.</p>
+    `
+  )
+  return sendEmail({ to: patientEmail, subject: 'New Prescription Available - DocEase', html })
+}
+
+export const sendDoctorLeaveToAdmin = async (adminEmail, adminName, doctorName, leaveDate, reason) => {
+  const html = getLayout(
+    'Doctor Leave Scheduled',
+    `
+    <h2>Hello ${adminName},</h2>
+    <p><strong>Dr. ${doctorName}</strong> has scheduled an upcoming leave of absence.</p>
+    <div class="box">
+      <div class="box-item"><strong>Date:</strong> ${leaveDate}</div>
+      <div class="box-item"><strong>Reason:</strong> ${reason}</div>
+    </div>
+    <p>Please ensure that no new appointments are booked for this date and any existing appointments are appropriately rescheduled by the doctor.</p>
+    `
+  )
+  return sendEmail({ to: adminEmail, subject: `Leave Notice: Dr. ${doctorName} - DocEase`, html })
+}

@@ -2,7 +2,7 @@ import { useState, useEffect, useContext } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Calendar, Clock, MapPin, User, FileText, Download, Eye, ArrowLeft, CheckCircle, XCircle, Stethoscope } from 'lucide-react'
-import { getAppointmentById, updateAppointmentStatus } from '../../services/appointmentService'
+import { getAppointmentById, updateAppointmentStatus, notifyPatientPrescriptionUploaded } from '../../services/appointmentService'
 import { getDocumentsForAppointment, createPatientDocument } from '../../services/documentService'
 import { uploadFileToCloudinary } from '../../services/cloudinaryService'
 import { AuthContext } from '../../context/AuthContext'
@@ -116,6 +116,10 @@ const DoctorAppointmentDetails = () => {
       const docs = await getDocumentsForAppointment(appointmentId, user)
       setDocuments(docs)
       setProgress(0)
+
+      // Notify via Email
+      await notifyPatientPrescriptionUploaded(appointment.patientId, user.name || user.firstName)
+
     } catch (err) {
       showError(err.message || 'Upload failed')
     } finally {
@@ -159,6 +163,10 @@ const DoctorAppointmentDetails = () => {
         type: 'report',
         link: `/patient/appointments/${appointmentId}`
       })
+
+      // Notify via Email
+      await notifyPatientPrescriptionUploaded(appointment.patientId, user.name || user.firstName)
+
     } catch (err) {
       showError('Failed to generate report')
     } finally {

@@ -141,3 +141,24 @@ export const deleteAppointment = async (appointmentId) => {
   if (!appointmentId) return
   await deleteDoc(doc(db, APPOINTMENTS_COLLECTION, appointmentId))
 }
+
+export const notifyPatientPrescriptionUploaded = async (patientId, doctorName) => {
+  try {
+    const patientDoc = await getDoc(doc(db, 'users', patientId))
+    if (patientDoc.exists()) {
+      const patientData = patientDoc.data()
+      if (patientData.email) {
+        await api.post('/emails/send', {
+          action: 'sendPrescriptionUploadedToPatient',
+          payload: {
+            patientEmail: patientData.email,
+            patientName: patientData.name || patientData.firstName,
+            doctorName
+          }
+        })
+      }
+    }
+  } catch (error) {
+    console.error('Failed to send prescription uploaded email:', error)
+  }
+}
