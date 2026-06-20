@@ -355,7 +355,9 @@ const SuperAdminVerification = () => {
             </div>
           </div>
         </div>
-        </div>
+      </div>
+    </div>
+
 
         <motion.div
           className="dashboard-card"
