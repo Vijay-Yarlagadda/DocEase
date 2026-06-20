@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Search, CheckCircle2, XCircle, Eye, Filter, ArrowRight } from 'lucide-react'
+import { Search, CheckCircle2, XCircle, Eye, Filter, ArrowRight, Phone, Mail, FileText, Check, X } from 'lucide-react'
 import DashboardPageHeader from '../../components/dashboard/DashboardPageHeader'
 import SuperAdminStatusBadge from '../../components/superadmin/SuperAdminStatusBadge'
 import PDFViewer from '../../components/PDFViewer'
@@ -309,29 +309,35 @@ const SuperAdminVerification = () => {
                 <div className="p-8 text-center text-slate-500">No hospitals match your filters.</div>
               ) : (
                 filteredHospitals.map((hospital) => (
-                  <div key={hospital.id} className="flex flex-col lg:grid lg:grid-cols-6 gap-4 px-5 py-4 lg:items-center text-sm text-slate-700 dark:text-slate-200">
+                  <div key={hospital.id} className="flex flex-col lg:grid lg:grid-cols-6 gap-3 lg:gap-4 px-4 lg:px-5 py-3 lg:py-4 lg:items-center text-sm text-slate-700 dark:text-slate-200">
                     <div className="col-span-2 flex justify-between items-start lg:block">
                       <div>
                         <button type="button" onClick={() => setSelectedHospital(hospital)} className="text-left font-semibold text-slate-900 dark:text-white hover:text-fuchsia-500 transition">
                           {hospital.name || 'Unnamed Hospital'}
                         </button>
-                        <p className="text-xs text-slate-500 mt-1">{hospital.address || 'Address not provided'}</p>
+                        <p className="text-xs text-slate-500 mt-0.5">{hospital.address || 'Address not provided'}</p>
                       </div>
-                      <div className="lg:hidden">
+                      <div className="lg:hidden shrink-0 ml-2">
                         <SuperAdminStatusBadge status={hospital.verificationStatus} />
                       </div>
                     </div>
                     <div className="hidden lg:block"><SuperAdminStatusBadge status={hospital.verificationStatus} /></div>
                     
-                    <div className="flex flex-col gap-1 lg:block">
-                      <span className="text-xs text-slate-400 uppercase tracking-wider lg:hidden">Contact</span>
-                      <div>{hospital.phone || hospital.email || 'N/A'}</div>
+                    {/* Mobile Contact & Docs Row */}
+                    <div className="flex flex-row lg:hidden gap-5 mt-1 text-slate-500 dark:text-slate-400">
+                      <div className="flex items-center gap-1.5">
+                        <Phone className="w-3.5 h-3.5" />
+                        <span className="text-xs">{hospital.phone || hospital.email || 'N/A'}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <FileText className="w-3.5 h-3.5" />
+                        <span className="text-xs">{(hospital.registrationCertificateUrl ? 1 : 0) + (hospital.hospitalLicenseUrl ? 1 : 0)} docs</span>
+                      </div>
                     </div>
-                    
-                    <div className="flex flex-col gap-1 lg:block">
-                      <span className="text-xs text-slate-400 uppercase tracking-wider lg:hidden">Documents</span>
-                      <div>{(hospital.registrationCertificateUrl ? 1 : 0) + (hospital.hospitalLicenseUrl ? 1 : 0)} uploaded</div>
-                    </div>
+
+                    {/* Desktop Columns */}
+                    <div className="hidden lg:block">{hospital.phone || hospital.email || 'N/A'}</div>
+                    <div className="hidden lg:block">{(hospital.registrationCertificateUrl ? 1 : 0) + (hospital.hospitalLicenseUrl ? 1 : 0)} uploaded</div>
                     
                     <div className="flex items-center justify-start lg:justify-end gap-2 mt-2 lg:mt-0 pt-3 lg:pt-0 border-t border-slate-100 dark:border-slate-800 lg:border-none">
                       {(!hospital.verificationStatus || hospital.verificationStatus === 'pending') ? (
@@ -340,17 +346,17 @@ const SuperAdminVerification = () => {
                             type="button"
                             disabled={updatingId === hospital.id}
                             onClick={() => handleStatusUpdate(hospital.id, 'verified')}
-                            className="rounded-2xl bg-emerald-500 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-400 disabled:opacity-50"
+                            className="flex-1 lg:flex-none flex items-center justify-center gap-1.5 rounded-2xl bg-emerald-500 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-400 disabled:opacity-50"
                           >
-                            Approve
+                            <Check className="w-3.5 h-3.5 lg:hidden" /> Approve
                           </button>
                           <button
                             type="button"
                             disabled={updatingId === hospital.id}
                             onClick={() => handleStatusUpdate(hospital.id, 'rejected')}
-                            className="rounded-2xl bg-rose-500 px-3 py-2 text-xs font-semibold text-white hover:bg-rose-400 disabled:opacity-50"
+                            className="flex-1 lg:flex-none flex items-center justify-center gap-1.5 rounded-2xl bg-rose-500 px-3 py-2 text-xs font-semibold text-white hover:bg-rose-400 disabled:opacity-50"
                           >
-                            Reject
+                            <X className="w-3.5 h-3.5 lg:hidden" /> Reject
                           </button>
                         </>
                       ) : (
