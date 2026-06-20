@@ -256,7 +256,7 @@ const SuperAdminVerification = () => {
       />
 
       <div className="grid gap-6 mb-8 xl:grid-cols-[1fr_0.45fr]">
-        <div className="dashboard-card">
+        <div className="dashboard-card min-w-0">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
             <div>
               <p className="text-sm text-slate-500">Verification workflow</p>
