@@ -1,4 +1,4 @@
-import { collection, addDoc, getDocs, updateDoc, doc, query, where, orderBy, onSnapshot, serverTimestamp } from 'firebase/firestore'
+import { collection, addDoc, getDocs, updateDoc, deleteDoc, doc, query, where, orderBy, onSnapshot, serverTimestamp } from 'firebase/firestore'
 import { db } from './firebase'
 
 export const sendNotification = async (notificationData) => {
@@ -27,7 +27,6 @@ export const markNotificationAsRead = async (notificationId) => {
 
 export const deleteNotification = async (notificationId) => {
   try {
-    const { deleteDoc } = await import('firebase/firestore')
     const notifRef = doc(db, 'notifications', notificationId)
     await deleteDoc(notifRef)
   } catch (error) {
@@ -38,7 +37,6 @@ export const deleteNotification = async (notificationId) => {
 
 export const clearHospitalNotifications = async (hospitalName) => {
   try {
-    const { deleteDoc } = await import('firebase/firestore')
     const q = query(collection(db, 'notifications'), where('type', '==', 'hospital'))
     const snapshot = await getDocs(q)
     const deletes = []
