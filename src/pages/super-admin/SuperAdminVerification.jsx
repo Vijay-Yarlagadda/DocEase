@@ -109,13 +109,14 @@ const HospitalDetailsModal = ({ hospital, onClose, onViewDocument }) => {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm px-4 py-6 overflow-y-auto">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.93 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.95 }}
-        className="w-full max-w-3xl rounded-3xl border border-slate-800/80 bg-slate-950/95 p-6 shadow-2xl my-8"
-      >
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/80 backdrop-blur-sm">
+      <div className="flex min-h-full items-center justify-center p-4 py-10">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.93 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.95 }}
+          className="w-full max-w-3xl rounded-3xl border border-slate-800/80 bg-slate-950/95 p-6 shadow-2xl"
+        >
         <div className="flex items-start justify-between gap-4 mb-6">
           <div>
             <p className="text-sm text-slate-400 uppercase tracking-[0.2em]">Hospital details</p>
@@ -191,6 +192,7 @@ const HospitalDetailsModal = ({ hospital, onClose, onViewDocument }) => {
           </div>
         </div>
       </motion.div>
+      </div>
     </div>
   )
 }
