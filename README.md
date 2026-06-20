@@ -95,8 +95,8 @@ A comprehensive, secure healthcare management platform that streamlines document
 
 ### **Email & Notifications**
 
-- **Resend** - Email delivery service
-- **Resend SDK** - Email API integration
+- **Nodemailer** - SMTP email delivery engine
+- **Google SMTP** - Secure email transmission integration
 
 ### **Deployment**
 
@@ -106,9 +106,10 @@ A comprehensive, secure healthcare management platform that streamlines document
 
 ### **Development Tools**
 
-- **PostCSS** - CSS transformations
-- **Concurrently** - Run multiple commands simultaneously
-- **Patch Package** - Fix npm dependencies
+- **Vite** - Lightning-fast modern frontend build tool
+- **PostCSS** - Advanced CSS transformation engine used by Tailwind
+- **ESLint** - Automated code quality and syntax checker
+- **Concurrently** - Development utility to run frontend and backend simultaneously
 
 ---
 
@@ -186,7 +187,7 @@ DocEase/
 - **npm** or **yarn**
 - **Firebase Project** (create one at [firebase.google.com](https://firebase.google.com))
 - **Cloudinary Account** (sign up at [cloudinary.com](https://cloudinary.com))
-- **Resend API Key** (get one at [resend.com](https://resend.com))
+- **Gmail Account** (with App Passwords enabled for Nodemailer)
 
 ### Installation
 
@@ -225,7 +226,8 @@ npm install
 
 # Create .env file
 echo "PORT=5000
-RESEND_API_KEY=your_resend_api_key
+SMTP_USER=your_gmail_address
+SMTP_PASS=your_gmail_app_password
 NODE_ENV=development" > .env
 
 # Start the server
@@ -477,7 +479,7 @@ firebase deploy --only functions
 3. Set environment variables:
 
 ```bash
-firebase functions:config:set resend.api_key="your_key"
+# Add SMTP_USER and SMTP_PASS to your hosting provider's environment variables
 ```
 
 ### Database - Firestore
@@ -513,12 +515,13 @@ Firestore is hosted by Firebase - no additional deployment needed.
 
 ## 📧 Email Service
 
-DocEase uses **Resend** for reliable email delivery:
+DocEase uses **Nodemailer** with Google SMTP for reliable, automated email delivery:
 
-- **Appointment Confirmations** - Automatic confirmations sent to patients
-- **Doctor Notifications** - Alert doctors of new appointments
-- **Password Resets** - Secure password reset emails
-- **System Notifications** - Important system updates
+- **Appointment Confirmations** - Automatic status updates sent to patients
+- **Doctor Notifications** - Alerts for doctors about new appointment requests
+- **Prescription Delivery** - Alerts patients when their prescriptions are ready
+- **Leave Management** - Notifies admins when doctors schedule time off
+- **Hospital Verification** - Updates for hospital approval/rejection statuses
 
 ---
 
@@ -567,8 +570,8 @@ npm start
 
 **Issue**: Email not sending
 
-- Solution: Verify Resend API key is valid
-- Check email templates and sender configuration
+- Solution: Verify your Gmail App Password is correct in `SMTP_PASS`
+- Check that your Gmail account has 2-Step Verification enabled
 
 For detailed troubleshooting, see [TROUBLESHOOTING.md](TROUBLESHOOTING.md)
 
@@ -630,40 +633,4 @@ For support, email us at support@docease.com or open an issue on [GitHub Issues]
 
 **Made with ❤️ by the DocEase Team**
 
-## 🎨 Customization
 
-### Theme Colors
-
-Edit `tailwind.config.js` to customize colors:
-
-```js
-colors: {
-  primary: { DEFAULT: '#1E3A8A' },
-  secondary: { DEFAULT: '#0EA5E9' },
-  accent: { DEFAULT: '#38BDF8' },
-}
-```
-
-### Dark Mode
-
-Dark mode is enabled by default. Toggle it using the moon/sun icon in the navbar. The preference is saved in localStorage.
-
-## 📝 Notes
-
-- This is a frontend-only implementation. Backend API integration is pending.
-- All forms currently log to console. Connect to your backend API as needed.
-- Authentication is placeholder-based. Implement proper authentication when connecting to backend.
-
-## 🔮 Future Enhancements
-
-- Backend API integration
-- Real authentication system
-- Database connectivity
-- File upload functionality
-- Real-time notifications
-- Email notifications
-- Advanced analytics
-
-## 📄 License
-
-This project is open source and available under the MIT License.
