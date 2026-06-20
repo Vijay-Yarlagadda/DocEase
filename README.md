@@ -194,7 +194,7 @@ DocEase/
 #### Step 1: Clone the Repository
 
 ```bash
-git clone https://github.com/yourusername/docease.git
+git clone https://github.com/Vijay-Yarlagadda/docease.git
 cd DocEase
 ```
 
