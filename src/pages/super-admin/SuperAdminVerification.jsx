@@ -290,13 +290,15 @@ const SuperAdminVerification = () => {
           </div>
 
           <div className="overflow-hidden rounded-[2rem] border border-slate-200/70 dark:border-slate-800/70 bg-white/95 dark:bg-slate-900/70">
-            <div className="grid grid-cols-6 gap-4 px-5 py-4 text-xs uppercase tracking-[0.3em] font-semibold text-slate-500 bg-slate-100 dark:bg-slate-950">
-              <span className="col-span-2">Hospital</span>
-              <span>Status</span>
-              <span>Contact</span>
-              <span>Docs</span>
-              <span className="text-right">Actions</span>
-            </div>
+            <div className="overflow-x-auto">
+              <div className="min-w-[800px]">
+                <div className="grid grid-cols-6 gap-4 px-5 py-4 text-xs uppercase tracking-[0.3em] font-semibold text-slate-500 bg-slate-100 dark:bg-slate-950">
+                  <span className="col-span-2">Hospital</span>
+                  <span>Status</span>
+                  <span>Contact</span>
+                  <span>Docs</span>
+                  <span className="text-right">Actions</span>
+                </div>
             <div className="divide-y divide-slate-200/70 dark:divide-slate-800">
               {loading ? (
                 Array.from({ length: 4 }).map((_, index) => (
@@ -351,9 +353,11 @@ const SuperAdminVerification = () => {
             </div>
           </div>
         </div>
+      </div>
+    </div>
 
-        <motion.div
-          className="dashboard-card"
+    <motion.div
+      className="dashboard-card"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.35, delay: 0.08 }}
