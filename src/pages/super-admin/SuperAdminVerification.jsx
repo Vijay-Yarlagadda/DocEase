@@ -365,11 +365,9 @@ const SuperAdminVerification = () => {
             </div>
           </div>
         </div>
-      </div>
-    </div>
 
-    <motion.div
-      className="dashboard-card"
+        <motion.div
+          className="dashboard-card"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.35, delay: 0.08 }}
