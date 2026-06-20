@@ -2,9 +2,18 @@ import { motion } from 'framer-motion'
 import HeroSection from '../components/HeroSection'
 import RoleCard from '../components/RoleCard'
 import { Shield, UserCheck, Users, ArrowRight } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { Link, Navigate } from 'react-router-dom'
+import { AuthContext } from '../context/AuthContext'
+import { useContext } from 'react'
 
 const Home = () => {
+  const { user } = useContext(AuthContext)
+  
+  if (user) {
+    if (user.role === 'superadmin') return <Navigate to="/super-admin/dashboard" replace />
+    if (user.role) return <Navigate to={`/${user.role}/dashboard`} replace />
+  }
+
   const roles = [
     {
       icon: Shield,
