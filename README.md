@@ -608,9 +608,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **DocEase Development Team**
 
-- **Email**: support@docease.com
-- **GitHub**: [yourgithubusername](https://github.com/yourgithubusername)
-- **Website**: [docease.vercel.app](https://docease.vercel.app)
+- **Email**: docease06@gmail.com
+- **GitHub**: [Vijay-Yarlagadda](https://github.com/Vijay-Yarlagadda/DocEase)
+- **Website**: [mydocease.vercel.app](https://mydocease.vercel.app)
 
 ---
 
