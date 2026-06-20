@@ -7,6 +7,7 @@ const PDFViewer = ({ isOpen, url, fileName, onClose }) => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [pdfSrc, setPdfSrc] = useState(null)
+  const [isImage, setIsImage] = useState(false)
   const iframeRef = useRef(null)
 
   useEffect(() => {
@@ -14,6 +15,7 @@ const PDFViewer = ({ isOpen, url, fileName, onClose }) => {
       setLoading(true)
       setError(null)
       setPdfSrc(null)
+      setIsImage(false)
     }
   }, [isOpen, url])
 
@@ -74,12 +76,16 @@ const PDFViewer = ({ isOpen, url, fileName, onClose }) => {
              throw new Error('Server returned an HTML page instead of a document.')
           }
 
-          // Force download as blob to bypass any Content-Disposition attachment headers
-          // which can cause the browser to download instead of displaying the PDF
+          // Check if the file is an image based on content type or extension
+          const isImg = contentType.includes('image') || (fileName && fileName.toLowerCase().match(/\.(jpg|jpeg|png|gif|webp)$/))
+          
           const rawBlob = await resp.blob()
-          const pdfBlob = new Blob([rawBlob], { type: 'application/pdf' })
-          objectUrl = URL.createObjectURL(pdfBlob)
-          if (!cancelled) setPdfSrc(objectUrl)
+          const fileBlob = new Blob([rawBlob], { type: isImg ? (rawBlob.type || 'image/png') : 'application/pdf' })
+          objectUrl = URL.createObjectURL(fileBlob)
+          if (!cancelled) {
+            setPdfSrc(objectUrl)
+            setIsImage(!!isImg)
+          }
           setLoading(false)
           return
         }
@@ -94,10 +100,14 @@ const PDFViewer = ({ isOpen, url, fileName, onClose }) => {
               if (contentType && contentType.includes('text/html')) {
                  throw new Error('Server returned an HTML page instead of a document.')
               }
+              const isImg = contentType && contentType.includes('image')
               const rawBlob = await authResp.blob()
-              const pdfBlob = new Blob([rawBlob], { type: 'application/pdf' })
-              objectUrl = URL.createObjectURL(pdfBlob)
-              if (!cancelled) setPdfSrc(objectUrl)
+              const fileBlob = new Blob([rawBlob], { type: isImg ? (rawBlob.type || 'image/png') : 'application/pdf' })
+              objectUrl = URL.createObjectURL(fileBlob)
+              if (!cancelled) {
+                setPdfSrc(objectUrl)
+                setIsImage(!!isImg)
+              }
               setLoading(false)
               return
             }
@@ -195,16 +205,24 @@ const PDFViewer = ({ isOpen, url, fileName, onClose }) => {
             </div>
           )}
 
-          {/* Using embed for better compatibility with PDFs */}
-          <embed
-            ref={iframeRef}
-            src={pdfUrl}
-            type="application/pdf"
-            onLoad={handleIframeLoad}
-            onError={handleIframeError}
-            className="w-full h-full"
-            title="PDF Viewer"
-          />
+          {/* Document Renderer */}
+          {isImage ? (
+            <img 
+              src={pdfUrl} 
+              alt={fileName || 'Document'} 
+              className="max-w-full max-h-full object-contain p-4"
+              onLoad={() => setLoading(false)}
+            />
+          ) : (
+            <iframe
+              ref={iframeRef}
+              src={pdfUrl}
+              className="w-full h-full border-0 bg-white"
+              title="Document Viewer"
+              onLoad={handleIframeLoad}
+              onError={handleIframeError}
+            />
+          )}
         </div>
       </motion.div>
     </motion.div>
