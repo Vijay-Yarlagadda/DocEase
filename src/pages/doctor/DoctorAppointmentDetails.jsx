@@ -5,8 +5,8 @@ import { Calendar, Clock, MapPin, User, FileText, Download, Eye, ArrowLeft, Chec
 import { getAppointmentById, updateAppointmentStatus, notifyPatientPrescriptionUploaded } from '../../services/appointmentService'
 import { getDocumentsForAppointment, createPatientDocument } from '../../services/documentService'
 import { uploadFileToCloudinary } from '../../services/cloudinaryService'
-import PrescriptionBuilder from './PrescriptionBuilder'
-import DocumentViewerModal from '../../components/DocumentViewerModal'
+
+
 import { formatDoctorName } from '../../utils/userProfile'
 import { AuthContext } from '../../context/AuthContext'
 import FilePreviewModal from '../../components/FilePreviewModal'
