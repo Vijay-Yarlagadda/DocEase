@@ -46,7 +46,6 @@ const DoctorManagementPanel = ({ showAddForm = true }) => {
   const [submitting, setSubmitting] = useState(false)
   const [createdDoctor, setCreatedDoctor] = useState(null)
   const [showSuccessModal, setShowSuccessModal] = useState(false)
-  const [resetResult, setResetResult] = useState(null)
   const { showSuccess, showError } = useToast()
 
   const hospitalId = user?.uid || 'default'
@@ -168,11 +167,10 @@ const DoctorManagementPanel = ({ showAddForm = true }) => {
   }
 
   const handleResetPassword = async (doctor) => {
-    if (!window.confirm(`Reset password for Dr. ${doctor.name}? A new temporary password will be generated.`)) return
+    if (!window.confirm(`Send password reset email to Dr. ${doctor.name}?`)) return
     try {
-      const res = await resetDoctorPassword(doctor.id)
-      setResetResult({ email: doctor.email, tempPassword: res.tempPassword, name: doctor.name })
-      showSuccess('Temporary password generated — doctor must change it on next login')
+      await resetDoctorPassword(doctor.id)
+      showSuccess(`Password reset email sent to ${doctor.email}`)
       await fetchDoctors()
     } catch (err) {
       showError(err.message || 'Unable to reset password')
@@ -277,25 +275,6 @@ const DoctorManagementPanel = ({ showAddForm = true }) => {
             </div>
           </div>
         </div>
-
-        {resetResult && (
-          <div className="mb-4 p-4 rounded-xl bg-amber-500/10 border border-amber-500/20">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <p className="text-sm text-amber-200 font-medium">Password reset for {resetResult.name}</p>
-                <p className="text-xs text-slate-400 mt-1">Email: {resetResult.email}</p>
-                <code className="text-accent text-sm mt-2 block">{resetResult.tempPassword}</code>
-              </div>
-              <button onClick={() => setResetResult(null)} className="text-slate-500 hover:text-slate-900 dark:hover:text-white"><X className="w-4 h-4" /></button>
-            </div>
-            <button
-              onClick={() => navigator.clipboard.writeText(resetResult.tempPassword)}
-              className="mt-2 text-xs text-accent hover:text-cyan-300"
-            >
-              Copy password
-            </button>
-          </div>
-        )}
 
         <div className="space-y-2">
           {filteredDoctors.length === 0 && <p className="text-sm text-slate-500 text-center py-8">No doctors found</p>}

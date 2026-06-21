@@ -1,4 +1,5 @@
-import { db } from './firebase'
+import { auth, db } from './firebase'
+import { sendPasswordResetEmail } from 'firebase/auth'
 import { generateTempPassword, getAllDoctors } from './authService'
 import api from './api'
 import {
@@ -248,14 +249,18 @@ export const toggleDoctorActive = async (doctorId, active) => {
 }
 
 export const resetDoctorPassword = async (doctorId) => {
-  const tempPassword = generateTempPassword(12)
-  await updateDoc(doc(db, DOCTORS_COLLECTION, doctorId), {
-    tempPasswordReset: tempPassword,
-    mustChangePassword: true,
-    firstLogin: true,
+  const doctorDocRef = doc(db, DOCTORS_COLLECTION, doctorId)
+  const doctorDoc = await getDoc(doctorDocRef)
+  if (!doctorDoc.exists()) throw new Error('Doctor not found')
+  const email = doctorDoc.data().email
+
+  await sendPasswordResetEmail(auth, email)
+
+  await updateDoc(doctorDocRef, {
     passwordResetAt: serverTimestamp(),
+    mustChangePassword: false,
   })
-  return { tempPassword }
+  return { success: true }
 }
 
 export const getAllPatients = async () => {
