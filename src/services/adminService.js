@@ -142,9 +142,12 @@ export const approveHospital = async (hospitalId) => {
     const snap = await getDoc(doc(db, HOSPITALS_COLLECTION, hospitalId))
     if (snap.exists()) {
       const data = snap.data()
+      const adminDoc = await getDoc(doc(db, USERS_COLLECTION, hospitalId))
+      const adminEmail = adminDoc.exists() ? adminDoc.data().email : data.email
+      
       await api.post('/emails/send', {
         action: 'sendHospitalVerificationStatus',
-        payload: { hospitalEmail: data.email, hospitalName: data.name, status: 'approved' }
+        payload: { hospitalEmail: adminEmail, hospitalName: data.name, status: 'approved' }
       })
       const { sendNotification } = await import('./notificationService')
       await sendNotification({
@@ -171,9 +174,12 @@ export const rejectHospital = async (hospitalId) => {
     const snap = await getDoc(doc(db, HOSPITALS_COLLECTION, hospitalId))
     if (snap.exists()) {
       const data = snap.data()
+      const adminDoc = await getDoc(doc(db, USERS_COLLECTION, hospitalId))
+      const adminEmail = adminDoc.exists() ? adminDoc.data().email : data.email
+
       await api.post('/emails/send', {
         action: 'sendHospitalVerificationStatus',
-        payload: { hospitalEmail: data.email, hospitalName: data.name, status: 'rejected' }
+        payload: { hospitalEmail: adminEmail, hospitalName: data.name, status: 'rejected' }
       })
       const { sendNotification } = await import('./notificationService')
       await sendNotification({
