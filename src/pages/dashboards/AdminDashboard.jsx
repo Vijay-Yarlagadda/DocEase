@@ -14,6 +14,7 @@ import {
   getAdminNotifications,
   getUpcomingAppointments,
 } from '../../services/adminService'
+import { formatDoctorName } from '../../utils/userProfile'
 import { AuthContext } from '../../context/AuthContext'
 
 const AdminDashboard = () => {
@@ -134,7 +135,7 @@ const AdminDashboard = () => {
               <div key={a.id} className="flex items-center justify-between p-3 rounded-xl bg-white/95 dark:bg-slate-900/50 border border-slate-200/70 dark:border-slate-700/30">
                 <div>
                   <p className="text-sm font-medium text-slate-900 dark:text-white">{a.patientName || 'Patient'}</p>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">Dr. {a.doctorName || '—'} &bull; {a.date}</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">{formatDoctorName(a.doctorName)} &bull; {a.date}</p>
                 </div>
                 <span className="inline-flex items-center justify-center text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 capitalize">
                   {a.status || 'pending'}

@@ -25,6 +25,7 @@ import {
 import { useToast } from '../Toast'
 import { PanelSkeleton } from './SkeletonLoader'
 import DoctorCreatedSuccessModal from './DoctorCreatedSuccessModal'
+import { formatDoctorName } from '../../utils/userProfile'
 
 const emptyForm = {
   name: '',
@@ -145,7 +146,7 @@ const DoctorManagementPanel = ({ showAddForm = true }) => {
   }
 
   const handleDelete = async (doctor) => {
-    if (!window.confirm(`Delete Dr. ${doctor.name}? This cannot be undone.`)) return
+    if (!window.confirm(`Delete ${formatDoctorName(doctor.name)}? This cannot be undone.`)) return
     try {
       await deleteDoctor(doctor.id)
       showSuccess('Doctor removed')
@@ -167,7 +168,7 @@ const DoctorManagementPanel = ({ showAddForm = true }) => {
   }
 
   const handleResetPassword = async (doctor) => {
-    if (!window.confirm(`Send password reset email to Dr. ${doctor.name}?`)) return
+    if (!window.confirm(`Send password reset email to ${formatDoctorName(doctor.name)}?`)) return
     try {
       await resetDoctorPassword(doctor.id)
       showSuccess(`Password reset email sent to ${doctor.email}`)

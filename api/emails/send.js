@@ -28,7 +28,7 @@ export default async function handler(req, res) {
 
     switch (action) {
       case 'sendDoctorCredentials':
-        result = await emailService.sendDoctorCredentials(payload.email, payload.name, payload.password)
+        result = await emailService.sendDoctorCredentials(payload.email, payload.name, payload.password, payload.hospitalName, payload.hospitalEmail)
         break
       case 'sendAppointmentBookedToDoctor':
         result = await emailService.sendAppointmentBookedToDoctor(payload.doctorEmail, payload.patientName, payload.date, payload.time)

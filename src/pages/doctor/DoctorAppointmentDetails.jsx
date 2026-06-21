@@ -5,6 +5,9 @@ import { Calendar, Clock, MapPin, User, FileText, Download, Eye, ArrowLeft, Chec
 import { getAppointmentById, updateAppointmentStatus, notifyPatientPrescriptionUploaded } from '../../services/appointmentService'
 import { getDocumentsForAppointment, createPatientDocument } from '../../services/documentService'
 import { uploadFileToCloudinary } from '../../services/cloudinaryService'
+import PrescriptionBuilder from './PrescriptionBuilder'
+import DocumentViewerModal from '../../components/DocumentViewerModal'
+import { formatDoctorName } from '../../utils/userProfile'
 import { AuthContext } from '../../context/AuthContext'
 import FilePreviewModal from '../../components/FilePreviewModal'
 import { useToast } from '../../components/Toast'
@@ -71,7 +74,7 @@ const DoctorAppointmentDetails = () => {
       await sendNotification({
         recipientId: appointment.patientId,
         title: `Appointment ${newStatus}`,
-        message: `Your appointment with Dr. ${user.name || user.firstName} has been marked as ${newStatus}.`,
+        message: `Your appointment with ${formatDoctorName(user.name || user.firstName)} has been marked as ${newStatus}.`,
         type: 'appointment',
         link: `/patient/appointments/${appointmentId}`
       })
@@ -159,7 +162,7 @@ const DoctorAppointmentDetails = () => {
       await sendNotification({
         recipientId: appointment.patientId,
         title: 'New Medical Report',
-        message: `Dr. ${user.name || user.firstName} has generated a medical report for your recent appointment.`,
+        message: `${formatDoctorName(user.name || user.firstName)} has generated a medical report for your recent appointment.`,
         type: 'report',
         link: `/patient/appointments/${appointmentId}`
       })

@@ -8,6 +8,7 @@ import {
 } from '../../services/adminService'
 import { useToast } from '../Toast'
 import { PanelSkeleton } from './SkeletonLoader'
+import { formatDoctorName } from '../../utils/userProfile'
 
 const statusStyle = {
   pending: 'bg-amber-500/15 text-amber-400 border-amber-500/20',
@@ -127,7 +128,7 @@ const AppointmentManagementPanel = ({ compact = false }) => {
               <div className="flex-1 min-w-0">
                 <p className="font-medium text-slate-900 dark:text-white truncate">{a.patientName || 'Patient'}</p>
                 <p className="text-sm text-slate-500 truncate">
-                  {a.doctorName ? (a.doctorName.startsWith('Dr.') ? a.doctorName : `Dr. ${a.doctorName}`) : '—'} &bull; {a.date} {a.time ? `at ${a.time}` : ''}
+                  {a.doctorName ? formatDoctorName(a.doctorName) : '—'} &bull; {a.date} {a.time ? `at ${a.time}` : ''}
                 </p>
               </div>
               <span className={`inline-flex items-center justify-center self-start sm:self-center px-2.5 py-1 rounded-full text-[10px] font-semibold capitalize border ${statusStyle[a.status] || statusStyle.pending}`}>

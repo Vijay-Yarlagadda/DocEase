@@ -70,14 +70,16 @@ const getLayout = (title, body) => `
 </html>
 `
 
-export const sendDoctorCredentials = async (email, name, password) => {
+export const sendDoctorCredentials = async (email, name, password, hospitalName, hospitalEmail) => {
   const html = getLayout(
     'Welcome to DocEase',
     `
     <h2>Welcome aboard, Dr. ${name}!</h2>
-    <p>Your Doctor account has been successfully created by the hospital administration.</p>
+    <p>Your Doctor account has been successfully created by the administration at <strong>${hospitalName || 'your hospital'}</strong>.</p>
     <div class="box">
-      <div class="box-item"><strong>Email/Username:</strong> ${email}</div>
+      <div class="box-item"><strong>Hospital Name:</strong> ${hospitalName || 'DocEase Hospital'}</div>
+      ${hospitalEmail ? `<div class="box-item"><strong>Hospital Contact Email:</strong> ${hospitalEmail}</div>` : ''}
+      <div class="box-item"><strong>Your Login Email:</strong> ${email}</div>
       <div class="box-item"><strong>Temporary Password:</strong> ${password}</div>
     </div>
     <p>Please log in and change your password immediately upon your first login for security purposes.</p>

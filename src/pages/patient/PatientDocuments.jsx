@@ -8,7 +8,7 @@ import FilePreviewModal from '../../components/FilePreviewModal'
 import { useToast } from '../../components/Toast'
 import { db } from '../../services/firebase'
 import { doc, getDoc } from 'firebase/firestore'
-import { getDisplayName } from '../../utils/userProfile'
+import { getDisplayName, formatDoctorName } from '../../utils/userProfile'
 
 const PatientDocuments = () => {
   const { user } = useContext(AuthContext)
@@ -126,7 +126,7 @@ const PatientDocuments = () => {
                   >
                     <div className="flex items-center gap-2">
                       <User className="w-5 h-5 text-teal-600 dark:text-teal-400" />
-                      {doctorName.startsWith('Dr.') ? doctorName : `Dr. ${doctorName}`}
+                      {formatDoctorName(doctorName)}
                       <span className="inline-flex items-center justify-center text-xs font-medium text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full ml-1">
                         {docs.length} {docs.length === 1 ? 'file' : 'files'}
                       </span>

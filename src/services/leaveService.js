@@ -1,5 +1,6 @@
 import { db } from './firebase'
 import { collection, addDoc, query, where, getDocs, deleteDoc, doc, getDoc } from 'firebase/firestore'
+import { formatDoctorName } from '../utils/userProfile'
 import api from './api'
 
 const LEAVES_COLLECTION = 'leaves'
@@ -48,7 +49,7 @@ export const addLeave = async (doctorId, date, reason) => {
           await sendNotification({
             recipientId: adminDoc.id,
             title: 'Doctor Leave Scheduled',
-            message: `Dr. ${doctorName} scheduled a leave on ${date}.`,
+            message: `${formatDoctorName(doctorName)} scheduled a leave on ${date}.`,
             type: 'doctor',
             link: '/admin/doctors'
           })

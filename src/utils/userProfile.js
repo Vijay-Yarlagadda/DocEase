@@ -10,6 +10,13 @@ export const getDisplayName = (user) => {
 
 export const getUserEmail = (user) => user?.email || user?.mail || ''
 
+export const formatDoctorName = (name) => {
+  if (!name) return '—'
+  const trimmed = name.trim()
+  const nameWithoutDr = trimmed.replace(/^dr\.?\s*/i, '').trim()
+  return `Dr. ${nameWithoutDr}`
+}
+
 export const getInitials = (user) => {
   const name = getDisplayName(user)
   return name

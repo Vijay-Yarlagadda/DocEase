@@ -583,6 +583,19 @@ export const adminCreateDoctor = async (
       throw new Error('Temporary password must be at least 8 characters')
     }
 
+    let hospitalName = 'DocEase Hospital'
+    let hospitalEmail = ''
+    try {
+      const { getHospitalProfile } = await import('./adminService')
+      const profile = await getHospitalProfile(hospitalId)
+      if (profile) {
+        hospitalName = profile.name || hospitalName
+        hospitalEmail = profile.email || hospitalEmail
+      }
+    } catch (e) {
+      console.warn('Failed to fetch hospital profile for email', e)
+    }
+
     // Prefer calling a backend Cloud Function to perform admin create (secure)
     if (functions) {
       try {
@@ -600,7 +613,7 @@ export const adminCreateDoctor = async (
         try {
           await api.post('/emails/send', {
             action: 'sendDoctorCredentials',
-            payload: { email, name, password: tempPassword }
+            payload: { email, name, password: tempPassword, hospitalName, hospitalEmail }
           })
         } catch (emailErr) {
           console.error('Failed to send doctor email via backend:', emailErr)
@@ -648,7 +661,7 @@ export const adminCreateDoctor = async (
     try {
       await api.post('/emails/send', {
         action: 'sendDoctorCredentials',
-        payload: { email: firebaseUser.email, name, password: tempPassword }
+        payload: { email: firebaseUser.email, name, password: tempPassword, hospitalName, hospitalEmail }
       })
     } catch (emailErr) {
       console.error('Failed to send doctor email via backend:', emailErr)
