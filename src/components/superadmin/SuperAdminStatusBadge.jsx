@@ -12,7 +12,7 @@ const SuperAdminStatusBadge = ({ status }) => {
   }
 
   return (
-    <span className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold ${badgeStyles[normalized] || badgeStyles.pending}`}>
+    <span className={`whitespace-nowrap shrink-0 inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold ${badgeStyles[normalized] || badgeStyles.pending}`}>
       {labels[normalized] || labels.pending}
     </span>
   )

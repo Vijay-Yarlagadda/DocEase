@@ -136,7 +136,7 @@ const AdminDashboard = () => {
                   <p className="text-sm font-medium text-slate-900 dark:text-white">{a.patientName || 'Patient'}</p>
                   <p className="text-xs text-slate-500 dark:text-slate-400">Dr. {a.doctorName || '—'} &bull; {a.date}</p>
                 </div>
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 capitalize">
+                <span className="inline-flex items-center justify-center whitespace-nowrap shrink-0 text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 capitalize">
                   {a.status || 'pending'}
                 </span>
               </div>

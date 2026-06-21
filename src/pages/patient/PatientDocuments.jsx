@@ -127,7 +127,7 @@ const PatientDocuments = () => {
                     <div className="flex items-center gap-2">
                       <User className="w-5 h-5 text-teal-600 dark:text-teal-400" />
                       {doctorName.startsWith('Dr.') ? doctorName : `Dr. ${doctorName}`}
-                      <span className="text-xs font-medium text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full ml-1">
+                      <span className="inline-flex items-center justify-center whitespace-nowrap shrink-0 text-xs font-medium text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full ml-1">
                         {docs.length} {docs.length === 1 ? 'file' : 'files'}
                       </span>
                     </div>

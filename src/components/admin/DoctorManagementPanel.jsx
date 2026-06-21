@@ -312,13 +312,13 @@ const DoctorManagementPanel = ({ showAddForm = true }) => {
                   <div className="flex items-center gap-2 flex-wrap">
                     <p className="font-medium text-slate-900 dark:text-white">{d.name}</p>
                     {needsPasswordChange(d) ? (
-                      <span className="px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/20 text-[10px] font-medium inline-flex items-center gap-1">
+                      <span className="whitespace-nowrap shrink-0 px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/20 text-[10px] font-medium inline-flex items-center gap-1">
                         <Lock className="w-3 h-3" /> Must Change Password
                       </span>
                     ) : d.active === false ? (
-                      <span className="px-2 py-0.5 rounded-full bg-red-500/15 text-red-400 border border-red-500/20 text-[10px] font-medium">Inactive</span>
+                      <span className="inline-flex items-center justify-center whitespace-nowrap shrink-0 px-2 py-0.5 rounded-full bg-red-500/15 text-red-400 border border-red-500/20 text-[10px] font-medium">Inactive</span>
                     ) : (
-                      <span className="px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 text-[10px] font-medium">Active</span>
+                      <span className="inline-flex items-center justify-center whitespace-nowrap shrink-0 px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 text-[10px] font-medium">Active</span>
                     )}
                   </div>
                   <p className="text-sm text-slate-500 truncate">{d.email}</p>

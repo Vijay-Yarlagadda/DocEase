@@ -130,7 +130,7 @@ const AppointmentManagementPanel = ({ compact = false }) => {
                   {a.doctorName ? (a.doctorName.startsWith('Dr.') ? a.doctorName : `Dr. ${a.doctorName}`) : '—'} &bull; {a.date} {a.time ? `at ${a.time}` : ''}
                 </p>
               </div>
-              <span className={`self-start sm:self-center px-2.5 py-1 rounded-full text-[10px] font-semibold capitalize border ${statusStyle[a.status] || statusStyle.pending}`}>
+              <span className={`inline-flex items-center justify-center whitespace-nowrap shrink-0 self-start sm:self-center px-2.5 py-1 rounded-full text-[10px] font-semibold capitalize border ${statusStyle[a.status] || statusStyle.pending}`}>
                 {a.status || 'pending'}
               </span>
             </motion.div>
