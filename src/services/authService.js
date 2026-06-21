@@ -710,6 +710,7 @@ export const doctorChangePassword = async (currentPassword, newPassword, email) 
       mustChangePassword: false,
       firstLogin: false,
       passwordChangedAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
     })
 
     return {
