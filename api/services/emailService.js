@@ -74,7 +74,7 @@ export const sendDoctorCredentials = async (email, name, password, hospitalName,
   const html = getLayout(
     'Welcome to DocEase',
     `
-    <h2>Welcome aboard, Dr. ${name}!</h2>
+    <h2>Welcome aboard, ${name}!</h2>
     <p>Your Doctor account has been successfully created by the administration at <strong>${hospitalName || 'your hospital'}</strong>.</p>
     <div class="box">
       <div class="box-item"><strong>Hospital Name:</strong> ${hospitalName || 'DocEase Hospital'}</div>
@@ -110,7 +110,7 @@ export const sendAppointmentStatusToPatient = async (patientEmail, patientName, 
     `Appointment ${isApproved ? 'Approved' : 'Rejected'}`,
     `
     <h2>Hello ${patientName},</h2>
-    <p>Your appointment request with <strong>Dr. ${doctorName}</strong> has been <strong>${status}</strong>.</p>
+    <p>Your appointment request with <strong>${doctorName}</strong> has been <strong>${status}</strong>.</p>
     <div class="box">
       <div class="box-item"><strong>Date:</strong> ${date}</div>
       <div class="box-item"><strong>Time:</strong> ${time}</div>
@@ -166,7 +166,7 @@ export const sendDocumentUploadNotification = async (doctorEmail, doctorName, pa
   const html = getLayout(
     'New Medical Documents Uploaded',
     `
-    <h2>Hello Dr. ${doctorName},</h2>
+    <h2>Hello ${doctorName},</h2>
     <p>Your patient, <strong>${patientName}</strong>, has uploaded new medical documents to their appointment record.</p>
     <p>Please log in to your dashboard to review the files prior to the consultation.</p>
     `
@@ -179,7 +179,7 @@ export const sendPrescriptionUploadedToPatient = async (patientEmail, patientNam
     'New Prescription & Notes Available',
     `
     <h2>Hello ${patientName},</h2>
-    <p><strong>Dr. ${doctorName}</strong> has updated your appointment record with a new prescription and consultation notes.</p>
+    <p><strong>${doctorName}</strong> has updated your appointment record with a new prescription and consultation notes.</p>
     <p>Please log in to your patient portal to review your prescription, download any attached documents, and view your doctor's instructions.</p>
     `
   )
@@ -191,7 +191,7 @@ export const sendDoctorLeaveToAdmin = async (adminEmail, adminName, doctorName, 
     'Doctor Leave Scheduled',
     `
     <h2>Hello ${adminName},</h2>
-    <p><strong>Dr. ${doctorName}</strong> has scheduled an upcoming leave of absence.</p>
+    <p><strong>${doctorName}</strong> has scheduled an upcoming leave of absence.</p>
     <div class="box">
       <div class="box-item"><strong>Date:</strong> ${leaveDate}</div>
       <div class="box-item"><strong>Reason:</strong> ${reason}</div>
@@ -199,5 +199,5 @@ export const sendDoctorLeaveToAdmin = async (adminEmail, adminName, doctorName, 
     <p>Please ensure that no new appointments are booked for this date and any existing appointments are appropriately rescheduled by the doctor.</p>
     `
   )
-  return sendEmail({ to: adminEmail, subject: `Leave Notice: Dr. ${doctorName} - DocEase`, html })
+  return sendEmail({ to: adminEmail, subject: `Leave Notice: ${doctorName} - DocEase`, html })
 }
