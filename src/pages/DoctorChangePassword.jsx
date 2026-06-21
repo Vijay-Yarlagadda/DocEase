@@ -25,11 +25,11 @@ const DoctorChangePassword = () => {
   const [showConfirm, setShowConfirm] = useState(false)
   const [loading, setLoading] = useState(false)
 
-  if (!initialEmail || !tempPassword) {
+  if (!initialEmail) {
     return (
       <div className="auth-page min-h-screen flex items-center justify-center px-4">
         <div className="auth-card rounded-2xl p-8 text-center max-w-md">
-          <p className="text-slate-300 mb-4">Session expired. Please log in again with your temporary password.</p>
+          <p className="text-slate-300 mb-4">Session expired. Please log in again.</p>
           <button onClick={() => navigate('/login')} className="auth-btn">Go to Login</button>
         </div>
       </div>

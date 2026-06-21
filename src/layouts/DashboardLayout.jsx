@@ -12,9 +12,12 @@ const DashboardLayout = ({ darkMode, toggleDarkMode }) => {
   const { user } = useContext(AuthContext)
 
   useEffect(() => {
+    const isPasswordChangedLocally = user ? localStorage.getItem(`pwd_changed_${user.uid}`) === 'true' : false
+
     if (
       user?.role === 'doctor' &&
       doctorMustChangePassword(user) &&
+      !isPasswordChangedLocally &&
       location.pathname.startsWith('/doctor') &&
       !location.pathname.includes('change-password')
     ) {
