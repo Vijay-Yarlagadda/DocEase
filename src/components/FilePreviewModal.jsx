@@ -13,8 +13,9 @@ const FilePreviewModal = ({ document, onClose }) => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4"
+        className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm"
       >
+        <div className="flex min-h-full items-center justify-center p-4 py-10">
         <motion.div
           initial={{ scale: 0.96, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
@@ -48,6 +49,7 @@ const FilePreviewModal = ({ document, onClose }) => {
             )}
           </div>
         </motion.div>
+        </div>
       </motion.div>
     </AnimatePresence>
   )

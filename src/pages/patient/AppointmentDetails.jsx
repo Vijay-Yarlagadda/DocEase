@@ -8,6 +8,7 @@ import { uploadFileToCloudinary } from '../../services/cloudinaryService'
 import { getReportForAppointment } from '../../services/reportService'
 import { AuthContext } from '../../context/AuthContext'
 import { useToast } from '../../components/Toast'
+import FilePreviewModal from '../../components/FilePreviewModal'
 
 const AppointmentDetails = () => {
   const { appointmentId } = useParams()
@@ -23,6 +24,7 @@ const AppointmentDetails = () => {
   const [dragActive, setDragActive] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [progress, setProgress] = useState(0)
+  const [previewDocument, setPreviewDocument] = useState(null)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -242,9 +244,9 @@ const AppointmentDetails = () => {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <a href={doc.fileUrl} target="_blank" rel="noreferrer" className="btn-primary px-3 py-1.5 text-xs inline-flex items-center gap-1.5">
+                      <button onClick={() => setPreviewDocument(doc)} className="btn-primary px-3 py-1.5 text-xs inline-flex items-center gap-1.5">
                         <Eye className="w-3.5 h-3.5" /> View
-                      </a>
+                      </button>
                     </div>
                   </div>
                 ))
@@ -275,9 +277,9 @@ const AppointmentDetails = () => {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <a href={doc.fileUrl} target="_blank" rel="noreferrer" className="btn-secondary px-3 py-1.5 text-xs inline-flex items-center gap-1.5">
+                      <button onClick={() => setPreviewDocument(doc)} className="btn-secondary px-3 py-1.5 text-xs inline-flex items-center gap-1.5">
                         <Eye className="w-3.5 h-3.5" /> View
-                      </a>
+                      </button>
                       <button 
                         onClick={() => handleDelete(doc.id)} 
                         className="p-1.5 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-lg transition-colors ml-1"
@@ -321,6 +323,8 @@ const AppointmentDetails = () => {
           </div>
         </div>
       )}
+
+      <FilePreviewModal document={previewDocument} onClose={() => setPreviewDocument(null)} />
     </div>
   )
 }
