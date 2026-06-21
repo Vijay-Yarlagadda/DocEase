@@ -425,7 +425,7 @@ const HospitalProfilePanel = () => {
                 <p className="text-sm font-semibold text-slate-900 dark:text-white">Hospital Verification Documents</p>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Upload PDFs or images for registration certificate and hospital license. These documents are reviewed by Super Admin before verification.</p>
               </div>
-              <span className={`whitespace-nowrap shrink-0 inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${form.verificationStatus === 'verified' ? 'bg-emerald-100 text-emerald-700' : form.verificationStatus === 'rejected' ? 'bg-rose-100 text-rose-700' : 'bg-orange-100 text-orange-700'}`}>
+              <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${form.verificationStatus ==='verified' ? 'bg-emerald-100 text-emerald-700' : form.verificationStatus === 'rejected' ? 'bg-rose-100 text-rose-700' : 'bg-orange-100 text-orange-700'}`}>
                 {form.verificationStatus || 'pending'}
               </span>
             </div>
@@ -492,7 +492,7 @@ const HospitalProfilePanel = () => {
                   <h4 className="text-sm font-semibold text-slate-900 dark:text-white">{hospital.name || 'Unnamed Hospital'}</h4>
                   <p className="text-xs text-slate-400 mt-1">{hospital.address || 'Address not available'}</p>
                 </div>
-                <span className={`shrink-0 inline-flex items-center justify-center text-center whitespace-nowrap text-[10px] uppercase tracking-[0.18em] px-3 py-1.5 rounded-full ${isOwnHospital(hospital) ? 'bg-accent/15 text-accent border border-accent/20' : 'bg-slate-800/60 text-slate-300 border border-slate-700/40'}`}>
+                <span className={`inline-flex items-center justify-center text-center text-[10px] uppercase tracking-[0.18em] px-3 py-1.5 rounded-full ${isOwnHospital(hospital) ?'bg-accent/15 text-accent border border-accent/20' : 'bg-slate-800/60 text-slate-300 border border-slate-700/40'}`}>
                   {isOwnHospital(hospital) ? 'My Hospital' : 'Read-only'}
                 </span>
               </div>

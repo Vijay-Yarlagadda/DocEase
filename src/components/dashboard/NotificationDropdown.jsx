@@ -76,7 +76,7 @@ const NotificationDropdown = () => {
             <div className="px-4 py-3 border-b border-slate-200 dark:border-slate-700/50 flex items-center justify-between bg-slate-50 dark:bg-slate-800/50">
               <h3 className="font-semibold text-slate-900 dark:text-white">Notifications</h3>
               {unreadCount > 0 && (
-                <span className="inline-flex items-center justify-center whitespace-nowrap shrink-0 text-xs font-medium text-slate-500 dark:text-slate-400 bg-slate-200 dark:bg-slate-700 px-2 py-0.5 rounded-full">
+                <span className="inline-flex items-center justify-center text-xs font-medium text-slate-500 dark:text-slate-400 bg-slate-200 dark:bg-slate-700 px-2 py-0.5 rounded-full">
                   {unreadCount} new
                 </span>
               )}

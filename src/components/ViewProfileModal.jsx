@@ -61,7 +61,7 @@ const ViewProfileModal = ({ isOpen, onClose, user }) => {
                 </span>
                 <div>
                   <p className="text-lg font-semibold text-white">{displayName}</p>
-                  <span className={`whitespace-nowrap shrink-0 inline-flex mt-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold border ${roleStyle.badge}`}>
+                  <span className={`inline-flex mt-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold border ${roleStyle.badge}`}>
                     {roleStyle.label}
                   </span>
                 </div>

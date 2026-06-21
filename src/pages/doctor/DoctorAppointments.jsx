@@ -18,7 +18,7 @@ const StatusBadge = ({ status }) => {
   const defaultStyle = 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400'
   
   return (
-    <span className={`inline-flex items-center justify-center whitespace-nowrap shrink-0 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${styles[status] || defaultStyle}`}>
+    <span className={`inline-flex items-center justify-center px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${styles[status] || defaultStyle}`}>
       {status || 'Unknown'}
     </span>
   )

@@ -104,8 +104,8 @@ const SuperAdminDashboard = () => {
                   <p className="font-semibold text-slate-900 dark:text-white">{hospital.name || 'Unnamed Hospital'}</p>
                   <p className="text-sm text-slate-500 mt-1">{hospital.address || 'No address provided'}</p>
                   <div className="mt-3 flex flex-wrap gap-2 text-xs text-slate-500">
-                    <span className="inline-flex items-center justify-center whitespace-nowrap shrink-0 px-2 py-1 rounded-full bg-orange-500/10 text-orange-400 border border-orange-500/15">Pending verification</span>
-                    <span className="inline-flex items-center justify-center whitespace-nowrap shrink-0 px-2 py-1 rounded-full bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">{getHospitalDocCount(hospital)} documents</span>
+                    <span className="inline-flex items-center justify-center px-2 py-1 rounded-full bg-orange-500/10 text-orange-400 border border-orange-500/15">Pending verification</span>
+                    <span className="inline-flex items-center justify-center px-2 py-1 rounded-full bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">{getHospitalDocCount(hospital)} documents</span>
                   </div>
                 </div>
               ))
@@ -181,7 +181,7 @@ const SuperAdminDashboard = () => {
               <div className="flex flex-col justify-between gap-3">
                 <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
                   Status
-                  <span className={`inline-flex items-center justify-center whitespace-nowrap shrink-0 px-2 py-1 rounded-full ${hospital.verificationStatus === 'verified' ? 'bg-emerald-500/10 text-emerald-300' : hospital.verificationStatus === 'rejected' ? 'bg-rose-500/10 text-rose-300' : 'bg-orange-500/10 text-orange-300'}`}>
+                  <span className={`inline-flex items-center justify-center px-2 py-1 rounded-full ${hospital.verificationStatus ==='verified' ? 'bg-emerald-500/10 text-emerald-300' : hospital.verificationStatus === 'rejected' ? 'bg-rose-500/10 text-rose-300' : 'bg-orange-500/10 text-orange-300'}`}>
                     {hospital.verificationStatus || 'pending'}
                   </span>
                 </div>

@@ -28,7 +28,7 @@ const NotificationsPanel = ({ notifications = [], loading = false }) => {
         <Bell className="w-5 h-5 text-accent" />
         <h3 className="text-base font-semibold text-slate-900 dark:text-white">Notifications</h3>
         {notifications.length > 0 && (
-          <span className="inline-flex items-center justify-center whitespace-nowrap shrink-0 ml-auto px-2 py-0.5 rounded-full text-[10px] font-semibold bg-accent/15 text-accent border border-accent/20">
+          <span className="inline-flex items-center justify-center ml-auto px-2 py-0.5 rounded-full text-[10px] font-semibold bg-accent/15 text-accent border border-accent/20">
             {notifications.length}
           </span>
         )}

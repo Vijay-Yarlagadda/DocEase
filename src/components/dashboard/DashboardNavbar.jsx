@@ -90,7 +90,7 @@ const DashboardNavbar = ({ darkMode, toggleDarkMode }) => {
       <div className="flex items-center gap-6 lg:gap-10">
         <DocEaseLogo to={`/${user?.role || 'admin'}/dashboard`} />
 
-        <span className={`whitespace-nowrap shrink-0 hidden sm:inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold text-white bg-gradient-to-r ${portal.gradient}`}>
+        <span className={`hidden sm:inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold text-white bg-gradient-to-r ${portal.gradient}`}>
           {portal.label}
         </span>
 

@@ -18,7 +18,7 @@ const DashboardPageHeader = ({ title, subtitle, role, action }) => {
       className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8"
     >
       <div>
-        <span className={`whitespace-nowrap shrink-0 inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold text-white bg-gradient-to-r ${badgeGradient} mb-3 capitalize`}>
+        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold text-white bg-gradient-to-r ${badgeGradient} mb-3 capitalize`}>
           {role} Portal
         </span>
         <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white mb-1">

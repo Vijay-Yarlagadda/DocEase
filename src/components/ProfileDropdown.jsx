@@ -123,7 +123,7 @@ const ProfileDropdown = ({ variant = 'navbar' }) => {
               <div className="px-4 py-4 border-b border-slate-200 dark:border-slate-700/50">
                 <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">{displayName}</p>
                 <p className="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5">{email || 'No email'}</p>
-                <span className={`whitespace-nowrap shrink-0 inline-flex mt-2 px-2 py-0.5 rounded-full text-[10px] font-semibold border ${roleStyle.badge}`}>
+                <span className={`inline-flex mt-2 px-2 py-0.5 rounded-full text-[10px] font-semibold border ${roleStyle.badge}`}>
                   {roleStyle.label}
                 </span>
               </div>
