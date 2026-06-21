@@ -142,14 +142,16 @@ const PDFViewer = ({ isOpen, url, fileName, onClose }) => {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       onClick={onClose}
-      className="fixed inset-0 z-[9999] bg-slate-950/90 backdrop-blur-sm flex items-center justify-center p-4"
+      className="fixed inset-0 overflow-y-auto bg-slate-950/90 backdrop-blur-sm"
+      style={{ zIndex: 9999 }}
     >
+      <div className="flex min-h-full items-center justify-center p-4 py-10">
       <motion.div
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.9, opacity: 0 }}
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-6xl h-[90vh] rounded-2xl border border-slate-800 bg-slate-900 shadow-2xl overflow-hidden flex flex-col"
+        className="w-full max-w-6xl h-[85vh] rounded-2xl border border-slate-800 bg-slate-900 shadow-2xl overflow-hidden flex flex-col"
       >
         {/* Header */}
         <div className="flex items-center justify-between gap-4 p-4 border-b border-slate-800 bg-slate-950 flex-shrink-0">
@@ -225,6 +227,7 @@ const PDFViewer = ({ isOpen, url, fileName, onClose }) => {
           )}
         </div>
       </motion.div>
+      </div>
     </motion.div>
   )
 }
