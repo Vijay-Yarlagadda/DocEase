@@ -141,7 +141,6 @@ const PDFViewer = ({ isOpen, url, fileName, onClose }) => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      onClick={onClose}
       className="fixed inset-0 overflow-y-auto bg-slate-950/90 backdrop-blur-sm"
       style={{ zIndex: 9999 }}
     >
