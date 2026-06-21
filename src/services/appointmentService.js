@@ -92,6 +92,8 @@ export const updateAppointmentStatus = async (appointmentId, newStatus) => {
       const doctorEmail = doctorDoc.exists() ? doctorDoc.data().email : null
       const patientEmail = patientDoc.exists() ? patientDoc.data().email : null
 
+      const { sendNotification } = await import('./notificationService')
+      
       if (newStatus === 'approved' || newStatus === 'rejected') {
         if (patientEmail) {
           await api.post('/emails/send', {
@@ -106,6 +108,15 @@ export const updateAppointmentStatus = async (appointmentId, newStatus) => {
             }
           })
         }
+        if (aptData.patientId) {
+          await sendNotification({
+            recipientId: aptData.patientId,
+            title: `Appointment ${newStatus === 'approved' ? 'Approved' : 'Rejected'}`,
+            message: `Your appointment with ${aptData.doctorName} on ${aptData.appointmentDate} at ${aptData.appointmentTime} has been ${newStatus}.`,
+            type: 'appointment',
+            link: '/patient/appointments'
+          })
+        }
       } else if (newStatus === 'cancelled') {
         if (doctorEmail) {
           await api.post('/emails/send', {
@@ -117,6 +128,23 @@ export const updateAppointmentStatus = async (appointmentId, newStatus) => {
           await api.post('/emails/send', {
             action: 'sendAppointmentCancelled',
             payload: { email: patientEmail, oppositeName: aptData.doctorName, date: aptData.appointmentDate, time: aptData.appointmentTime }
+          })
+        }
+        
+        await sendNotification({
+          recipientId: aptData.doctorId || aptData.doctorUid,
+          title: 'Appointment Cancelled',
+          message: `Appointment with ${aptData.patientName} on ${aptData.appointmentDate} at ${aptData.appointmentTime} was cancelled.`,
+          type: 'appointment',
+          link: '/doctor/appointments'
+        })
+        if (aptData.patientId) {
+          await sendNotification({
+            recipientId: aptData.patientId,
+            title: 'Appointment Cancelled',
+            message: `Your appointment with ${aptData.doctorName} on ${aptData.appointmentDate} at ${aptData.appointmentTime} was cancelled.`,
+            type: 'appointment',
+            link: '/patient/appointments'
           })
         }
       }
@@ -157,8 +185,17 @@ export const notifyPatientPrescriptionUploaded = async (patientId, doctorName) =
           }
         })
       }
+      
+      const { sendNotification } = await import('./notificationService')
+      await sendNotification({
+        recipientId: patientId,
+        title: 'Prescription Uploaded',
+        message: `${doctorName} has uploaded a prescription for your recent appointment.`,
+        type: 'document',
+        link: '/patient/documents'
+      })
     }
   } catch (error) {
-    console.error('Failed to send prescription uploaded email:', error)
+    console.error('Failed to send prescription uploaded email/notification:', error)
   }
 }

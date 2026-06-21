@@ -33,9 +33,18 @@ export const createPatientDocument = async ({ appointmentId, patientUid, patient
           }
         })
       }
+      
+      const { sendNotification } = await import('./notificationService')
+      await sendNotification({
+        recipientId: doctorId,
+        title: 'New Document Uploaded',
+        message: `${patientName || 'A Patient'} has uploaded a new document.`,
+        type: 'document',
+        link: '/doctor/records'
+      })
     }
   } catch (err) {
-    console.error('Failed to send document upload email:', err)
+    console.error('Failed to send document upload email/notification:', err)
   }
 
   return documentRef.id

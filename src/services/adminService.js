@@ -146,10 +146,17 @@ export const approveHospital = async (hospitalId) => {
         action: 'sendHospitalVerificationStatus',
         payload: { hospitalEmail: data.email, hospitalName: data.name, status: 'approved' }
       })
-      await clearHospitalNotifications(data.name)
+      const { sendNotification } = await import('./notificationService')
+      await sendNotification({
+        recipientId: hospitalId,
+        type: 'hospital',
+        title: 'Hospital Profile Approved',
+        message: 'Your hospital profile has been successfully verified and approved by the Super Admin.',
+        link: '/admin/dashboard'
+      })
     }
   } catch (err) {
-    console.error('Failed to send hospital approval email', err)
+    console.error('Failed to send hospital approval email/notification', err)
   }
 }
 
@@ -168,10 +175,17 @@ export const rejectHospital = async (hospitalId) => {
         action: 'sendHospitalVerificationStatus',
         payload: { hospitalEmail: data.email, hospitalName: data.name, status: 'rejected' }
       })
-      await clearHospitalNotifications(data.name)
+      const { sendNotification } = await import('./notificationService')
+      await sendNotification({
+        recipientId: hospitalId,
+        type: 'hospital',
+        title: 'Hospital Profile Rejected',
+        message: 'Your hospital profile verification was rejected. Please update your documents and reapply.',
+        link: '/admin/hospital-profile'
+      })
     }
   } catch (err) {
-    console.error('Failed to send hospital rejection email', err)
+    console.error('Failed to send hospital rejection email/notification', err)
   }
 }
 

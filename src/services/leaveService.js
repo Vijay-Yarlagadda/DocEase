@@ -29,7 +29,8 @@ export const addLeave = async (doctorId, date, reason) => {
         )
         const adminSnap = await getDocs(q)
         if (!adminSnap.empty) {
-          const adminData = adminSnap.docs[0].data()
+          const adminDoc = adminSnap.docs[0]
+          const adminData = adminDoc.data()
           if (adminData.email) {
             await api.post('/emails/send', {
               action: 'sendDoctorLeaveToAdmin',
@@ -42,6 +43,15 @@ export const addLeave = async (doctorId, date, reason) => {
               }
             })
           }
+          
+          const { sendNotification } = await import('./notificationService')
+          await sendNotification({
+            recipientId: adminDoc.id,
+            title: 'Doctor Leave Scheduled',
+            message: `Dr. ${doctorName} scheduled a leave on ${date}.`,
+            type: 'doctor',
+            link: '/admin/doctors'
+          })
         }
       }
     }
