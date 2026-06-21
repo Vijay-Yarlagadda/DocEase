@@ -17,8 +17,10 @@ const DoctorChangePassword = () => {
   const tempPassword = loc.state?.tempPassword || ''
   const doctorName = loc.state?.doctorName || ''
 
+  const [currentPassword, setCurrentPassword] = useState(loc.state?.tempPassword || '')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
+  const [showCurrent, setShowCurrent] = useState(false)
   const [showNew, setShowNew] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -35,10 +37,10 @@ const DoctorChangePassword = () => {
   }
 
   const validate = () => {
-    if (!newPassword || !confirmPassword) { showError('All fields are required'); return false }
+    if (!currentPassword || !newPassword || !confirmPassword) { showError('All fields are required'); return false }
     if (newPassword.length < 8) { showError('New password must be at least 8 characters'); return false }
     if (newPassword !== confirmPassword) { showError('Passwords do not match'); return false }
-    if (newPassword === tempPassword) { showError('New password must differ from the temporary password'); return false }
+    if (newPassword === currentPassword) { showError('New password must differ from the current password'); return false }
     return true
   }
 
@@ -47,7 +49,7 @@ const DoctorChangePassword = () => {
     if (!validate()) return
     setLoading(true)
     try {
-      const result = await doctorChangePassword(tempPassword, newPassword, initialEmail)
+      const result = await doctorChangePassword(currentPassword, newPassword, initialEmail)
 
       const idToken = await auth.currentUser?.getIdToken()
       if (idToken) localStorage.setItem('docease_token', idToken)
@@ -60,6 +62,7 @@ const DoctorChangePassword = () => {
       }
       setUser(updatedUser)
       localStorage.setItem('docease_user', JSON.stringify(updatedUser))
+      localStorage.setItem(`pwd_changed_${result.uid}`, 'true')
 
       showSuccess('Password updated successfully!')
       setTimeout(() => navigate('/doctor/dashboard'), 800)
@@ -95,6 +98,25 @@ const DoctorChangePassword = () => {
             <div>
               <label className="block text-sm font-medium text-slate-300 mb-2">Email</label>
               <input value={initialEmail} readOnly className="dashboard-input opacity-60 cursor-not-allowed" />
+            </div>
+
+            <div>
+              <label htmlFor="currentPassword" className="block text-sm font-medium text-slate-300 mb-2">Current Password</label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                <input
+                  id="currentPassword"
+                  type={showCurrent ? 'text' : 'password'}
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  placeholder="Enter current password"
+                  required
+                  className="dashboard-input pl-10 pr-10"
+                />
+                <button type="button" onClick={() => setShowCurrent((p) => !p)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300">
+                  {showCurrent ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
             </div>
 
             <div>

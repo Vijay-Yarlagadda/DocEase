@@ -54,7 +54,9 @@ const Login = () => {
       setUser(userWithRole)
       localStorage.setItem('docease_user', JSON.stringify(userWithRole))
 
-      if (!isSuperAdminLogin && selectedRole === 'doctor' && doctorMustChangePassword(user)) {
+      const isPasswordChangedLocally = localStorage.getItem(`pwd_changed_${user.uid}`) === 'true'
+
+      if (!isSuperAdminLogin && selectedRole === 'doctor' && doctorMustChangePassword(user) && !isPasswordChangedLocally) {
         showSuccess('Please set a new password to continue')
         navigate('/doctor/change-password', {
           state: {

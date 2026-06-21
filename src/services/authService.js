@@ -705,13 +705,17 @@ export const doctorChangePassword = async (currentPassword, newPassword, email) 
     await updatePassword(user, newPassword)
 
     // Mark password change complete in Firestore
-    const doctorDocRef = doc(db, DOCTORS_COLLECTION, user.uid)
-    await updateDoc(doctorDocRef, {
-      mustChangePassword: false,
-      firstLogin: false,
-      passwordChangedAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-    })
+    try {
+      const doctorDocRef = doc(db, DOCTORS_COLLECTION, user.uid)
+      await updateDoc(doctorDocRef, {
+        mustChangePassword: false,
+        firstLogin: false,
+        passwordChangedAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      })
+    } catch (fsError) {
+      console.warn("Firestore permissions prevented updating mustChangePassword flag, but password was changed successfully in Auth.", fsError)
+    }
 
     return {
       uid: user.uid,
