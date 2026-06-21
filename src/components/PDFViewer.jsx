@@ -1,6 +1,7 @@
+import { createPortal } from 'react-dom'
 import { useState, useRef, useEffect } from 'react'
 import { normalizeCloudinaryUrl } from '../utils/hospitalHelpers'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { X, Download } from 'lucide-react'
 
 const PDFViewer = ({ isOpen, url, fileName, onClose }) => {
@@ -19,30 +20,6 @@ const PDFViewer = ({ isOpen, url, fileName, onClose }) => {
     }
   }, [isOpen, url])
 
-  if (!isOpen || !url) return null
-
-  const handleDownload = () => {
-    console.log('[PDF Viewer] Downloading', { fileName, url })
-    const link = document.createElement('a')
-    link.href = url
-    link.download = fileName || 'document.pdf'
-    link.target = '_blank'
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-  }
-
-  const handleIframeLoad = () => {
-    console.log('[PDF Viewer] PDF loaded successfully')
-    setLoading(false)
-  }
-
-  const handleIframeError = () => {
-    console.error('[PDF Viewer] Failed to load PDF iframe')
-    setLoading(false)
-    setError('Could not load PDF in viewer. Try downloading instead.')
-  }
-
   let resolved = normalizeCloudinaryUrl(url)
 
   useEffect(() => {
@@ -56,17 +33,15 @@ const PDFViewer = ({ isOpen, url, fileName, onClose }) => {
       setError(null)
 
       try {
-        // First try a simple fetch to verify accessibility
         let resp = await fetch(resolved, { method: 'GET' })
 
-        // If it failed and is a Cloudinary raw URL, try image fallback
         if (!resp.ok && resolved.includes('/raw/upload/')) {
           const imageFallback = resolved.replace('/raw/upload/', '/image/upload/')
           console.warn('[PDF Viewer] Fetch failed for raw, trying image fallback:', imageFallback)
           const fallbackResp = await fetch(imageFallback, { method: 'GET' })
           if (fallbackResp.ok) {
             resp = fallbackResp
-            resolved = imageFallback // Update resolved so we use the correct URL
+            resolved = imageFallback
           }
         }
 
@@ -76,8 +51,7 @@ const PDFViewer = ({ isOpen, url, fileName, onClose }) => {
              throw new Error('Server returned an HTML page instead of a document.')
           }
 
-          // Check if the file is an image based on content type or extension
-          const isImg = contentType.includes('image') || (fileName && fileName.toLowerCase().match(/\.(jpg|jpeg|png|gif|webp)$/))
+          const isImg = contentType && contentType.includes('image') || (fileName && fileName.toLowerCase().match(/\.(jpg|jpeg|png|gif|webp)$/))
           
           const rawBlob = await resp.blob()
           const fileBlob = new Blob([rawBlob], { type: isImg ? (rawBlob.type || 'image/png') : 'application/pdf' })
@@ -90,7 +64,6 @@ const PDFViewer = ({ isOpen, url, fileName, onClose }) => {
           return
         }
 
-        // If we got a 401/403, try fetching with Authorization header (token)
         if (resp.status === 401 || resp.status === 403) {
           const token = localStorage.getItem('docease_token')
           if (token) {
@@ -134,16 +107,41 @@ const PDFViewer = ({ isOpen, url, fileName, onClose }) => {
     }
   }, [isOpen, resolved])
 
+  const handleDownload = () => {
+    console.log('[PDF Viewer] Downloading', { fileName, url })
+    const link = document.createElement('a')
+    link.href = url
+    link.download = fileName || 'document.pdf'
+    link.target = '_blank'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
+
+  const handleIframeLoad = () => {
+    console.log('[PDF Viewer] PDF loaded successfully')
+    setLoading(false)
+  }
+
+  const handleIframeError = () => {
+    console.error('[PDF Viewer] Failed to load PDF iframe')
+    setLoading(false)
+    setError('Could not load PDF in viewer. Try downloading instead.')
+  }
+
+  if (!isOpen || !url) return null
+
   const pdfUrl = pdfSrc
 
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 overflow-y-auto bg-slate-950/90 backdrop-blur-sm"
-      style={{ zIndex: 9999 }}
-    >
+  return createPortal(
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 overflow-y-auto bg-slate-950/90 backdrop-blur-sm"
+        style={{ zIndex: 99999 }}
+      >
       <div className="flex min-h-full items-center justify-center p-4 py-10">
       <motion.div
         initial={{ scale: 0.9, opacity: 0 }}
@@ -228,6 +226,8 @@ const PDFViewer = ({ isOpen, url, fileName, onClose }) => {
       </motion.div>
       </div>
     </motion.div>
+    </AnimatePresence>,
+    document.body
   )
 }
 
