@@ -17,7 +17,7 @@ exports.createDoctor = functions.https.onCall(async (data, context) => {
     throw new functions.https.HttpsError('permission-denied', 'Only admins can create doctor accounts.')
   }
 
-  const { name, email, qualification = '', specialization = '', experience = 0, hospitalId = null } = data || {}
+  const { name, email, tempPassword: clientTempPassword, qualification = '', specialization = '', experience = 0, hospitalId = null } = data || {}
   if (!name || !email) {
     throw new functions.https.HttpsError('invalid-argument', 'Name and email are required')
   }
@@ -30,15 +30,24 @@ exports.createDoctor = functions.https.onCall(async (data, context) => {
     return pw
   }
 
-  const tempPassword = generateTempPassword(12)
+  const tempPassword = clientTempPassword || generateTempPassword(12)
 
   try {
-    // Create user in Firebase Auth
-    const userRecord = await admin.auth().createUser({
-      email,
-      password: tempPassword,
-      displayName: name,
-    })
+    let userRecord
+    try {
+      userRecord = await admin.auth().createUser({
+        email,
+        password: tempPassword,
+        displayName: name,
+      })
+    } catch (createErr) {
+      if (createErr.code === 'auth/email-already-exists') {
+        userRecord = await admin.auth().getUserByEmail(email)
+        await admin.auth().updateUser(userRecord.uid, { password: tempPassword, displayName: name })
+      } else {
+        throw createErr
+      }
+    }
 
     // Create the doctor document in Firestore
     const docRef = db.collection('doctors').doc(userRecord.uid)
@@ -54,9 +63,6 @@ exports.createDoctor = functions.https.onCall(async (data, context) => {
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
     })
 
-    // Send email with credentials
-    await emails.sendDoctorCredentials(email, name, tempPassword).catch(e => console.error('Email failed:', e))
-
     return { uid: userRecord.uid, email: userRecord.email, tempPassword }
   } catch (err) {
     console.error('createDoctor error', err)
@@ -70,6 +76,24 @@ exports.createDoctor = functions.https.onCall(async (data, context) => {
 
 const SUPER_ADMIN_EMAIL = 'docease06@gmail.com'
 const DEFAULT_SUPER_ADMIN_SETUP_SECRET = 'DocEaseSuperAdminForceCreate123!'
+
+exports.deleteDoctorAccount = functions.https.onCall(async (data, context) => {
+  if (!context.auth) {
+    throw new functions.https.HttpsError('unauthenticated', 'The function must be called while authenticated.')
+  }
+  const { uid } = data || {}
+  if (!uid) {
+    throw new functions.https.HttpsError('invalid-argument', 'User UID is required')
+  }
+  try {
+    await admin.auth().deleteUser(uid)
+    return { success: true }
+  } catch (err) {
+    console.error('deleteDoctorAccount error', err)
+    if (err.code === 'auth/user-not-found') return { success: true }
+    throw new functions.https.HttpsError('internal', err.message || 'Unable to delete user')
+  }
+})
 
 exports.provisionSuperAdmin = functions.https.onCall(async (data, context) => {
   const { email, password, setupSecret } = data || {}

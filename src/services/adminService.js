@@ -239,6 +239,17 @@ export const deleteDoctor = async (doctorId) => {
   }
 
   await deleteDoc(doc(db, DOCTORS_COLLECTION, doctorId))
+
+  const { functions } = await import('./firebase')
+  if (functions) {
+    try {
+      const { httpsCallable } = await import('firebase/functions')
+      const deleteDoctorAccount = httpsCallable(functions, 'deleteDoctorAccount')
+      await deleteDoctorAccount({ uid: doctorId })
+    } catch (e) {
+      console.warn('Failed to delete doctor from Firebase Auth:', e)
+    }
+  }
 }
 
 export const toggleDoctorActive = async (doctorId, active) => {

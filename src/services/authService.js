@@ -770,7 +770,7 @@ const handleAuthError = (error) => {
       case 'auth/invalid-credential':
         return new Error('Invalid email or password. Check your credentials and try again.')
       case 'auth/email-already-in-use':
-        return new Error('This email is already in use.')
+        return new Error('This email is already in use. If you recently deleted this doctor, you must also delete their account from the Firebase Authentication console before recreating them.')
       case 'auth/weak-password':
         return new Error('Password must be at least 6 characters.')
       case 'auth/too-many-requests':
