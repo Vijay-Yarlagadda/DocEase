@@ -109,7 +109,7 @@ const HospitalDetailsModal = ({ hospital, onClose, onViewDocument }) => {
   }
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/80 backdrop-blur-sm">
+    <div className="fixed inset-0 z-[100] overflow-y-auto bg-slate-950/80 backdrop-blur-sm">
       <div className="flex min-h-full items-center justify-center p-4 py-10">
         <motion.div
           initial={{ opacity: 0, scale: 0.93 }}
