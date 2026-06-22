@@ -74,7 +74,7 @@ export const sendDoctorCredentials = async (email, name, password, hospitalName,
   const html = getLayout(
     'Welcome to DocEase',
     `
-    <h2>Welcome aboard, ${name}!</h2>
+    <h2>Welcome aboard, Dr. ${name.replace(/^(dr\\.?\\s*)+/gi, '').trim()}!</h2>
     <p>Your Doctor account has been successfully created by the administration at <strong>${hospitalName || 'your hospital'}</strong>.</p>
     <div class="box">
       <div class="box-item"><strong>Hospital Name:</strong> ${hospitalName || 'DocEase Hospital'}</div>

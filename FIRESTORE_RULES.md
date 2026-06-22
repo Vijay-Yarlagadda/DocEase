@@ -30,9 +30,11 @@ service cloud.firestore {
     // Doctors Collection
     // - Requirement 1: Patients (and anyone authenticated) must be able to read doctors.
     // - Write restricted to Admins.
+    // - Exception: Doctors can update their own document (e.g. to change mustChangePassword flag or update profile).
     match /doctors/{docId} {
       allow read: if request.auth != null;
-      allow create, update, delete: if isAdmin() || isSuperAdmin();
+      allow create, delete: if isAdmin() || isSuperAdmin();
+      allow update: if (request.auth != null && request.auth.uid == docId) || isAdmin() || isSuperAdmin();
     }
 
     // Hospitals Collection

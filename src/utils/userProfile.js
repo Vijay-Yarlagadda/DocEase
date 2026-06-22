@@ -13,7 +13,7 @@ export const getUserEmail = (user) => user?.email || user?.mail || ''
 export const formatDoctorName = (name) => {
   if (!name) return '—'
   const trimmed = name.trim()
-  const nameWithoutDr = trimmed.replace(/^dr\.?\s*/i, '').trim()
+  const nameWithoutDr = trimmed.replace(/^(dr\.?\s*)+/gi, '').trim()
   return `Dr. ${nameWithoutDr}`
 }
 
