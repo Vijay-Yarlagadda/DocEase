@@ -305,10 +305,10 @@ const DoctorManagementPanel = ({ showAddForm = true }) => {
                   <p className="text-xs text-slate-600 mt-0.5">{d.specialization || 'General'} &bull; {d.experience || 0} yrs &bull; {d.qualification || '—'}</p>
                 </div>
                 <div className="flex items-center gap-1 flex-wrap">
-                  <button onClick={() => setEditDoctor({ ...d })} className="p-2 rounded-lg text-slate-400 hover:text-accent hover:bg-slate-800 transition-colors" title="Edit"><Pencil className="w-4 h-4" /></button>
-                  <button onClick={() => handleResetPassword(d)} className="p-2 rounded-lg text-slate-400 hover:text-amber-400 hover:bg-slate-800 transition-colors" title="Reset Password"><KeyRound className="w-4 h-4" /></button>
-                  <button onClick={() => handleToggleActive(d)} className="p-2 rounded-lg text-slate-400 hover:text-cyan-400 hover:bg-slate-800 transition-colors" title={d.active === false ? 'Activate' : 'Deactivate'}><Power className="w-4 h-4" /></button>
-                  <button onClick={() => handleDelete(d)} className="p-2 rounded-lg text-slate-400 hover:text-red-400 hover:bg-slate-800 transition-colors" title="Delete"><Trash2 className="w-4 h-4" /></button>
+                  <button onClick={() => setEditDoctor({ ...d })} className="p-2 rounded-lg text-slate-400 hover:text-blue-500 hover:bg-blue-500/10 active:bg-blue-500/20 active:scale-95 transition-all duration-200" title="Edit"><Pencil className="w-4 h-4" /></button>
+                  <button onClick={() => handleResetPassword(d)} className="p-2 rounded-lg text-slate-400 hover:text-amber-500 hover:bg-amber-500/10 active:bg-amber-500/20 active:scale-95 transition-all duration-200" title="Reset Password"><KeyRound className="w-4 h-4" /></button>
+                  <button onClick={() => handleToggleActive(d)} className={`p-2 rounded-lg text-slate-400 active:scale-95 transition-all duration-200 ${d.active === false ? 'hover:text-emerald-500 hover:bg-emerald-500/10 active:bg-emerald-500/20' : 'hover:text-slate-200 hover:bg-slate-500/20 active:bg-slate-500/30'}`} title={d.active === false ? 'Activate' : 'Deactivate'}><Power className="w-4 h-4" /></button>
+                  <button onClick={() => handleDelete(d)} className="p-2 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 active:bg-rose-500/20 active:scale-95 transition-all duration-200" title="Delete"><Trash2 className="w-4 h-4" /></button>
                 </div>
               </div>
             </motion.div>
