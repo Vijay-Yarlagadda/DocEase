@@ -24,6 +24,11 @@ export default {
         'gradient-hero': 'linear-gradient(to right, #4f46e5, #8b5cf6, #0d9488)',
         'gradient-button': 'linear-gradient(to right, #4f46e5, #8b5cf6, #0d9488, #06b6d4)',
       },
+      keyframes: {
+        shimmer: {
+          '100%': { transform: 'translateX(100%)' },
+        },
+      },
       boxShadow: {
         'glass': '0 8px 32px 0 rgba(79, 70, 229, 0.15)',
         'glass-dark': '0 8px 32px 0 rgba(0, 0, 0, 0.5)',

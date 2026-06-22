@@ -32,6 +32,7 @@ const DashboardLayout = ({ darkMode, toggleDarkMode }) => {
     <div className="dashboard-layout">
       <div className="dashboard-glow dashboard-glow--left" aria-hidden="true" />
       <div className="dashboard-glow dashboard-glow--right" aria-hidden="true" />
+      <div className="dashboard-glow dashboard-glow--bottom" aria-hidden="true" />
 
       <DashboardNavbar darkMode={darkMode} toggleDarkMode={toggleDarkMode} />
 

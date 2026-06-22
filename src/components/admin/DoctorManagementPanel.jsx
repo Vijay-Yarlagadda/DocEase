@@ -282,12 +282,16 @@ const DoctorManagementPanel = ({ showAddForm = true }) => {
           {filteredDoctors.map((d, i) => (
             <motion.div
               key={d.id}
-              initial={{ opacity: 0, x: -8 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: i * 0.03 }}
-              className="p-4 rounded-xl bg-white/90 dark:bg-slate-900/50 border border-slate-200/70 dark:border-slate-700/30 hover:border-slate-300 dark:hover:border-slate-600/50 transition-colors"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.05, type: 'spring', stiffness: 300, damping: 24 }}
+              whileHover={{ y: -2, scale: 1.005 }}
+              className="p-4 rounded-xl backdrop-blur-xl bg-white/60 dark:bg-slate-900/40 border border-white/60 dark:border-slate-700/30 shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] dark:hover:shadow-[0_8px_30px_rgba(79,70,229,0.15)] transition-all duration-300 relative overflow-hidden group"
             >
-              <div className="flex flex-col lg:flex-row lg:items-center gap-3">
+              {/* Optional ambient glow inside card on hover */}
+              <div className="absolute inset-0 bg-gradient-to-r from-primary/0 via-primary/0 to-primary/5 dark:to-primary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              
+              <div className="flex flex-col lg:flex-row lg:items-center gap-3 relative z-10">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <p className="font-medium text-slate-900 dark:text-white">{d.name}</p>

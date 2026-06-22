@@ -91,30 +91,42 @@
   }
 
   .dashboard-layout {
-    @apply relative h-screen overflow-hidden bg-gradient-to-br from-slate-50 via-white to-slate-50 dark:bg-[#0B0F19];
-    background-image:
-      radial-gradient(ellipse 70% 50% at 10% -10%, rgba(79, 70, 229, 0.12), transparent),
-      radial-gradient(ellipse 50% 40% at 90% 100%, rgba(13, 148, 136, 0.1), transparent);
+    @apply relative h-screen overflow-hidden bg-[#fafafa] dark:bg-[#030712] transition-colors duration-500;
   }
 
+  /* Animated Mesh Gradient Elements */
   .dashboard-glow {
-    @apply absolute rounded-full blur-[100px] pointer-events-none;
+    @apply absolute rounded-full mix-blend-multiply dark:mix-blend-screen filter blur-[120px] opacity-60 dark:opacity-40 animate-mesh-blob pointer-events-none;
   }
 
   .dashboard-glow--left {
-    @apply w-80 h-80 -top-24 -left-24 bg-primary/20;
+    @apply w-[500px] h-[500px] -top-32 -left-32 bg-indigo-400 dark:bg-indigo-600;
+    animation-delay: 0s;
   }
 
   .dashboard-glow--right {
-    @apply w-96 h-96 -bottom-32 -right-32 bg-secondary/20;
+    @apply w-[600px] h-[600px] top-1/4 -right-32 bg-teal-400 dark:bg-teal-600;
+    animation-delay: 2s;
+  }
+
+  .dashboard-glow--bottom {
+    @apply absolute rounded-full mix-blend-multiply dark:mix-blend-screen filter blur-[120px] opacity-50 dark:opacity-30 animate-mesh-blob pointer-events-none w-[400px] h-[400px] -bottom-32 left-1/3 bg-purple-400 dark:bg-purple-600;
+    animation-delay: 4s;
+  }
+
+  @keyframes mesh-blob {
+    0% { transform: translate(0px, 0px) scale(1); }
+    33% { transform: translate(40px, -60px) scale(1.1); }
+    66% { transform: translate(-30px, 30px) scale(0.9); }
+    100% { transform: translate(0px, 0px) scale(1); }
   }
 
   .dashboard-topbar {
-    @apply fixed top-0 left-0 right-0 h-16 z-50 flex items-center justify-between px-4 md:px-6 lg:px-8 border-b bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-slate-200/50 dark:border-slate-700/40 shadow-sm;
+    @apply fixed top-4 left-4 right-4 md:left-6 md:right-6 lg:left-8 lg:right-8 h-16 z-50 flex items-center justify-between px-6 rounded-2xl bg-white/70 dark:bg-slate-900/70 backdrop-blur-2xl border border-white/50 dark:border-slate-700/50 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)];
   }
 
   .dashboard-main {
-    @apply fixed top-16 left-0 right-0 bottom-0 z-10 overflow-hidden;
+    @apply fixed top-24 left-0 right-0 bottom-0 z-10 overflow-hidden;
   }
 
   .dashboard-main-inner {
