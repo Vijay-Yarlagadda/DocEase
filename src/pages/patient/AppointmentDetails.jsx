@@ -9,6 +9,7 @@ import { getReportForAppointment } from '../../services/reportService'
 import { AuthContext } from '../../context/AuthContext'
 import { useToast } from '../../components/Toast'
 import FilePreviewModal from '../../components/FilePreviewModal'
+import { formatDoctorName } from '../../utils/userProfile'
 
 const AppointmentDetails = () => {
   const { appointmentId } = useParams()
@@ -178,9 +179,14 @@ const AppointmentDetails = () => {
         </div>
 
         <div className="grid sm:grid-cols-2 gap-6 bg-slate-50 dark:bg-slate-800/30 p-6 rounded-2xl border border-slate-100 dark:border-slate-700/50">
-          <div>
-            <p className="text-sm font-medium text-slate-400 mb-1 flex items-center gap-1.5"><Stethoscope className="w-4 h-4" /> Doctor</p>
-            <p className="font-semibold text-slate-900 dark:text-white">{appointment.doctorName}</p>
+          <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-100 dark:border-slate-700/50">
+            <div className="w-10 h-10 rounded-full bg-teal-100 dark:bg-teal-900/30 flex items-center justify-center text-teal-600 dark:text-teal-400 font-bold">
+              {appointment.doctorName?.charAt(0)}
+            </div>
+            <div>
+              <p className="text-xs text-slate-500 mb-0.5">Consulting Doctor</p>
+              <p className="font-semibold text-slate-900 dark:text-white">{formatDoctorName(appointment.doctorName)}</p>
+            </div>
           </div>
           <div>
             <p className="text-sm font-medium text-slate-400 mb-1 flex items-center gap-1.5"><MapPin className="w-4 h-4" /> Hospital</p>

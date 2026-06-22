@@ -7,6 +7,7 @@ import { bookAppointment, getDoctorAppointmentsByDate } from '../../services/app
 import { checkDoctorLeaveOnDate } from '../../services/leaveService'
 import { AuthContext } from '../../context/AuthContext'
 import { useToast } from '../../components/Toast'
+import { formatDoctorName } from '../../utils/userProfile'
 
 const PatientHospitals = () => {
   const { user } = useContext(AuthContext)
@@ -276,7 +277,7 @@ const PatientHospitals = () => {
                     <div key={doc.id} className="p-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/30 hover:border-teal-500/50 transition-colors group">
                       <div className="flex justify-between items-start mb-3">
                         <div>
-                          <h4 className="font-semibold text-slate-900 dark:text-white">{doc.name}</h4>
+                          <h4 className="font-semibold text-slate-900 dark:text-white">{formatDoctorName(doc.name)}</h4>
                           <p className="text-xs text-teal-600 dark:text-teal-400 font-medium mt-0.5">{doc.specialization}</p>
                         </div>
                       </div>

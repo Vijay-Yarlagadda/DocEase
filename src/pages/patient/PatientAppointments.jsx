@@ -6,6 +6,7 @@ import DashboardPageHeader from '../../components/dashboard/DashboardPageHeader'
 import { getPatientAppointments } from '../../services/appointmentService'
 import { AuthContext } from '../../context/AuthContext'
 import { useToast } from '../../components/Toast'
+import { formatDoctorName } from '../../utils/userProfile'
 
 const StatusBadge = ({ status }) => {
   const styles = {
@@ -125,7 +126,7 @@ const PatientAppointments = () => {
                   </div>
                   <div>
                     <h3 className="font-semibold text-lg text-slate-900 dark:text-white mb-1 group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
-                      {appt.doctorName}
+                      {formatDoctorName(appt.doctorName)}
                     </h3>
                     <p className="text-sm text-slate-500 dark:text-slate-400 flex flex-wrap items-center gap-x-4 gap-y-1">
                       <span className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5" /> {appt.hospitalName}</span>
