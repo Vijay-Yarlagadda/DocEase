@@ -96,7 +96,8 @@
 
   /* Animated Mesh Gradient Elements */
   .dashboard-glow {
-    @apply absolute rounded-full mix-blend-multiply dark:mix-blend-screen filter blur-[120px] opacity-60 dark:opacity-40 animate-mesh-blob pointer-events-none;
+    @apply absolute rounded-full mix-blend-multiply dark:mix-blend-screen filter blur-[120px] opacity-60 dark:opacity-40 pointer-events-none;
+    animation: mesh-blob 10s infinite alternate ease-in-out;
   }
 
   .dashboard-glow--left {
@@ -110,7 +111,7 @@
   }
 
   .dashboard-glow--bottom {
-    @apply absolute rounded-full mix-blend-multiply dark:mix-blend-screen filter blur-[120px] opacity-50 dark:opacity-30 animate-mesh-blob pointer-events-none w-[400px] h-[400px] -bottom-32 left-1/3 bg-purple-400 dark:bg-purple-600;
+    @apply absolute rounded-full mix-blend-multiply dark:mix-blend-screen filter blur-[120px] opacity-50 dark:opacity-30 pointer-events-none w-[400px] h-[400px] -bottom-32 left-1/3 bg-purple-400 dark:bg-purple-600;
     animation-delay: 4s;
   }
 
