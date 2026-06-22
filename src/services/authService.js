@@ -583,6 +583,8 @@ export const adminCreateDoctor = async (
       throw new Error('Temporary password must be at least 8 characters')
     }
 
+    const cleanedName = name.replace(/^(dr\\.?\\s*)+/gi, '').trim()
+
     let hospitalName = 'DocEase Hospital'
     let hospitalEmail = ''
     try {
@@ -601,7 +603,7 @@ export const adminCreateDoctor = async (
       try {
         const createDoctorFn = httpsCallable(functions, 'createDoctor')
         const res = await createDoctorFn({
-          name,
+          name: cleanedName,
           email,
           tempPassword,
           qualification,
@@ -613,7 +615,7 @@ export const adminCreateDoctor = async (
         try {
           await api.post('/emails/send', {
             action: 'sendDoctorCredentials',
-            payload: { email, name, password: tempPassword, hospitalName, hospitalEmail }
+            payload: { email, name: cleanedName, password: tempPassword, hospitalName, hospitalEmail }
           })
         } catch (emailErr) {
           console.error('Failed to send doctor email via backend:', emailErr)
@@ -641,7 +643,7 @@ export const adminCreateDoctor = async (
     try {
       await setDoc(docRef, {
         uid: firebaseUser.uid,
-        name,
+        name: cleanedName,
         email: firebaseUser.email,
         qualification,
         specialization,
@@ -661,7 +663,7 @@ export const adminCreateDoctor = async (
     try {
       await api.post('/emails/send', {
         action: 'sendDoctorCredentials',
-        payload: { email: firebaseUser.email, name, password: tempPassword, hospitalName, hospitalEmail }
+        payload: { email: firebaseUser.email, name: cleanedName, password: tempPassword, hospitalName, hospitalEmail }
       })
     } catch (emailErr) {
       console.error('Failed to send doctor email via backend:', emailErr)
@@ -672,7 +674,7 @@ export const adminCreateDoctor = async (
       uid: firebaseUser.uid,
       email: firebaseUser.email,
       tempPassword,
-      name,
+      name: cleanedName,
     }
   } catch (error) {
     throw handleAuthError(error)

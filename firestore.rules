@@ -1,0 +1,108 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper Functions for Role-Based Auth
+    function getUserRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+    
+    function isAdmin() {
+      return request.auth != null && getUserRole() == 'admin';
+    }
+    
+    function isSuperAdmin() {
+      return request.auth != null && getUserRole() == 'superadmin';
+    }
+
+    // Users Collection
+    // - Users manage their own profile.
+    // - Admins/Superadmins can read and update all profiles.
+    match /users/{userId} {
+      allow create: if request.auth != null && request.auth.uid == userId;
+      allow read, update, delete: if request.auth != null && (
+        request.auth.uid == userId || isAdmin() || isSuperAdmin()
+      );
+    }
+
+    // Doctors Collection
+    // - Requirement 1: Patients (and anyone authenticated) must be able to read doctors.
+    // - Write restricted to Admins.
+    // - Exception: Doctors can update their own document (e.g. to change mustChangePassword flag or update profile).
+    match /doctors/{docId} {
+      allow read: if request.auth != null;
+      allow create, delete: if isAdmin() || isSuperAdmin();
+      allow update: if (request.auth != null && request.auth.uid == docId) || isAdmin() || isSuperAdmin();
+    }
+
+    // Hospitals Collection
+    // - Requirement 1: Patients must be able to read hospitals.
+    // - Requirement 4: Super Admin can review hospitals.
+    match /hospitals/{hId} {
+      allow read: if request.auth != null;
+      allow create, update, delete: if isAdmin() || isSuperAdmin();
+    }
+
+    // Appointments Collection
+    // - Requirement: Only the patient associated with the appointment can create it.
+    // - Admins need to see all appointments.
+    // - Doctors/Patients see their own.
+    match /appointments/{appId} {
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.patientId;
+      allow read, update, delete: if request.auth != null && (
+        request.auth.uid == resource.data.patientId ||
+        request.auth.uid == resource.data.doctorId ||
+        isAdmin() || isSuperAdmin()
+      );
+    }
+
+    // Documents (Patient Medical Records)
+    // - Requirement 2: Admins must NOT be able to read.
+    // - Requirement 3: Doctors only access documents linked to them.
+    // - Requirement 4: Super Admin cannot access records.
+    match /documents/{docId} {
+      allow create: if request.auth != null && (
+        request.auth.uid == request.resource.data.patientUid ||
+        request.auth.uid == request.resource.data.doctorId
+      );
+      allow read: if request.auth != null && (
+        request.auth.uid == resource.data.patientUid ||
+        request.auth.uid == resource.data.doctorId ||
+        (resource.data.sharedWith != null && request.auth.uid in resource.data.sharedWith)
+      );
+      allow update, delete: if request.auth != null && request.auth.uid == request.resource.data.patientUid;
+    }
+
+    // Reports (Doctor generated medical reports)
+    // - Same privacy as documents: only Patient and assigned Doctor. No Admins/Superadmins.
+    match /reports/{reportId} {
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.doctorId;
+      allow read: if request.auth != null && (
+        request.auth.uid == resource.data.patientId ||
+        request.auth.uid == resource.data.doctorId
+      );
+      allow update, delete: if request.auth != null && request.auth.uid == resource.data.doctorId;
+    }
+
+    // Notifications
+    match /notifications/{notifId} {
+      allow create: if request.auth != null;
+      allow read, update, delete: if request.auth != null && request.auth.uid == resource.data.recipientId;
+    }
+    
+    // Leaves (Doctor leave requests)
+    match /leaves/{leaveId} {
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.doctorId;
+      allow read: if request.auth != null && (
+        request.auth.uid == resource.data.doctorId || isAdmin() || isSuperAdmin()
+      );
+      allow update, delete: if request.auth != null && (
+        request.auth.uid == resource.data.doctorId || isAdmin()
+      );
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
