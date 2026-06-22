@@ -317,18 +317,18 @@ const PatientHospitals = () => {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl shadow-xl shadow-slate-200/50 dark:shadow-black/20 rounded-3xl shadow-2xl w-full max-w-md overflow-hidden border border-slate-200 dark:border-slate-800"
+              className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl shadow-xl shadow-slate-200/50 dark:shadow-black/20 rounded-3xl w-full max-w-md border border-slate-200 dark:border-slate-800 flex flex-col max-h-[90vh]"
             >
-              <div className="flex items-center justify-between p-5 border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900">
+              <div className="flex-shrink-0 flex items-center justify-between p-5 border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900">
                 <h3 className="font-bold text-slate-900 dark:text-white">Book Appointment</h3>
                 <button onClick={() => setBookingDoctor(null)} className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors">
                   <X className="w-5 h-5" />
                 </button>
               </div>
-              <div className="p-6">
+              <div className="p-6 overflow-y-auto custom-scrollbar">
                 <div className="mb-6 p-4 rounded-xl bg-teal-50 dark:bg-teal-900/20 border border-teal-100 dark:border-teal-800/50">
                   <p className="text-xs text-teal-600 dark:text-teal-400 font-semibold mb-1 uppercase tracking-wider">Doctor</p>
-                  <p className="font-bold text-slate-900 dark:text-white text-lg">{bookingDoctor.name}</p>
+                  <p className="font-bold text-slate-900 dark:text-white text-lg">{formatDoctorName(bookingDoctor.name)}</p>
                   <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">{bookingDoctor.specialization} &bull; {selectedHospital.name}</p>
                 </div>
 
