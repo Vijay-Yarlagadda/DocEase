@@ -1,5 +1,6 @@
 import { useState, useEffect, useContext } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { createPortal } from 'react-dom'
 import { Building2, MapPin, Phone, Mail, ChevronRight, Stethoscope, Calendar, Clock, X, Check } from 'lucide-react'
 import DashboardPageHeader from '../../components/dashboard/DashboardPageHeader'
 import { getVerifiedHospitals, getDoctorsByHospital } from '../../services/patientService'
@@ -310,144 +311,147 @@ const PatientHospitals = () => {
       </div>
 
       {/* Booking Modal */}
-      <AnimatePresence>
-        {bookingDoctor && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl shadow-xl shadow-slate-200/50 dark:shadow-black/20 rounded-3xl w-full max-w-md border border-slate-200 dark:border-slate-800 flex flex-col max-h-[90vh]"
-            >
-              <div className="flex-shrink-0 flex items-center justify-between p-5 border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900">
-                <h3 className="font-bold text-slate-900 dark:text-white">Book Appointment</h3>
-                <button onClick={() => setBookingDoctor(null)} className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors">
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-              <div className="p-6 overflow-y-auto custom-scrollbar">
-                <div className="mb-6 p-4 rounded-xl bg-teal-50 dark:bg-teal-900/20 border border-teal-100 dark:border-teal-800/50">
-                  <p className="text-xs text-teal-600 dark:text-teal-400 font-semibold mb-1 uppercase tracking-wider">Doctor</p>
-                  <p className="font-bold text-slate-900 dark:text-white text-lg">{formatDoctorName(bookingDoctor.name)}</p>
-                  <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">{bookingDoctor.specialization} &bull; {selectedHospital.name}</p>
+      {createPortal(
+        <AnimatePresence>
+          {bookingDoctor && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl shadow-xl shadow-slate-200/50 dark:shadow-black/20 rounded-3xl w-full max-w-md border border-slate-200 dark:border-slate-800 flex flex-col max-h-[90vh]"
+              >
+                <div className="flex-shrink-0 flex items-center justify-between p-5 border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900">
+                  <h3 className="font-bold text-slate-900 dark:text-white">Book Appointment</h3>
+                  <button onClick={() => setBookingDoctor(null)} className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors">
+                    <X className="w-5 h-5" />
+                  </button>
                 </div>
+                <div className="p-6 overflow-y-auto custom-scrollbar">
+                  <div className="mb-6 p-4 rounded-xl bg-teal-50 dark:bg-teal-900/20 border border-teal-100 dark:border-teal-800/50">
+                    <p className="text-xs text-teal-600 dark:text-teal-400 font-semibold mb-1 uppercase tracking-wider">Doctor</p>
+                    <p className="font-bold text-slate-900 dark:text-white text-lg">{formatDoctorName(bookingDoctor.name)}</p>
+                    <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">{bookingDoctor.specialization} &bull; {selectedHospital.name}</p>
+                  </div>
 
-                <form onSubmit={handleBook} className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5 flex items-center gap-2">
-                      <Calendar className="w-4 h-4 text-slate-400" />
-                      Date
-                    </label>
-                    <input 
-                      type="date" 
-                      required
-                      min={minDateStr}
-                      value={date}
-                      onChange={e => setDate(e.target.value)}
-                      className="dashboard-input w-full"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
-                      <Clock className="w-4 h-4 text-slate-400" />
-                      Select Time Slot
-                    </label>
+                  <form onSubmit={handleBook} className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5 flex items-center gap-2">
+                        <Calendar className="w-4 h-4 text-slate-400" />
+                        Date
+                      </label>
+                      <input 
+                        type="date" 
+                        required
+                        min={minDateStr}
+                        value={date}
+                        onChange={e => setDate(e.target.value)}
+                        className="dashboard-input w-full"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
+                        <Clock className="w-4 h-4 text-slate-400" />
+                        Select Time Slot
+                      </label>
+                      
+                      {checkingSlots ? (
+                        <div className="text-sm text-slate-500 py-8 text-center flex flex-col items-center gap-2">
+                          <div className="w-5 h-5 border-2 border-slate-300 border-t-cyan-500 rounded-full animate-spin"></div>
+                          Checking availability...
+                        </div>
+                      ) : isDoctorOnLeave ? (
+                        <div className="text-sm text-red-600 dark:text-red-400 py-6 text-center bg-red-50 dark:bg-red-900/20 rounded-xl border border-red-100 dark:border-red-900/50 font-medium flex flex-col items-center gap-2">
+                          <X className="w-6 h-6 text-red-500" />
+                          Doctor is not available on this date.
+                        </div>
+                      ) : generatedSlots.notWorkingDay ? (
+                        <div className="text-sm text-amber-600 dark:text-amber-400 py-6 text-center bg-amber-50 dark:bg-amber-900/20 rounded-xl border border-amber-100 dark:border-amber-900/50 font-medium flex flex-col items-center gap-2">
+                          <X className="w-6 h-6 text-amber-500" />
+                          Doctor is not available on this day of the week.
+                        </div>
+                      ) : (
+                        <div className="space-y-4 max-h-[200px] overflow-y-auto pr-2 custom-scrollbar">
+                          {generatedSlots.morning.length > 0 && (
+                            <div>
+                              <p className="text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wider">Morning</p>
+                              <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                                {generatedSlots.morning.map(t => (
+                                  <button
+                                    key={t}
+                                    type="button"
+                                    disabled={bookedSlots.includes(t)}
+                                    onClick={() => setTime(t)}
+                                    className={`py-1.5 px-2 text-xs font-medium rounded-lg border transition-all ${bookedSlots.includes(t) ? 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed dark:bg-slate-800/50 dark:border-slate-800 dark:text-slate-600' : time === t ? 'bg-cyan-500 border-cyan-500 text-white shadow-md shadow-cyan-500/30' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-cyan-400 dark:hover:border-cyan-600'}`}
+                                  >
+                                    {t}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          
+                          {generatedSlots.afternoon.length > 0 && (
+                            <div>
+                              <p className="text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wider">Afternoon</p>
+                              <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                                {generatedSlots.afternoon.map(t => (
+                                  <button
+                                    key={t}
+                                    type="button"
+                                    disabled={bookedSlots.includes(t)}
+                                    onClick={() => setTime(t)}
+                                    className={`py-1.5 px-2 text-xs font-medium rounded-lg border transition-all ${bookedSlots.includes(t) ? 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed dark:bg-slate-800/50 dark:border-slate-800 dark:text-slate-600' : time === t ? 'bg-cyan-500 border-cyan-500 text-white shadow-md shadow-cyan-500/30' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-cyan-400 dark:hover:border-cyan-600'}`}
+                                  >
+                                    {t}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          
+                          {generatedSlots.evening.length > 0 && (
+                            <div>
+                              <p className="text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wider">Evening</p>
+                              <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                                {generatedSlots.evening.map(t => (
+                                  <button
+                                    key={t}
+                                    type="button"
+                                    disabled={bookedSlots.includes(t)}
+                                    onClick={() => setTime(t)}
+                                    className={`py-1.5 px-2 text-xs font-medium rounded-lg border transition-all ${bookedSlots.includes(t) ? 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed dark:bg-slate-800/50 dark:border-slate-800 dark:text-slate-600' : time === t ? 'bg-cyan-500 border-cyan-500 text-white shadow-md shadow-cyan-500/30' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-cyan-400 dark:hover:border-cyan-600'}`}
+                                  >
+                                    {t}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
                     
-                    {checkingSlots ? (
-                      <div className="text-sm text-slate-500 py-8 text-center flex flex-col items-center gap-2">
-                        <div className="w-5 h-5 border-2 border-slate-300 border-t-cyan-500 rounded-full animate-spin"></div>
-                        Checking availability...
-                      </div>
-                    ) : isDoctorOnLeave ? (
-                      <div className="text-sm text-red-600 dark:text-red-400 py-6 text-center bg-red-50 dark:bg-red-900/20 rounded-xl border border-red-100 dark:border-red-900/50 font-medium flex flex-col items-center gap-2">
-                        <X className="w-6 h-6 text-red-500" />
-                        Doctor is not available on this date.
-                      </div>
-                    ) : generatedSlots.notWorkingDay ? (
-                      <div className="text-sm text-amber-600 dark:text-amber-400 py-6 text-center bg-amber-50 dark:bg-amber-900/20 rounded-xl border border-amber-100 dark:border-amber-900/50 font-medium flex flex-col items-center gap-2">
-                        <X className="w-6 h-6 text-amber-500" />
-                        Doctor is not available on this day of the week.
-                      </div>
-                    ) : (
-                      <div className="space-y-4 max-h-[200px] overflow-y-auto pr-2 custom-scrollbar">
-                        {generatedSlots.morning.length > 0 && (
-                          <div>
-                            <p className="text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wider">Morning</p>
-                            <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-                              {generatedSlots.morning.map(t => (
-                                <button
-                                  key={t}
-                                  type="button"
-                                  disabled={bookedSlots.includes(t)}
-                                  onClick={() => setTime(t)}
-                                  className={`py-1.5 px-2 text-xs font-medium rounded-lg border transition-all ${bookedSlots.includes(t) ? 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed dark:bg-slate-800/50 dark:border-slate-800 dark:text-slate-600' : time === t ? 'bg-cyan-500 border-cyan-500 text-white shadow-md shadow-cyan-500/30' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-cyan-400 dark:hover:border-cyan-600'}`}
-                                >
-                                  {t}
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                        
-                        {generatedSlots.afternoon.length > 0 && (
-                          <div>
-                            <p className="text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wider">Afternoon</p>
-                            <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-                              {generatedSlots.afternoon.map(t => (
-                                <button
-                                  key={t}
-                                  type="button"
-                                  disabled={bookedSlots.includes(t)}
-                                  onClick={() => setTime(t)}
-                                  className={`py-1.5 px-2 text-xs font-medium rounded-lg border transition-all ${bookedSlots.includes(t) ? 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed dark:bg-slate-800/50 dark:border-slate-800 dark:text-slate-600' : time === t ? 'bg-cyan-500 border-cyan-500 text-white shadow-md shadow-cyan-500/30' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-cyan-400 dark:hover:border-cyan-600'}`}
-                                >
-                                  {t}
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                        
-                        {generatedSlots.evening.length > 0 && (
-                          <div>
-                            <p className="text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wider">Evening</p>
-                            <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-                              {generatedSlots.evening.map(t => (
-                                <button
-                                  key={t}
-                                  type="button"
-                                  disabled={bookedSlots.includes(t)}
-                                  onClick={() => setTime(t)}
-                                  className={`py-1.5 px-2 text-xs font-medium rounded-lg border transition-all ${bookedSlots.includes(t) ? 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed dark:bg-slate-800/50 dark:border-slate-800 dark:text-slate-600' : time === t ? 'bg-cyan-500 border-cyan-500 text-white shadow-md shadow-cyan-500/30' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-cyan-400 dark:hover:border-cyan-600'}`}
-                                >
-                                  {t}
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div className="pt-4">
-                    <button 
-                      type="submit" 
-                      disabled={booking}
-                      className="btn-primary w-full justify-center"
-                    >
-                      {booking ? 'Booking...' : 'Confirm Appointment'}
-                    </button>
-                    <p className="text-xs text-center text-slate-500 mt-3">
-                      Your appointment will require approval from the doctor. You can upload medical records after approval.
-                    </p>
-                  </div>
-                </form>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+                    <div className="pt-4">
+                      <button 
+                        type="submit" 
+                        disabled={booking}
+                        className="btn-primary w-full justify-center"
+                      >
+                        {booking ? 'Booking...' : 'Confirm Appointment'}
+                      </button>
+                      <p className="text-xs text-center text-slate-500 mt-3">
+                        Your appointment will require approval from the doctor. You can upload medical records after approval.
+                      </p>
+                    </div>
+                  </form>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
     </div>
   )
 }
