@@ -583,7 +583,7 @@ export const adminCreateDoctor = async (
       throw new Error('Temporary password must be at least 8 characters')
     }
 
-    const cleanedName = name.replace(/^(dr\\.?\\s*)+/gi, '').trim()
+    const cleanedName = name.replace(/^(dr\.?\s*)+/gi, '').trim()
 
     let hospitalName = 'DocEase Hospital'
     let hospitalEmail = ''
