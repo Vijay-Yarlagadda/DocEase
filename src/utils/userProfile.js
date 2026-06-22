@@ -1,11 +1,22 @@
 export const getDisplayName = (user) => {
   if (!user) return 'User'
   if (user.role === 'superadmin') return 'DocEase'
-  if (user.name?.trim()) return user.name.trim()
-  if (user.fullName?.trim()) return user.fullName.trim()
-  const email = user.email || user.mail
-  if (email) return email.split('@')[0]
-  return 'User'
+  
+  let name = ''
+  if (user.name?.trim()) name = user.name.trim()
+  else if (user.fullName?.trim()) name = user.fullName.trim()
+  else {
+    const email = user.email || user.mail
+    if (email) name = email.split('@')[0]
+  }
+  
+  if (!name) name = 'User'
+  
+  if (user.role === 'doctor') {
+    return formatDoctorName(name)
+  }
+  
+  return name
 }
 
 export const getUserEmail = (user) => user?.email || user?.mail || ''

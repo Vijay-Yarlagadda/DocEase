@@ -21,7 +21,7 @@ const DashboardPageHeader = ({ title, subtitle, role, action }) => {
         <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold text-white bg-gradient-to-r ${badgeGradient} mb-3 capitalize`}>
           {role} Portal
         </span>
-        <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white mb-1">
+        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-500 dark:from-white dark:to-slate-400 mb-2">
           {title}
         </h1>
         <p className="text-slate-600 dark:text-slate-400 text-sm sm:text-base">

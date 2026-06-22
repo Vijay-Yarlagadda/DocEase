@@ -6,6 +6,7 @@ import { doctorChangePassword } from '../services/authService'
 import { auth } from '../services/firebase'
 import { AuthContext } from '../context/AuthContext'
 import { useToast } from '../components/Toast'
+import { formatDoctorName } from '../utils/userProfile'
 
 const DoctorChangePassword = () => {
   const loc = useLocation()
@@ -89,7 +90,7 @@ const DoctorChangePassword = () => {
             <Shield className="w-7 h-7 text-white" />
           </div>
           <h1 className="text-2xl font-bold text-white mb-2">Set Your New Password</h1>
-          {doctorName && <p className="text-slate-400 text-sm">Welcome, <span className="text-cyan-400">{doctorName}</span></p>}
+          {doctorName && <p className="text-slate-400 text-sm">Welcome, <span className="text-cyan-400">{formatDoctorName(doctorName)}</span></p>}
           <p className="text-slate-500 text-xs mt-2">For security, you must change your temporary password before continuing.</p>
         </div>
 
