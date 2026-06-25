@@ -124,20 +124,19 @@ const DoctorSchedule = () => {
   const pastLeaves = leaves.filter(l => new Date(l.date) < new Date(new Date().setHours(0,0,0,0)))
 
   return (
-    <div>
-      <DashboardPageHeader
-        role="doctor"
-        title="Schedule & Leaves"
-        subtitle="Manage your availability and upcoming days off"
-      />
+    <div className="grid lg:grid-cols-3 gap-6 lg:items-start">
+      <div className="lg:col-span-1 sticky top-24">
+        <DashboardPageHeader
+          role="doctor"
+          title="Schedule & Leaves"
+          subtitle="Manage your availability and upcoming days off"
+        />
 
-      <div className="grid lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-1">
-          <div className="dashboard-card sticky top-24">
-            <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
-              <CalendarIcon className="w-5 h-5 text-teal-500" />
-              Schedule Leave
-            </h2>
+        <div className="dashboard-card">
+          <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+            <CalendarIcon className="w-5 h-5 text-teal-500" />
+            Schedule Leave
+          </h2>
             
             <div className="bg-amber-50 dark:bg-amber-900/20 p-4 rounded-xl border border-amber-100 dark:border-amber-800/50 mb-6">
               <div className="flex gap-3">
@@ -320,7 +319,6 @@ const DoctorSchedule = () => {
           )}
         </div>
       </div>
-    </div>
   )
 }
 
