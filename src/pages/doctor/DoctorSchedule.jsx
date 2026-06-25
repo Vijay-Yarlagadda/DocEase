@@ -123,6 +123,7 @@ const DoctorSchedule = () => {
   const upcomingLeaves = leaves.filter(l => new Date(l.date) >= new Date(new Date().setHours(0,0,0,0)))
   const pastLeaves = leaves.filter(l => new Date(l.date) < new Date(new Date().setHours(0,0,0,0)))
 
+  return (
     <div className="grid lg:grid-cols-12 gap-8 lg:items-start max-w-7xl mx-auto">
       {/* Left Column: Sticky Sidebar */}
       <div className="lg:col-span-4 sticky top-24 flex flex-col gap-6">
