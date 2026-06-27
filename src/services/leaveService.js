@@ -27,26 +27,34 @@ export const addLeave = async (doctorId, date, reason) => {
         if (adminDoc.exists() && adminDoc.data().role === 'admin') {
           const adminData = adminDoc.data()
           if (adminData.email) {
-            await api.post('/emails/send', {
-              action: 'sendDoctorLeaveToAdmin',
-              payload: {
-                adminEmail: adminData.email,
-                adminName: adminData.name || adminData.firstName || 'Hospital Admin',
-                doctorName,
-                leaveDate: date,
-                reason: reason || 'Personal Leave'
-              }
-            })
+            try {
+              await api.post('/emails/send', {
+                action: 'sendDoctorLeaveToAdmin',
+                payload: {
+                  adminEmail: adminData.email,
+                  adminName: adminData.name || adminData.firstName || 'Hospital Admin',
+                  doctorName,
+                  leaveDate: date,
+                  reason: reason || 'Personal Leave'
+                }
+              })
+            } catch (emailErr) {
+              console.error('Failed to send leave email to admin:', emailErr)
+            }
           }
           
-          const { sendNotification } = await import('./notificationService')
-          await sendNotification({
-            recipientId: adminDoc.id,
-            title: 'Doctor Leave Scheduled',
-            message: `${formatDoctorName(doctorName)} scheduled a leave on ${date}.`,
-            type: 'doctor',
-            link: '/admin/doctors'
-          })
+          try {
+            const { sendNotification } = await import('./notificationService')
+            await sendNotification({
+              recipientId: adminDoc.id,
+              title: 'Doctor Leave Scheduled',
+              message: `${formatDoctorName(doctorName)} scheduled a leave on ${date}.`,
+              type: 'doctor',
+              link: '/admin/doctors'
+            })
+          } catch (notifErr) {
+            console.error('Failed to send leave in-app notification:', notifErr)
+          }
         }
       }
     }
