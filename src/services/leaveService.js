@@ -22,17 +22,17 @@ export const addLeave = async (doctorId, date, reason) => {
       const doctorName = doctorData.name || doctorData.firstName
 
       if (hospitalId) {
-        // The admin's document ID in the 'users' collection is the hospitalId
-        const adminDoc = await getDoc(doc(db, 'users', hospitalId))
-        if (adminDoc.exists() && adminDoc.data().role === 'admin') {
-          const adminData = adminDoc.data()
-          if (adminData.email) {
+        // Fetch hospital profile to get the admin's email and name, since doctors cannot read the 'users' collection
+        const hospitalDoc = await getDoc(doc(db, 'hospitals', hospitalId))
+        if (hospitalDoc.exists()) {
+          const hospitalData = hospitalDoc.data()
+          if (hospitalData.email) {
             try {
               await api.post('/emails/send', {
                 action: 'sendDoctorLeaveToAdmin',
                 payload: {
-                  adminEmail: adminData.email,
-                  adminName: adminData.name || adminData.firstName || 'Hospital Admin',
+                  adminEmail: hospitalData.email,
+                  adminName: hospitalData.name || 'Hospital Admin',
                   doctorName,
                   leaveDate: date,
                   reason: reason || 'Personal Leave'
@@ -46,7 +46,7 @@ export const addLeave = async (doctorId, date, reason) => {
           try {
             const { sendNotification } = await import('./notificationService')
             await sendNotification({
-              recipientId: adminDoc.id,
+              recipientId: hospitalId, // Admin UID is the hospitalId
               title: 'Doctor Leave Scheduled',
               message: `${formatDoctorName(doctorName)} scheduled a leave on ${date}.`,
               type: 'doctor',
@@ -88,7 +88,7 @@ export const deleteLeave = async (leaveId) => {
   await deleteDoc(doc(db, LEAVES_COLLECTION, leaveId))
 }
 
-export const subscribeToDoctorLeaveOnDate = (doctorId, date, callback) => {
+export const subscribeToDoctorLeaveOnDate = (doctorId, date, callback, onError) => {
   if (!doctorId || !date) {
     callback(false)
     return () => {}
@@ -100,5 +100,8 @@ export const subscribeToDoctorLeaveOnDate = (doctorId, date, callback) => {
   )
   return onSnapshot(q, (snap) => {
     callback(!snap.empty)
+  }, (err) => {
+    console.error('Leave subscription error:', err)
+    if (onError) onError(err)
   })
 }
