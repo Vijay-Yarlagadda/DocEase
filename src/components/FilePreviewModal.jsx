@@ -40,7 +40,7 @@ const FilePreviewModal = ({ document, onClose }) => {
             {isImage ? (
               <img src={document.fileUrl} alt={document.fileName} className="h-full w-full object-contain rounded-2xl" />
             ) : isPdf ? (
-              <iframe src={document.fileUrl} title={document.fileName} className="h-full w-full rounded-2xl bg-white dark:bg-slate-950 border-0" />
+              <iframe src={`https://docs.google.com/viewer?url=${encodeURIComponent(document.fileUrl)}&embedded=true`} title={document.fileName} className="h-full w-full rounded-2xl bg-white dark:bg-slate-950 border-0" />
             ) : (
               <div className="flex h-full items-center justify-center rounded-2xl bg-white dark:bg-slate-950 text-slate-500">
                 <p>Preview not available for this file type.</p>
