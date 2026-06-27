@@ -22,17 +22,17 @@ export const addLeave = async (doctorId, date, reason) => {
       const doctorName = doctorData.name || doctorData.firstName
 
       if (hospitalId) {
-        // Fetch hospital profile to get the admin's email and name, since doctors cannot read the 'users' collection
-        const hospitalDoc = await getDoc(doc(db, 'hospitals', hospitalId))
-        if (hospitalDoc.exists()) {
-          const hospitalData = hospitalDoc.data()
-          if (hospitalData.email) {
+        // The admin's document ID in the 'users' collection is the hospitalId
+        const adminDoc = await getDoc(doc(db, 'users', hospitalId))
+        if (adminDoc.exists() && adminDoc.data().role === 'admin') {
+          const adminData = adminDoc.data()
+          if (adminData.email) {
             try {
               await api.post('/emails/send', {
                 action: 'sendDoctorLeaveToAdmin',
                 payload: {
-                  adminEmail: hospitalData.email,
-                  adminName: hospitalData.name || 'Hospital Admin',
+                  adminEmail: adminData.email,
+                  adminName: adminData.name || adminData.firstName || 'Hospital Admin',
                   doctorName,
                   leaveDate: date,
                   reason: reason || 'Personal Leave'
@@ -49,8 +49,7 @@ export const addLeave = async (doctorId, date, reason) => {
               recipientId: hospitalId, // Admin UID is the hospitalId
               title: 'Doctor Leave Scheduled',
               message: `${formatDoctorName(doctorName)} scheduled a leave on ${date}.`,
-              type: 'doctor',
-              link: '/admin/doctors'
+              type: 'doctor'
             })
           } catch (notifErr) {
             console.error('Failed to send leave in-app notification:', notifErr)
