@@ -185,7 +185,7 @@ const DoctorSchedule = () => {
                 min={minDateStr}
                 value={leaveDate}
                 onChange={e => setLeaveDate(e.target.value)}
-                className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl px-4 py-3 focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500 transition-all outline-none"
+                className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white dark:[color-scheme:dark] rounded-xl px-4 py-3 focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500 transition-all outline-none"
               />
             </div>
             
@@ -294,7 +294,7 @@ const DoctorSchedule = () => {
                     <Clock className="w-4 h-4" />
                   </div>
                   <input type="time" value={startTime} onChange={e => setStartTime(e.target.value)} required 
-                    className="w-full pl-11 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl px-4 py-3.5 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all outline-none" 
+                    className="w-full pl-11 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white dark:[color-scheme:dark] rounded-xl px-4 py-3.5 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all outline-none" 
                   />
                 </div>
               </div>
@@ -308,7 +308,7 @@ const DoctorSchedule = () => {
                     <Clock className="w-4 h-4" />
                   </div>
                   <input type="time" value={endTime} onChange={e => setEndTime(e.target.value)} required 
-                    className="w-full pl-11 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl px-4 py-3.5 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all outline-none" 
+                    className="w-full pl-11 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white dark:[color-scheme:dark] rounded-xl px-4 py-3.5 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all outline-none" 
                   />
                 </div>
               </div>
@@ -322,7 +322,7 @@ const DoctorSchedule = () => {
                     <Clock className="w-4 h-4" />
                   </div>
                   <input type="time" value={breakStart} onChange={e => setBreakStart(e.target.value)} 
-                    className="w-full pl-11 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl px-4 py-3.5 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all outline-none" 
+                    className="w-full pl-11 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white dark:[color-scheme:dark] rounded-xl px-4 py-3.5 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all outline-none" 
                   />
                 </div>
               </div>
@@ -336,7 +336,7 @@ const DoctorSchedule = () => {
                     <Clock className="w-4 h-4" />
                   </div>
                   <input type="time" value={breakEnd} onChange={e => setBreakEnd(e.target.value)} 
-                    className="w-full pl-11 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl px-4 py-3.5 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all outline-none" 
+                    className="w-full pl-11 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white dark:[color-scheme:dark] rounded-xl px-4 py-3.5 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all outline-none" 
                   />
                 </div>
               </div>
