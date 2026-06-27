@@ -51,7 +51,7 @@ const FilePreviewModal = ({ document, onClose }) => {
         </div>
       </motion.div>
     </AnimatePresence>,
-    document.body
+    window.document.body
   )
 }
 
