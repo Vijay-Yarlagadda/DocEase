@@ -22,15 +22,9 @@ export const addLeave = async (doctorId, date, reason) => {
       const doctorName = doctorData.name || doctorData.firstName
 
       if (hospitalId) {
-        // Fetch the admin for this hospital
-        const q = query(
-          collection(db, 'users'), 
-          where('role', '==', 'admin'),
-          where('hospitalId', '==', hospitalId)
-        )
-        const adminSnap = await getDocs(q)
-        if (!adminSnap.empty) {
-          const adminDoc = adminSnap.docs[0]
+        // The admin's document ID in the 'users' collection is the hospitalId
+        const adminDoc = await getDoc(doc(db, 'users', hospitalId))
+        if (adminDoc.exists() && adminDoc.data().role === 'admin') {
           const adminData = adminDoc.data()
           if (adminData.email) {
             await api.post('/emails/send', {
