@@ -1,5 +1,5 @@
 import { db } from './firebase'
-import { collection, addDoc, query, where, getDocs, updateDoc, doc, getDoc, serverTimestamp, deleteDoc } from 'firebase/firestore'
+import { collection, addDoc, query, where, getDocs, updateDoc, doc, getDoc, serverTimestamp, deleteDoc, onSnapshot } from 'firebase/firestore'
 import api from './api'
 
 const APPOINTMENTS_COLLECTION = 'appointments'
@@ -198,4 +198,19 @@ export const notifyPatientPrescriptionUploaded = async (patientId, doctorName) =
   } catch (error) {
     console.error('Failed to send prescription uploaded email/notification:', error)
   }
+}
+
+export const subscribeToDoctorAppointmentsByDate = (doctorId, date, callback) => {
+  if (!doctorId || !date) {
+    callback([])
+    return () => {}
+  }
+  const q = query(
+    collection(db, APPOINTMENTS_COLLECTION),
+    where('doctorId', '==', doctorId),
+    where('appointmentDate', '==', date)
+  )
+  return onSnapshot(q, (snap) => {
+    callback(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })))
+  })
 }

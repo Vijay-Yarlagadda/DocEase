@@ -1,5 +1,5 @@
 import { db } from './firebase'
-import { collection, addDoc, query, where, getDocs, deleteDoc, doc, getDoc } from 'firebase/firestore'
+import { collection, addDoc, query, where, getDocs, deleteDoc, doc, getDoc, onSnapshot } from 'firebase/firestore'
 import { formatDoctorName } from '../utils/userProfile'
 import api from './api'
 
@@ -86,4 +86,19 @@ export const checkDoctorLeaveOnDate = async (doctorId, date) => {
 export const deleteLeave = async (leaveId) => {
   if (!leaveId) return
   await deleteDoc(doc(db, LEAVES_COLLECTION, leaveId))
+}
+
+export const subscribeToDoctorLeaveOnDate = (doctorId, date, callback) => {
+  if (!doctorId || !date) {
+    callback(false)
+    return () => {}
+  }
+  const q = query(
+    collection(db, LEAVES_COLLECTION), 
+    where('doctorId', '==', doctorId),
+    where('date', '==', date)
+  )
+  return onSnapshot(q, (snap) => {
+    callback(!snap.empty)
+  })
 }

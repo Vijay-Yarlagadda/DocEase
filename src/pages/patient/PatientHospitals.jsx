@@ -4,8 +4,8 @@ import { createPortal } from 'react-dom'
 import { Building2, MapPin, Phone, Mail, ChevronRight, Stethoscope, Calendar, Clock, X, Check } from 'lucide-react'
 import DashboardPageHeader from '../../components/dashboard/DashboardPageHeader'
 import { getVerifiedHospitals, getDoctorsByHospital } from '../../services/patientService'
-import { bookAppointment, getDoctorAppointmentsByDate } from '../../services/appointmentService'
-import { checkDoctorLeaveOnDate } from '../../services/leaveService'
+import { bookAppointment, getDoctorAppointmentsByDate, subscribeToDoctorAppointmentsByDate } from '../../services/appointmentService'
+import { checkDoctorLeaveOnDate, subscribeToDoctorLeaveOnDate } from '../../services/leaveService'
 import { AuthContext } from '../../context/AuthContext'
 import { useToast } from '../../components/Toast'
 import { formatDoctorName } from '../../utils/userProfile'
@@ -104,35 +104,39 @@ const PatientHospitals = () => {
   }, [])
 
   useEffect(() => {
-    const fetchAvailability = async () => {
-      if (!date || !bookingDoctor) {
-        setBookedSlots([])
-        setIsDoctorOnLeave(false)
-        return
-      }
+    let unsubscribeLeave = () => {}
+    let unsubscribeAppts = () => {}
+
+    if (!date || !bookingDoctor) {
+      setBookedSlots([])
+      setIsDoctorOnLeave(false)
+      setCheckingSlots(false)
+      return
+    }
+
+    setCheckingSlots(true)
+    const docId = bookingDoctor.uid || bookingDoctor.id
+
+    unsubscribeLeave = subscribeToDoctorLeaveOnDate(docId, date, (onLeave) => {
+      setIsDoctorOnLeave(onLeave)
+      setCheckingSlots(false)
       
-      setCheckingSlots(true)
-      const docId = bookingDoctor.uid || bookingDoctor.id
-      try {
-        const onLeave = await checkDoctorLeaveOnDate(docId, date)
-        setIsDoctorOnLeave(onLeave)
-        
-        if (!onLeave) {
-          const appointments = await getDoctorAppointmentsByDate(docId, date)
-          // Mark 'pending', 'approved', 'completed' as booked. 'rejected' slots are free.
+      if (!onLeave) {
+        unsubscribeAppts = subscribeToDoctorAppointmentsByDate(docId, date, (appointments) => {
           const booked = appointments
             .filter(app => app.status !== 'rejected')
             .map(app => app.appointmentTime)
           setBookedSlots(booked)
-        }
-      } catch (err) {
-        console.error("Failed to fetch availability", err)
-      } finally {
-        setCheckingSlots(false)
+        })
+      } else {
+        unsubscribeAppts()
       }
+    })
+
+    return () => {
+      unsubscribeLeave()
+      unsubscribeAppts()
     }
-    
-    fetchAvailability()
   }, [date, bookingDoctor])
 
   const handleSelectHospital = async (hospital) => {
