@@ -86,71 +86,101 @@ export const updateAppointmentStatus = async (appointmentId, newStatus) => {
     const aptSnap = await getDoc(appointmentRef)
     if (aptSnap.exists()) {
       const aptData = aptSnap.data()
-      const doctorDoc = await getDoc(doc(db, 'doctors', aptData.doctorId))
-      const patientDoc = await getDoc(doc(db, 'users', aptData.patientId))
       
-      const doctorEmail = doctorDoc.exists() ? doctorDoc.data().email : null
-      const patientEmail = patientDoc.exists() ? patientDoc.data().email : null
+      let doctorEmail = null
+      let patientEmail = aptData.patientEmail || null // Use if saved directly
+
+      // Fetch doctor email
+      try {
+        const doctorDoc = await getDoc(doc(db, 'doctors', aptData.doctorId))
+        if (doctorDoc.exists()) doctorEmail = doctorDoc.data().email
+      } catch (err) {
+        console.warn('Could not fetch doctor doc for email', err)
+      }
+
+      // Fetch patient email if not directly saved
+      if (!patientEmail) {
+        try {
+          const patientDoc = await getDoc(doc(db, 'users', aptData.patientId))
+          if (patientDoc.exists()) patientEmail = patientDoc.data().email || patientDoc.data().mail
+        } catch (err) {
+          console.warn('Could not fetch patient doc for email', err)
+        }
+      }
 
       const { sendNotification } = await import('./notificationService')
       
       if (newStatus === 'approved' || newStatus === 'rejected') {
         if (patientEmail) {
-          await api.post('/emails/send', {
-            action: 'sendAppointmentStatusToPatient',
-            payload: {
-              patientEmail,
-              patientName: aptData.patientName,
-              doctorName: aptData.doctorName,
-              date: aptData.appointmentDate,
-              time: aptData.appointmentTime,
-              status: newStatus
-            }
-          })
+          try {
+            await api.post('/emails/send', {
+              action: 'sendAppointmentStatusToPatient',
+              payload: {
+                patientEmail,
+                patientName: aptData.patientName,
+                doctorName: aptData.doctorName,
+                date: aptData.appointmentDate,
+                time: aptData.appointmentTime,
+                status: newStatus
+              }
+            })
+          } catch (emailErr) {
+            console.error('Failed to send status email to patient:', emailErr)
+          }
         }
         if (aptData.patientId) {
-          await sendNotification({
-            recipientId: aptData.patientId,
-            title: `Appointment ${newStatus === 'approved' ? 'Approved' : 'Rejected'}`,
-            message: `Your appointment with ${aptData.doctorName} on ${aptData.appointmentDate} at ${aptData.appointmentTime} has been ${newStatus}.`,
-            type: 'appointment',
-            link: '/patient/appointments'
-          })
+          try {
+            await sendNotification({
+              recipientId: aptData.patientId,
+              title: `Appointment ${newStatus === 'approved' ? 'Approved' : 'Rejected'}`,
+              message: `Your appointment with ${aptData.doctorName} on ${aptData.appointmentDate} at ${aptData.appointmentTime} has been ${newStatus}.`,
+              type: 'appointment'
+            })
+          } catch (notifErr) {
+            console.error('Failed to send status notification to patient:', notifErr)
+          }
         }
       } else if (newStatus === 'cancelled') {
         if (doctorEmail) {
-          await api.post('/emails/send', {
-            action: 'sendAppointmentCancelled',
-            payload: { email: doctorEmail, oppositeName: aptData.patientName, date: aptData.appointmentDate, time: aptData.appointmentTime }
-          })
+          try {
+            await api.post('/emails/send', {
+              action: 'sendAppointmentCancelled',
+              payload: { email: doctorEmail, oppositeName: aptData.patientName, date: aptData.appointmentDate, time: aptData.appointmentTime }
+            })
+          } catch (err) { console.error(err) }
         }
         if (patientEmail) {
-          await api.post('/emails/send', {
-            action: 'sendAppointmentCancelled',
-            payload: { email: patientEmail, oppositeName: aptData.doctorName, date: aptData.appointmentDate, time: aptData.appointmentTime }
-          })
+          try {
+            await api.post('/emails/send', {
+              action: 'sendAppointmentCancelled',
+              payload: { email: patientEmail, oppositeName: aptData.doctorName, date: aptData.appointmentDate, time: aptData.appointmentTime }
+            })
+          } catch (err) { console.error(err) }
         }
         
-        await sendNotification({
-          recipientId: aptData.doctorId || aptData.doctorUid,
-          title: 'Appointment Cancelled',
-          message: `Appointment with ${aptData.patientName} on ${aptData.appointmentDate} at ${aptData.appointmentTime} was cancelled.`,
-          type: 'appointment',
-          link: '/doctor/appointments'
-        })
-        if (aptData.patientId) {
+        try {
           await sendNotification({
-            recipientId: aptData.patientId,
+            recipientId: aptData.doctorId || aptData.doctorUid,
             title: 'Appointment Cancelled',
-            message: `Your appointment with ${aptData.doctorName} on ${aptData.appointmentDate} at ${aptData.appointmentTime} was cancelled.`,
-            type: 'appointment',
-            link: '/patient/appointments'
+            message: `Appointment with ${aptData.patientName} on ${aptData.appointmentDate} at ${aptData.appointmentTime} was cancelled.`,
+            type: 'appointment'
           })
+        } catch (err) { console.error(err) }
+
+        if (aptData.patientId) {
+          try {
+            await sendNotification({
+              recipientId: aptData.patientId,
+              title: 'Appointment Cancelled',
+              message: `Your appointment with ${aptData.doctorName} on ${aptData.appointmentDate} at ${aptData.appointmentTime} was cancelled.`,
+              type: 'appointment'
+            })
+          } catch (err) { console.error(err) }
         }
       }
     }
   } catch (err) {
-    console.error('Failed to trigger email:', err)
+    console.error('Failed to process appointment status update Side Effects:', err)
   }
 }
 
@@ -200,7 +230,7 @@ export const notifyPatientPrescriptionUploaded = async (patientId, doctorName) =
   }
 }
 
-export const subscribeToDoctorAppointmentsByDate = (doctorId, date, callback) => {
+export const subscribeToDoctorAppointmentsByDate = (doctorId, date, callback, onError) => {
   if (!doctorId || !date) {
     callback([])
     return () => {}
@@ -212,5 +242,8 @@ export const subscribeToDoctorAppointmentsByDate = (doctorId, date, callback) =>
   )
   return onSnapshot(q, (snap) => {
     callback(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })))
+  }, (err) => {
+    console.error('Appointment subscription error:', err)
+    if (onError) onError(err)
   })
 }
