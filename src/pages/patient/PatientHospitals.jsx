@@ -41,7 +41,8 @@ const PatientHospitals = () => {
     if (selectedDateStr) {
       const dayOfWeek = new Date(selectedDateStr).getDay()
       if (!workingDays.includes(dayOfWeek)) {
-        return { notWorkingDay: true, morning: [], afternoon: [], evening: [] }
+        const dayName = new Date(selectedDateStr).toLocaleDateString('en-US', { weekday: 'long', timeZone: 'UTC' })
+        return { notWorkingDay: true, dayName, morning: [], afternoon: [], evening: [] }
       }
     }
 
@@ -127,10 +128,16 @@ const PatientHospitals = () => {
             .filter(app => app.status !== 'rejected')
             .map(app => app.appointmentTime)
           setBookedSlots(booked)
+        }, (err) => {
+          console.error("Appointments subscription failed:", err)
+          setCheckingSlots(false)
         })
       } else {
         unsubscribeAppts()
       }
+    }, (err) => {
+      console.error("Leave subscription failed:", err)
+      setCheckingSlots(false)
     })
 
     return () => {
@@ -372,7 +379,10 @@ const PatientHospitals = () => {
                       ) : generatedSlots.notWorkingDay ? (
                         <div className="text-sm text-amber-600 dark:text-amber-400 py-6 text-center bg-amber-50 dark:bg-amber-900/20 rounded-xl border border-amber-100 dark:border-amber-900/50 font-medium flex flex-col items-center gap-2">
                           <X className="w-6 h-6 text-amber-500" />
-                          Doctor is not available on this day of the week.
+                          <div className="space-y-1">
+                            <p>Doctor does not take appointments on {generatedSlots.dayName}s.</p>
+                            <p className="text-xs text-amber-500/80 font-normal">This is based on their regular Schedule Settings, not a leave.</p>
+                          </div>
                         </div>
                       ) : (
                         <div className="space-y-4 max-h-[200px] overflow-y-auto pr-2 custom-scrollbar">
