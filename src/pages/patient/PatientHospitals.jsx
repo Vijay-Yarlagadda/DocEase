@@ -29,6 +29,10 @@ const PatientHospitals = () => {
   const [isDoctorOnLeave, setIsDoctorOnLeave] = useState(false)
   const [checkingSlots, setCheckingSlots] = useState(false)
 
+  const [selectedPincode, setSelectedPincode] = useState(() => localStorage.getItem('userPincode') || '')
+  const [showLocationModal, setShowLocationModal] = useState(false)
+  const [uniquePincodes, setUniquePincodes] = useState([])
+
   const generateTimeSlots = (doctor, selectedDateStr) => {
     const settings = doctor?.appointmentSettings || {}
     const duration = settings.slotDuration || 30
@@ -95,6 +99,14 @@ const PatientHospitals = () => {
       try {
         const data = await getVerifiedHospitals()
         setHospitals(data)
+        
+        const pincodes = [...new Set(data.map(h => h.pincode).filter(Boolean))]
+        setUniquePincodes(pincodes)
+        
+        // If no pincode selected, show location modal
+        if (!localStorage.getItem('userPincode')) {
+          setShowLocationModal(true)
+        }
       } catch (err) {
         showError('Failed to load hospitals')
       } finally {
@@ -189,12 +201,37 @@ const PatientHospitals = () => {
     }
   }
 
+  const handlePincodeSelect = (pincode) => {
+    setSelectedPincode(pincode)
+    if (pincode) {
+      localStorage.setItem('userPincode', pincode)
+    } else {
+      localStorage.removeItem('userPincode')
+    }
+    setShowLocationModal(false)
+    setSelectedHospital(null)
+    setDoctors([])
+  }
+
+  const filteredHospitals = hospitals.filter(h => 
+    selectedPincode ? h.pincode === selectedPincode : true
+  )
+
   return (
     <div>
       <DashboardPageHeader
         role="patient"
         title="Hospital Directory"
         subtitle="Find verified hospitals and book appointments with top doctors"
+        action={
+          <button
+            onClick={() => setShowLocationModal(true)}
+            className="flex items-center gap-2 px-4 py-2.5 bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200 dark:border-slate-700 rounded-xl shadow-sm text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-teal-300 dark:hover:border-teal-700 transition-all group"
+          >
+            <MapPin className="w-4 h-4 text-teal-500 group-hover:scale-110 transition-transform" />
+            {selectedPincode ? `Pincode: ${selectedPincode}` : 'All Locations'}
+          </button>
+        }
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -211,12 +248,20 @@ const PatientHospitals = () => {
                 <div key={i} className="h-24 animate-pulse rounded-2xl bg-slate-200 dark:bg-slate-800" />
               ))}
             </div>
-          ) : hospitals.length === 0 ? (
-            <div className="p-6 text-center text-slate-500 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl shadow-xl shadow-slate-200/50 dark:shadow-black/20 rounded-2xl border border-slate-200 dark:border-slate-800">
-              No verified hospitals available yet.
+          ) : filteredHospitals.length === 0 ? (
+            <div className="p-8 text-center text-slate-500 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl shadow-xl shadow-slate-200/50 dark:shadow-black/20 rounded-2xl border border-slate-200 dark:border-slate-800">
+              <MapPin className="w-10 h-10 mx-auto mb-3 text-slate-300 dark:text-slate-600" />
+              <p className="font-semibold text-slate-700 dark:text-slate-300">No hospitals found</p>
+              <p className="text-sm mt-1">Try changing your location filter.</p>
+              <button 
+                onClick={() => setShowLocationModal(true)}
+                className="mt-4 px-4 py-2 bg-teal-50 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400 rounded-lg text-sm font-medium hover:bg-teal-100 dark:hover:bg-teal-900/50 transition-colors"
+              >
+                Change Location
+              </button>
             </div>
           ) : (
-            hospitals.map(hospital => (
+            filteredHospitals.map(hospital => (
               <motion.button
                 key={hospital.id}
                 whileHover={{ scale: 1.02 }}
@@ -320,6 +365,64 @@ const PatientHospitals = () => {
           )}
         </div>
       </div>
+
+      {/* Location Modal */}
+      {createPortal(
+        <AnimatePresence>
+          {showLocationModal && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl shadow-2xl shadow-slate-200/50 dark:shadow-black/50 rounded-3xl overflow-hidden w-full max-w-md border border-slate-200 dark:border-slate-800 flex flex-col"
+              >
+                <div className="flex-shrink-0 flex items-center justify-between p-6 border-b border-slate-100 dark:border-slate-800 bg-gradient-to-r from-teal-500/10 to-transparent dark:from-teal-500/5">
+                  <div>
+                    <h3 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                      <MapPin className="w-6 h-6 text-teal-500" />
+                      Select Location
+                    </h3>
+                    <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Filter hospitals by your pincode</p>
+                  </div>
+                  {localStorage.getItem('userPincode') !== null && (
+                    <button onClick={() => setShowLocationModal(false)} className="p-2 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors">
+                      <X className="w-5 h-5" />
+                    </button>
+                  )}
+                </div>
+                <div className="p-6 overflow-y-auto custom-scrollbar max-h-[60vh] bg-slate-50/50 dark:bg-slate-900/50">
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      onClick={() => handlePincodeSelect('')}
+                      className={`py-4 px-4 rounded-2xl border text-sm font-bold transition-all flex flex-col items-center justify-center gap-2 ${!selectedPincode ? 'bg-teal-50 border-teal-500 text-teal-700 shadow-md shadow-teal-500/20 dark:bg-teal-900/30 dark:text-teal-300 dark:border-teal-700/50' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-teal-300 hover:text-teal-600 hover:shadow-sm'}`}
+                    >
+                      <MapPin className="w-5 h-5 opacity-70" />
+                      All Locations
+                    </button>
+                    {uniquePincodes.map(pin => (
+                      <button
+                        key={pin}
+                        onClick={() => handlePincodeSelect(pin)}
+                        className={`py-4 px-4 rounded-2xl border text-sm font-bold transition-all flex flex-col items-center justify-center gap-2 ${selectedPincode === pin ? 'bg-teal-50 border-teal-500 text-teal-700 shadow-md shadow-teal-500/20 dark:bg-teal-900/30 dark:text-teal-300 dark:border-teal-700/50' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-teal-300 hover:text-teal-600 hover:shadow-sm'}`}
+                      >
+                        <MapPin className="w-5 h-5 opacity-70" />
+                        {pin}
+                      </button>
+                    ))}
+                  </div>
+                  {uniquePincodes.length === 0 && (
+                    <div className="text-center p-4 text-slate-500 text-sm mt-4">
+                      No specific locations found from verified hospitals.
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
 
       {/* Booking Modal */}
       {createPortal(
