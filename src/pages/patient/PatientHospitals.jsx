@@ -409,6 +409,11 @@ const PatientHospitals = () => {
                         value={locationSearch}
                         onChange={(e) => setLocationSearch(e.target.value)}
                         className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition-all dark:text-white"
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && locationSearch.trim() !== '') {
+                            handleLocationSelect(locationSearch.trim())
+                          }
+                        }}
                       />
                     </div>
                   </div>
@@ -427,6 +432,37 @@ const PatientHospitals = () => {
                         <Search className="w-5 h-5 opacity-70" />
                         Search for "{locationSearch.trim()}"
                       </button>
+                      
+                      {/* Display matched possibilities */}
+                      {(() => {
+                        const searchStr = locationSearch.trim().toLowerCase()
+                        const matchedPopular = POPULAR_CITIES.filter(city => city.toLowerCase().includes(searchStr))
+                        const matchedHospitals = [...new Set(hospitals.filter(h => 
+                          (h.pincode?.toLowerCase() || '').includes(searchStr) || 
+                          (h.address?.toLowerCase() || '').includes(searchStr) ||
+                          (h.name?.toLowerCase() || '').includes(searchStr)
+                        ).map(h => h.pincode).filter(Boolean))]
+
+                        const combinedMatches = [...new Set([...matchedPopular, ...matchedHospitals])].slice(0, 10)
+
+                        if (combinedMatches.length === 0) return null
+
+                        return (
+                          <div className="grid grid-cols-2 gap-3 mt-3">
+                            {combinedMatches.map(match => (
+                              <button
+                                key={match}
+                                onClick={() => handleLocationSelect(match)}
+                                className={`py-4 px-4 rounded-2xl border text-sm font-bold transition-all flex flex-col items-center justify-center gap-2 ${selectedLocation === match ? 'bg-teal-50 border-teal-500 text-teal-700 shadow-md shadow-teal-500/20 dark:bg-teal-900/30 dark:text-teal-300 dark:border-teal-700/50' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-teal-300 hover:text-teal-600 hover:shadow-sm'}`}
+                              >
+                                <MapPin className="w-5 h-5 opacity-70" />
+                                {match}
+                              </button>
+                            ))}
+                          </div>
+                        )
+                      })()}
+
                       <button
                         onClick={() => handleLocationSelect('')}
                         className="w-full py-3 px-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-sm font-medium transition-all hover:bg-slate-50 dark:hover:bg-slate-700/50"
