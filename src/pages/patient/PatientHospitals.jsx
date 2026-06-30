@@ -437,13 +437,23 @@ const PatientHospitals = () => {
                       {(() => {
                         const searchStr = locationSearch.trim().toLowerCase()
                         const matchedPopular = POPULAR_CITIES.filter(city => city.toLowerCase().includes(searchStr))
-                        const matchedHospitals = [...new Set(hospitals.filter(h => 
-                          (h.pincode?.toLowerCase() || '').includes(searchStr) || 
-                          (h.address?.toLowerCase() || '').includes(searchStr) ||
-                          (h.name?.toLowerCase() || '').includes(searchStr)
-                        ).map(h => h.pincode).filter(Boolean))]
+                        
+                        let extractedMatches = []
+                        hospitals.forEach(h => {
+                          if ((h.pincode || '').toLowerCase().includes(searchStr)) {
+                            extractedMatches.push(h.pincode)
+                          }
+                          if ((h.address || '').toLowerCase().includes(searchStr)) {
+                            const parts = (h.address || '').split(',').map(p => p.trim())
+                            const matchingPart = parts.find(p => p.toLowerCase().includes(searchStr))
+                            if (matchingPart) extractedMatches.push(matchingPart)
+                          }
+                          if ((h.name || '').toLowerCase().includes(searchStr)) {
+                            extractedMatches.push(h.name)
+                          }
+                        })
 
-                        const combinedMatches = [...new Set([...matchedPopular, ...matchedHospitals])].slice(0, 10)
+                        const combinedMatches = [...new Set([...matchedPopular, ...extractedMatches.filter(Boolean)])].slice(0, 10)
 
                         if (combinedMatches.length === 0) return null
 
@@ -453,10 +463,10 @@ const PatientHospitals = () => {
                               <button
                                 key={match}
                                 onClick={() => handleLocationSelect(match)}
-                                className={`py-4 px-4 rounded-2xl border text-sm font-bold transition-all flex flex-col items-center justify-center gap-2 ${selectedLocation === match ? 'bg-teal-50 border-teal-500 text-teal-700 shadow-md shadow-teal-500/20 dark:bg-teal-900/30 dark:text-teal-300 dark:border-teal-700/50' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-teal-300 hover:text-teal-600 hover:shadow-sm'}`}
+                                className={`py-4 px-4 rounded-2xl border text-sm font-bold transition-all flex flex-col items-center justify-center text-center gap-2 ${selectedLocation === match ? 'bg-teal-50 border-teal-500 text-teal-700 shadow-md shadow-teal-500/20 dark:bg-teal-900/30 dark:text-teal-300 dark:border-teal-700/50' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-teal-300 hover:text-teal-600 hover:shadow-sm'}`}
                               >
-                                <MapPin className="w-5 h-5 opacity-70" />
-                                {match}
+                                <MapPin className="w-5 h-5 opacity-70 shrink-0" />
+                                <span className="line-clamp-2">{match}</span>
                               </button>
                             ))}
                           </div>
