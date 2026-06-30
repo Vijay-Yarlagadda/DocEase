@@ -330,7 +330,7 @@ const PatientHospitals = () => {
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
-                className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl shadow-xl shadow-slate-200/50 dark:shadow-black/20 rounded-3xl w-full max-w-md border border-slate-200 dark:border-slate-800 flex flex-col max-h-[90vh]"
+                className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl shadow-xl shadow-slate-200/50 dark:shadow-black/20 rounded-3xl overflow-hidden w-full max-w-md border border-slate-200 dark:border-slate-800 flex flex-col max-h-[90vh]"
               >
                 <div className="flex-shrink-0 flex items-center justify-between p-5 border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900">
                   <h3 className="font-bold text-slate-900 dark:text-white">Book Appointment</h3>
