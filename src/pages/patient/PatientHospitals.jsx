@@ -1,7 +1,7 @@
 import { useState, useEffect, useContext } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { createPortal } from 'react-dom'
-import { Building2, MapPin, Phone, Mail, ChevronRight, Stethoscope, Calendar, Clock, X, Check } from 'lucide-react'
+import { Building2, MapPin, Phone, Mail, ChevronRight, Stethoscope, Calendar, Clock, X, Check, Search } from 'lucide-react'
 import DashboardPageHeader from '../../components/dashboard/DashboardPageHeader'
 import { getVerifiedHospitals, getDoctorsByHospital } from '../../services/patientService'
 import { bookAppointment, getDoctorAppointmentsByDate, subscribeToDoctorAppointmentsByDate } from '../../services/appointmentService'
@@ -32,6 +32,7 @@ const PatientHospitals = () => {
   const [selectedPincode, setSelectedPincode] = useState(() => localStorage.getItem('userPincode') || '')
   const [showLocationModal, setShowLocationModal] = useState(false)
   const [uniquePincodes, setUniquePincodes] = useState([])
+  const [locationSearch, setLocationSearch] = useState('')
 
   const generateTimeSlots = (doctor, selectedDateStr) => {
     const settings = doctor?.appointmentSettings || {}
@@ -392,6 +393,18 @@ const PatientHospitals = () => {
                   )}
                 </div>
                 <div className="p-6 overflow-y-auto custom-scrollbar max-h-[60vh] bg-slate-50/50 dark:bg-slate-900/50">
+                  <div className="mb-4">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                      <input 
+                        type="text"
+                        placeholder="Search by city, area, or pincode..."
+                        value={locationSearch}
+                        onChange={(e) => setLocationSearch(e.target.value)}
+                        className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition-all dark:text-white"
+                      />
+                    </div>
+                  </div>
                   <div className="grid grid-cols-2 gap-3">
                     <button
                       onClick={() => handlePincodeSelect('')}
@@ -400,16 +413,35 @@ const PatientHospitals = () => {
                       <MapPin className="w-5 h-5 opacity-70" />
                       All Locations
                     </button>
-                    {uniquePincodes.map(pin => (
-                      <button
-                        key={pin}
-                        onClick={() => handlePincodeSelect(pin)}
-                        className={`py-4 px-4 rounded-2xl border text-sm font-bold transition-all flex flex-col items-center justify-center gap-2 ${selectedPincode === pin ? 'bg-teal-50 border-teal-500 text-teal-700 shadow-md shadow-teal-500/20 dark:bg-teal-900/30 dark:text-teal-300 dark:border-teal-700/50' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-teal-300 hover:text-teal-600 hover:shadow-sm'}`}
-                      >
-                        <MapPin className="w-5 h-5 opacity-70" />
-                        {pin}
-                      </button>
-                    ))}
+                    {(() => {
+                      const searchStr = locationSearch.trim().toLowerCase()
+                      const filteredPincodes = searchStr === '' 
+                        ? uniquePincodes 
+                        : [...new Set(hospitals.filter(h => 
+                            (h.pincode?.toLowerCase() || '').includes(searchStr) || 
+                            (h.address?.toLowerCase() || '').includes(searchStr) ||
+                            (h.name?.toLowerCase() || '').includes(searchStr)
+                          ).map(h => h.pincode).filter(Boolean))]
+
+                      if (filteredPincodes.length === 0 && searchStr !== '') {
+                        return (
+                          <div className="col-span-2 text-center p-4 text-slate-500 text-sm mt-2 bg-slate-100/50 dark:bg-slate-800/50 rounded-xl">
+                            No locations match your search.
+                          </div>
+                        )
+                      }
+
+                      return filteredPincodes.map(pin => (
+                        <button
+                          key={pin}
+                          onClick={() => handlePincodeSelect(pin)}
+                          className={`py-4 px-4 rounded-2xl border text-sm font-bold transition-all flex flex-col items-center justify-center gap-2 ${selectedPincode === pin ? 'bg-teal-50 border-teal-500 text-teal-700 shadow-md shadow-teal-500/20 dark:bg-teal-900/30 dark:text-teal-300 dark:border-teal-700/50' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-teal-300 hover:text-teal-600 hover:shadow-sm'}`}
+                        >
+                          <MapPin className="w-5 h-5 opacity-70" />
+                          {pin}
+                        </button>
+                      ))
+                    })()}
                   </div>
                   {uniquePincodes.length === 0 && (
                     <div className="text-center p-4 text-slate-500 text-sm mt-4">
