@@ -152,12 +152,13 @@ const DashboardNavbar = ({ darkMode, toggleDarkMode }) => {
       <AnimatePresence>
         {mobileOpen && (
           <motion.nav
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className="lg:hidden absolute top-full left-0 right-0 border-b border-slate-700/40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl overflow-hidden"
+            initial={{ opacity: 0, y: -10, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -10, scale: 0.95 }}
+            transition={{ duration: 0.2 }}
+            className="lg:hidden absolute top-[calc(100%+8px)] left-4 right-4 border border-slate-200/50 dark:border-slate-700/50 rounded-2xl shadow-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl overflow-hidden transition-colors duration-300 origin-top"
           >
-            <div className="px-4 py-3 space-y-1 bg-white/95 dark:bg-slate-900/95">
+            <div className="px-4 py-4 space-y-1 bg-white/95 dark:bg-slate-900/95">
               {menuItems.map((item) => {
                 const Icon = item.icon
                 return (
