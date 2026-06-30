@@ -197,7 +197,7 @@ const Navbar = ({ darkMode, toggleDarkMode, user }) => {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -10, scale: 0.95 }}
               transition={{ duration: 0.2 }}
-              className="lg:hidden absolute top-[72px] md:top-[88px] left-4 right-4 bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-700/50 rounded-2xl shadow-2xl overflow-hidden backdrop-blur-xl"
+              className="lg:hidden absolute top-[72px] md:top-[88px] left-4 right-4 bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-700/50 rounded-2xl shadow-2xl overflow-hidden backdrop-blur-xl transition-colors duration-300"
             >
               <div className="flex flex-col p-4 space-y-1">
                 {/* Mobile Navigation Links */}
