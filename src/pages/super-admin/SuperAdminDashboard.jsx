@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
 import { Building2, ShieldCheck, Hourglass, ShieldOff, Sparkles, ArrowRight } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import DashboardPageHeader from '../../components/dashboard/DashboardPageHeader'
 import StatCard from '../../components/dashboard/StatCard'
 import { getAllHospitals } from '../../services/adminService'
@@ -10,6 +10,7 @@ import { getHospitalDocCount } from '../../utils/hospitalHelpers'
 const SuperAdminDashboard = () => {
   const [hospitals, setHospitals] = useState([])
   const [loading, setLoading] = useState(true)
+  const navigate = useNavigate()
 
   useEffect(() => {
     getAllHospitals()
@@ -36,6 +37,7 @@ const SuperAdminDashboard = () => {
       value: counts.total,
       change: 'All registered hospital profiles',
       gradient: 'from-fuchsia-600 to-pink-500',
+      filterValue: 'all',
     },
     {
       icon: ShieldCheck,
@@ -43,6 +45,7 @@ const SuperAdminDashboard = () => {
       value: counts.verified,
       change: 'Approved and live',
       gradient: 'from-emerald-600 to-emerald-400',
+      filterValue: 'verified',
     },
     {
       icon: Hourglass,
@@ -50,6 +53,7 @@ const SuperAdminDashboard = () => {
       value: counts.pending,
       change: 'Awaiting Super Admin review',
       gradient: 'from-orange-500 to-orange-300',
+      filterValue: 'pending',
     },
     {
       icon: ShieldOff,
@@ -57,6 +61,7 @@ const SuperAdminDashboard = () => {
       value: counts.rejected,
       change: 'Requires admin follow-up',
       gradient: 'from-rose-500 to-rose-400',
+      filterValue: 'rejected',
     },
   ]
 
@@ -72,7 +77,12 @@ const SuperAdminDashboard = () => {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-8">
         {stats.map((item, index) => (
-          <StatCard key={item.label} {...item} delay={index * 0.07} />
+          <StatCard 
+            key={item.label} 
+            {...item} 
+            delay={index * 0.07} 
+            onClick={() => navigate('/super-admin/hospitals', { state: { filter: item.filterValue } })} 
+          />
         ))}
       </div>
 

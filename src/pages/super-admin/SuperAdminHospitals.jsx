@@ -5,11 +5,13 @@ import DashboardPageHeader from '../../components/dashboard/DashboardPageHeader'
 import SuperAdminStatusBadge from '../../components/superadmin/SuperAdminStatusBadge'
 import { getAllHospitals } from '../../services/adminService'
 import { getHospitalDocCount } from '../../utils/hospitalHelpers'
+import { useLocation } from 'react-router-dom'
 
 const SuperAdminHospitals = () => {
+  const location = useLocation()
   const [hospitals, setHospitals] = useState([])
   const [search, setSearch] = useState('')
-  const [filter, setFilter] = useState('all')
+  const [filter, setFilter] = useState(location.state?.filter || 'all')
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -69,37 +71,41 @@ const SuperAdminHospitals = () => {
       </div>
 
       <div className="overflow-hidden rounded-[2rem] border border-slate-200/70 dark:border-slate-800/70 bg-white/95 dark:bg-slate-900/70">
-        <div className="grid grid-cols-6 gap-4 px-5 py-4 text-xs uppercase tracking-[0.3em] font-semibold text-slate-500 bg-slate-100 dark:bg-slate-950">
-          <span className="col-span-2">Hospital</span>
-          <span>Status</span>
-          <span>Contact</span>
-          <span>Documents</span>
-          <span className="text-right">Details</span>
-        </div>
-        <div className="divide-y divide-slate-200/70 dark:divide-slate-800">
-          {loading ? (
-            Array.from({ length: 5 }).map((_, index) => (
-              <div key={index} className="px-5 py-5 animate-pulse">
-                <div className="h-4 rounded-full bg-slate-200 dark:bg-slate-800 w-3/4 mb-3" />
-                <div className="h-3 rounded-full bg-slate-200 dark:bg-slate-800 w-1/2" />
-              </div>
-            ))
-          ) : filteredHospitals.length === 0 ? (
-            <div className="p-8 text-center text-slate-500">No hospitals match your search.</div>
-          ) : (
-            filteredHospitals.map((hospital) => (
-              <div key={hospital.id} className="grid grid-cols-6 gap-4 px-5 py-5 items-center text-sm text-slate-700 dark:text-slate-200">
-                <div className="col-span-2">
-                  <p className="font-semibold text-slate-900 dark:text-white">{hospital.name || 'Unnamed Hospital'}</p>
-                  <p className="text-xs text-slate-500 mt-1">{hospital.address || 'No address provided'}</p>
-                </div>
-                <div><SuperAdminStatusBadge status={hospital.verificationStatus} /></div>
-                <div>{hospital.phone || hospital.email || 'N/A'}</div>
-                <div>{getHospitalDocCount(hospital)}</div>
-                <div className="text-right text-slate-500">{getHospitalDocCount(hospital) ? 'Documents ready' : 'No docs'}</div>
-              </div>
-            ))
-          )}
+        <div className="overflow-x-auto">
+          <div className="min-w-[800px]">
+            <div className="grid grid-cols-6 gap-4 px-5 py-4 text-xs uppercase tracking-[0.3em] font-semibold text-slate-500 bg-slate-100 dark:bg-slate-950">
+              <span className="col-span-2">Hospital</span>
+              <span>Status</span>
+              <span>Contact</span>
+              <span>Documents</span>
+              <span className="text-right">Details</span>
+            </div>
+            <div className="divide-y divide-slate-200/70 dark:divide-slate-800">
+              {loading ? (
+                Array.from({ length: 5 }).map((_, index) => (
+                  <div key={index} className="px-5 py-5 animate-pulse">
+                    <div className="h-4 rounded-full bg-slate-200 dark:bg-slate-800 w-3/4 mb-3" />
+                    <div className="h-3 rounded-full bg-slate-200 dark:bg-slate-800 w-1/2" />
+                  </div>
+                ))
+              ) : filteredHospitals.length === 0 ? (
+                <div className="p-8 text-center text-slate-500">No hospitals match your search.</div>
+              ) : (
+                filteredHospitals.map((hospital) => (
+                  <div key={hospital.id} className="grid grid-cols-6 gap-4 px-5 py-5 items-center text-sm text-slate-700 dark:text-slate-200">
+                    <div className="col-span-2">
+                      <p className="font-semibold text-slate-900 dark:text-white">{hospital.name || 'Unnamed Hospital'}</p>
+                      <p className="text-xs text-slate-500 mt-1">{hospital.address || 'No address provided'}</p>
+                    </div>
+                    <div><SuperAdminStatusBadge status={hospital.verificationStatus} /></div>
+                    <div>{hospital.phone || hospital.email || 'N/A'}</div>
+                    <div>{getHospitalDocCount(hospital)}</div>
+                    <div className="text-right text-slate-500">{getHospitalDocCount(hospital) ? 'Documents ready' : 'No docs'}</div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </div>
