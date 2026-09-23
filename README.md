@@ -95,8 +95,7 @@ A comprehensive, secure healthcare management platform that streamlines document
 
 ### **Email & Notifications**
 
-- **Nodemailer** - SMTP email delivery engine
-- **Google SMTP** - Secure email transmission integration
+- **Resend API** - Reliable and modern email delivery engine
 
 ### **Deployment**
 
@@ -187,7 +186,7 @@ DocEase/
 - **npm** or **yarn**
 - **Firebase Project** (create one at [firebase.google.com](https://firebase.google.com))
 - **Cloudinary Account** (sign up at [cloudinary.com](https://cloudinary.com))
-- **Gmail Account** (with App Passwords enabled for Nodemailer)
+- **Resend API Key** (sign up at [resend.com](https://resend.com))
 
 ### Installation
 
@@ -226,8 +225,7 @@ npm install
 
 # Create .env file
 echo "PORT=5000
-SMTP_USER=your_gmail_address
-SMTP_PASS=your_gmail_app_password
+RESEND_API_KEY=your_resend_api_key
 NODE_ENV=development" > .env
 
 # Start the server
@@ -515,7 +513,7 @@ Firestore is hosted by Firebase - no additional deployment needed.
 
 ## 📧 Email Service
 
-DocEase uses **Nodemailer** with Google SMTP for reliable, automated email delivery:
+DocEase uses the **Resend API** for fast, reliable, and automated email delivery:
 
 - **Appointment Confirmations** - Automatic status updates sent to patients
 - **Doctor Notifications** - Alerts for doctors about new appointment requests
@@ -570,8 +568,8 @@ npm start
 
 **Issue**: Email not sending
 
-- Solution: Verify your Gmail App Password is correct in `SMTP_PASS`
-- Check that your Gmail account has 2-Step Verification enabled
+- Solution: Verify your Resend API Key is correct in `RESEND_API_KEY`
+- Check that your domain is verified in your Resend dashboard
 
 For detailed troubleshooting, see [TROUBLESHOOTING.md](TROUBLESHOOTING.md)
 
